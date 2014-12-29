@@ -33,11 +33,29 @@ object ChineseCalendar {
       case ((start, table), ad) => table(ad - start + yearOffset)
     }
 
-    val Some(Month(_, sexagenary)) = months.find(_.month == date.month)
+    // val Some(Month(_, sexagenary)) = months.find(_.month == date.month)
 
     firstDay
   }
 
+
+  /**
+    * The grammar for a Chinese date is as follows:
+    * 
+    *   ChineseDate = monarchEra [year [month [dayOfMonth]]]
+    * 
+    * @param monarchEra This could be either the title of the monarch, or the era (年號), or both.
+    *                   For monarchs with era (except for 漢武帝 who
+    *                   firstly used era, but also ruled without era
+    *                   before the first usage), usage of monarch only
+    *                   is not allowed. When only use era, it should
+    *                   be unique. When use both, they are concatenated together like 漢武帝建元.
+    * @param year 元年|二年|三年|...
+    * @param month the grammar is: month = [春|夏|秋|冬] [閏] 正月|二月|三月|...|十月|十一月|十二月
+    *        Note that whether the combination of season/month is valid or not is not checked.
+    * @param dayOfMonth the grammar is:
+    *        dayOfMonth = Sexagenary|朔|初一|初二|...|初九|初十|十一|十二|...|十九|二十|廿一|廿二|...|廿九|三十|
+    */  
   def toGregorianCalendar(date: String): GregorianCalendar =
     toGregorianCalendar(parseDate(date))
 
@@ -45,15 +63,6 @@ object ChineseCalendar {
     ""
   }
 
-  /** 
-    * All fields are in Traditional Chinese. 
-    * @param monarchEra This could be either the title of the monarch, or the era (年號), or both.
-    *                   For monarchs with era (except for 漢武帝 who
-    *                   firstly used era, but also ruled without era
-    *                   before the first usage), usage of monarch only
-    *                   is not allowed. When only use era, it should
-    *                   be unique. When use both, they are concated together like 漢武帝建元.
-    */
   case class ChineseDate(monarchEra: String, year: String, 
                          month: String, dayOfMonth: String) {
     override def toString = monarchEra + year + month + dayOfMonth
@@ -129,6 +138,11 @@ object ChineseCalendar {
     "四十", "四十一", "四十二", "四十三", "四十四", "四十五", "四十六", "四十七", "四十八", "四十九",
     "五十", "五十一", "五十二", "五十三", "五十四", "五十五", "五十六", "五十七", "五十八", "五十九",
     "六十", "六十一", "六十二", "六十三", "六十四", "六十五", "六十六", "六十七", "六十八", "六十九"
+  )
+  private val Date = Array(
+    "", "", "", "", "", "", "", "", "", "",
+    "", "", "", "", "", "", "", "", "", "",
+    "", "", "", "", "", "", "", "", "", ""
   )
   private val LeapMonth = "閏"
 
@@ -211,24 +225,24 @@ object ChineseCalendar {
     y(31, 2, 11, "乙未 乙丑 甲午 甲子 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 辛卯 庚申"),
     y(32, 2, 1,  "庚寅 己未 己丑 戊午 戊子 丁巳 閏 丁亥 丙辰 丙戌 乙卯 乙酉 甲寅 甲申"), 
     y(33, 2, 18, "癸丑 癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰 庚戌 己卯 己酉 戊寅"),
-    y(34, 2, 8,  ""), 
-    y(35, 1, 28, ""),
-    y(36, 2, 99, ""), 
-    y(37, 2, 99, ""),
-    y(38, 2, 99, ""), 
-    y(39, 2, 99, ""),
-    y(40, 2, 99, ""), 
-    y(41, 2, 99, ""),
-    y(42, 2, 99, ""), 
-    y(43, 2, 99, ""),
-    y(44, 2, 99, ""), 
-    y(45, 2, 99, ""),
-    y(46, 2, 99, ""), 
-    y(47, 2, 99, ""),
-    y(48, 2, 99, ""), 
-    y(49, 2, 99, ""),
-    y(50, 2, 99, ""), 
-    y(51, 2, 99, ""),
+    y(34, 2, 8,  "戊申 丁丑 丁未 丙子 丙午 丙子 乙巳 乙亥 甲辰 甲戌 癸卯 癸酉"), 
+    y(35, 1, 28, "壬寅 壬申 辛丑 閏 辛未 庚子 庚午 己亥 己巳 戊戌 戊辰 戊戌 丁卯 丁酉"),
+    y(36, 2, 16, "丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳 壬戌 壬辰 辛酉 辛卯"), 
+    y(37, 2, 4,  "庚申 庚寅 庚申 己丑 己未 戊子 戊午 丁亥 丁巳 丙戌 丙辰 乙酉 閏 乙卯"),
+    y(38, 2, 23, "甲申 甲寅 癸未 癸丑 癸未 壬子 壬午 辛亥 辛巳 庚戌 庚辰 己酉"), 
+    y(39, 2, 13, "己卯 戊申 戊寅 丁未 丁丑 丙午 丙子 乙巳 乙亥 乙巳 甲戌 甲辰"),
+    y(40, 2, 2,  "癸酉 癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子 閏 己巳 己亥 戊辰 戊戌 戊辰"), 
+    y(41, 2, 20, "丁酉 丁卯 丙申 丙寅 乙未 乙丑 甲午 甲子 癸巳 癸亥 壬辰 壬戌"),
+    y(42, 2, 9,  "辛卯 辛酉 庚寅 庚申 庚寅 己未 己丑 戊午 戊子 丁巳 丁亥 丙辰"), 
+    y(43, 1, 30, "丙戌 乙卯 乙酉 甲寅 閏 甲申 癸丑 癸未 壬子 壬午 壬子 辛巳 辛亥 庚辰"),
+    y(44, 2, 18, "庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午 乙亥 乙巳 乙亥"), 
+    y(45, 2, 6,  "甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳"),
+    y(46, 1, 26, ""), 
+    y(47, 2, 14, ""),
+    y(48, 2, 4,  ""), 
+    y(49, 2, 22, ""),
+    y(50, 2, 11, ""), 
+    y(51, 1, 31, ""),
     y(52, 2, 99, ""), 
     y(53, 2, 99, ""),
     y(54, 2, 99, ""), 
@@ -706,7 +720,127 @@ object ChineseCalendar {
     (List("漢安帝元初", "元初"), (ADYears, 114)),
     (List("漢安帝永寧"), (ADYears, 120)),
     (List("漢安帝建光", "建光"), (ADYears, 121)),
-    (List("漢安帝延光", "延光"), (ADYears, 122))
+    (List("漢安帝延光", "延光"), (ADYears, 122)),
+    (List("漢順帝永建"), (ADYears, 126)),
+    (List("漢順帝陽嘉", "陽嘉"), (ADYears, 132)),
+    (List("漢順帝永和"), (ADYears, 136)),
+    (List("漢順帝漢安", "漢安"), (ADYears, 142)),
+    (List("漢順帝建康"), (ADYears, 144)),
+    (List("漢沖帝永憙", "永憙"), (ADYears, 145)),
+    (List("漢質帝本初", "本初"), (ADYears, 146)),
+    (List("漢桓帝建和"), (ADYears, 147)),
+    (List("漢桓帝和平"), (ADYears, 150)),
+    (List("漢桓帝元嘉"), (ADYears, 151)),
+    (List("漢桓帝永興"), (ADYears, 153)),
+    (List("漢桓帝永壽", "永壽"), (ADYears, 155)),
+    (List("漢桓帝延熹", "延熹"), (ADYears, 158)),
+    (List("漢桓帝永康"), (ADYears, 167)),
+    (List("漢靈帝建寧", "建寧"), (ADYears, 168)),
+    (List("漢靈帝熹平", "熹平"), (ADYears, 172)),
+    (List("漢靈帝光和", "光和"), (ADYears, 178)),
+    (List("漢靈帝中平", "中平", "漢獻帝中平"), (ADYears, 184)),
+    (List("漢少帝光熹", "光熹", "漢少帝昭寧", "昭寧", "漢獻帝永漢"), (ADYears, 189)),
+    (List("漢獻帝初平", "初平"), (ADYears, 190)),
+    (List("漢獻帝興平"), (ADYears, 194)),
+    (List("漢獻帝建安"), (ADYears, 196)),  // Also used by 段正明, although exact duration unknown.
+    (List("漢獻帝延康"), (ADYears, 220)),
+    (List("魏文帝黃初", "黃初"), (ADYears, 220)),
+    (List("魏明帝太和"), (ADYears, 227)),
+    (List("魏明帝青龍"), (ADYears, 233)),
+    (List("魏明帝景初", "景初"), (ADYears, 237)),
+    (List("魏齊王芳正始"), (ADYears, 240)),
+    (List("魏齊王芳嘉平"), (ADYears, 249)),
+    (List("魏高貴鄉公正元", "正元"), (ADYears, 254)),
+    (List("魏高貴鄉公甘露"), (ADYears, 256)),
+    (List("魏陳留王景元", "景元"), (ADYears, 260)),
+    (List("魏陳留王咸熙", "咸熙"), (ADYears, 264)),
+    (List("晉武帝泰始"), (ADYears, 265)),
+    (List("晉武帝咸寧"), (ADYears, 275)),
+    (List("晉武帝太康"), (ADYears, 280)),
+    (List("晉武帝太熙", "太熙", "晉惠帝永熙"), (ADYears, 290)),
+    (List("晉惠帝永平", "晉惠帝元康"), (ADYears, 291)),
+    (List("晉惠帝永康"), (ADYears, 300)),
+    (List("晉惠帝永寧"), (ADYears, 301)),
+    (List("晉惠帝太安"), (ADYears, 302)),
+    (List("晉惠帝永安", "晉惠帝建武", "晉惠帝永興"), (ADYears, 304)),
+    (List("晉惠帝光熙", "光熙"), (ADYears, 306)),
+    (List("晉懷帝永嘉"), (ADYears, 307)),
+    (List("晉愍帝建興"), (ADYears, 313)),
+    (List("晉元帝建武"), (ADYears, 317)),
+    (List("晉元帝大興"), (ADYears, 318)),
+    (List("晉元帝永昌"), (ADYears, 322)),
+    (List("晉明帝太寧"), (ADYears, 323)),
+    (List("晉成帝咸和"), (ADYears, 326)),
+    (List("晉成帝咸康"), (ADYears, 335)),
+    (List("晉康帝建元"), (ADYears, 343)),
+    (List("晉穆帝永和"), (ADYears, 345)),
+    (List("晉穆帝昇平"), (ADYears, 357)),
+    (List("晉哀帝隆和", "隆和"), (ADYears, 362)),
+    (List("晉哀帝興寧", "興寧"), (ADYears, 363)),
+    (List("晉廢帝太和"), (ADYears, 366)),
+    (List("晉簡文帝咸安", "咸安"), (ADYears, 371)),
+    (List("晉孝武帝寧康", "寧康"), (ADYears, 373)),
+    (List("晉孝武帝太元"), (ADYears, 376)),
+    (List("晉安帝隆安", "隆安"), (ADYears, 397)),
+    (List("晉安帝元興", "晉安帝大亨", "大亨"), (ADYears, 402)),
+    (List("晉安帝義熙"), (ADYears, 405)),
+    (List("晉恭帝元熙"), (ADYears, 419)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122)),      
+    (List("", ""), (ADYears, 122)),
+    (List("", ""), (ADYears, 122))    
   )
   private var eraMap = new mutable.HashMap[String, ((Int, Array[Year]), Int)]()
   for (era <- eraList) {

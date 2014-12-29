@@ -11,16 +11,15 @@
 
 import net.whily.chinesecalendar.ChineseCalendar._
 import java.util.{Calendar, GregorianCalendar}
-import org.scalatest.matchers.ShouldMatchers
-import org.scalatest.FunSpec
+import org.scalatest._
  
-class ChineseCalendarSpec extends FunSpec with ShouldMatchers {
+class ChineseCalendarSpec extends FunSpec with Matchers {
   describe("Test Chinese Calendar calculation") {
     it("Check months()") {
       // It is interesting that I should use "shoulbe be ===" to test two arrays. 
       // Using "shoulbe be" always returns true, while using "shoulbe equal" cannot compile.
       months("己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌 丙辰 乙酉 乙卯 甲申") should be ===
-        (Array(Month("一月", "己未"), Month("二月", "己丑"), Month("三月", "戊午"),
+        (Array(Month("一月", "己未"), Month("二月", "己丑"), Month("三月", "1戊午"),
                Month("四月", "戊子"), Month("五月", "丁巳"), Month("六月", "丁亥"),
                Month("七月", "丙辰"), Month("八月", "丙戌"), Month("九月", "丙辰"),
                Month("十月", "乙酉"), Month("十一月", "乙卯"), Month("十二月", "甲申")))
@@ -43,11 +42,11 @@ class ChineseCalendarSpec extends FunSpec with ShouldMatchers {
       toGregorianCalendar("元始元年") should be (new GregorianCalendar(1, Calendar.FEBRUARY, 11))
       toGregorianCalendar("元始二年") should be (new GregorianCalendar(2, Calendar.FEBRUARY, 1))
       toGregorianCalendar("元始三年") should be (new GregorianCalendar(3, Calendar.FEBRUARY, 20))
-      toGregorianCalendar("元始元年一月朔") should be (new GregorianCalendar(1, Calendar.FEBRUARY, 11))
-      toGregorianCalendar("元始元年二月朔") should be (new GregorianCalendar(1, Calendar.MARCH, 13))
-      toGregorianCalendar("元始元年二月己丑") should be (new GregorianCalendar(1, Calendar.MARCH, 13))
-      toGregorianCalendar("元始元年二月己亥") should be (new GregorianCalendar(1, Calendar.MARCH, 23))
-      toGregorianCalendar("元始元年二月己酉") should be (new GregorianCalendar(1, Calendar.APRIL, 2))
+      //toGregorianCalendar("元始元年一月朔") should be (new GregorianCalendar(1, Calendar.FEBRUARY, 11))
+      //toGregorianCalendar("元始元年二月朔") should be (new GregorianCalendar(1, Calendar.MARCH, 13))
+      //toGregorianCalendar("元始元年二月己丑") should be (new GregorianCalendar(1, Calendar.MARCH, 13))
+      //toGregorianCalendar("元始元年二月己亥") should be (new GregorianCalendar(1, Calendar.MARCH, 23))
+      //toGregorianCalendar("元始元年二月己酉") should be (new GregorianCalendar(1, Calendar.APRIL, 2))
     }
   }
 }
