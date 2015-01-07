@@ -19,7 +19,7 @@ class ChineseCalendarSpec extends FunSpec with Matchers {
       // It is interesting that I should use "shoulbe be ===" to test two arrays. 
       // Using "shoulbe be" always returns true, while using "shoulbe equal" cannot compile.
       months("己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌 丙辰 乙酉 乙卯 甲申") should be ===
-        (Array(Month("一月", "己未"), Month("二月", "己丑"), Month("三月", "1戊午"),
+        (Array(Month("一月", "己未"), Month("二月", "己丑"), Month("三月", "戊午"),
                Month("四月", "戊子"), Month("五月", "丁巳"), Month("六月", "丁亥"),
                Month("七月", "丙辰"), Month("八月", "丙戌"), Month("九月", "丙辰"),
                Month("十月", "乙酉"), Month("十一月", "乙卯"), Month("十二月", "甲申")))

@@ -56,8 +56,11 @@ object ChineseCalendar {
     * @param dayOfMonth the grammar is:
     *        dayOfMonth = Sexagenary|朔|初一|初二|...|初九|初十|十一|十二|...|十九|二十|廿一|廿二|...|廿九|三十|
     */  
-  def toGregorianCalendar(date: String): GregorianCalendar =
+  def toGregorianCalendar(date: String): GregorianCalendar = {
+    // An example of string with minimum length: 黃初元年
+    assert(date.length >= 4)  
     toGregorianCalendar(parseDate(date))
+  }
 
   def fromGregorianCalendar(calendar: GregorianCalendar): String = {
     ""
@@ -237,8 +240,8 @@ object ChineseCalendar {
     y(43, 1, 30, "丙戌 乙卯 乙酉 甲寅 閏 甲申 癸丑 癸未 壬子 壬午 壬子 辛巳 辛亥 庚辰"),
     y(44, 2, 18, "庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午 乙亥 乙巳 乙亥"), 
     y(45, 2, 6,  "甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳"),
-    y(46, 1, 26, ""), 
-    y(47, 2, 14, ""),
+    y(46, 1, 26, "戊戌 閏 戊辰 丁酉 丁卯 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳"), 
+    y(47, 2, 14, "壬戌 壬辰 辛酉 辛卯 庚申 庚寅 庚申 己丑 己未 戊子 戊午 丁亥"),
     y(48, 2, 4,  ""), 
     y(49, 2, 22, ""),
     y(50, 2, 11, ""), 
