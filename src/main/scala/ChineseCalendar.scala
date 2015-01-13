@@ -15,6 +15,11 @@ import java.util.{Calendar, GregorianCalendar}
 import scala.collection.mutable    // For toMap()
 
 object ChineseCalendar {
+  // For debugging purpose only. Will be removed once code is stable.
+  def main(args: Array[String]) {
+    toGregorianCalendar("元始元年三月廿一")
+  }
+
   // 干支
   private val Sexagenary = Array(
     "甲子", "乙丑", "丙寅", "丁卯", "戊辰", "己巳", "庚午", "辛未", "壬申", "癸酉",
@@ -25,19 +30,68 @@ object ChineseCalendar {
     "甲寅", "乙卯", "丙辰", "丁巳", "戊午", "己未", "庚申", "辛酉", "壬戌", "癸亥"
   )
 
+  def sexagenaryDiff(x: String, y: String) = {
+    // Note that in Java, % is remainder, not modulo operator. So some checking is needed.
+    val z = (Sexagenary.indexOf(y) - Sexagenary.indexOf(x)) % 60
+    if (z < 0) z + 60
+    else z
+  }
+
   def toGregorianCalendar(date: ChineseDate): GregorianCalendar = {
     val year = date.year.dropRight(1)   // Remove 年
     val yearOffset = Numbers.indexOf(year) - 1
     val monarchEra = date.monarchEra
+
     val Year(firstDay, months) = eraMap(monarchEra) match {
       case ((start, table), ad) => table(ad - start + yearOffset)
     }
 
-    // val Some(Month(_, sexagenary)) = months.find(_.month == date.month)
+    var dayDiff = daysFromNewYear(date.month, months)
+    // Find the sexagenary of the 1st day in the matching month. It can
+    // be done in daysFromNewYear(), but implemented below to make
+    // daysFromNewYear() clearer.
+    val Some(Month(_, sexagenary)) = months.find(_.month == date.month)
+    val dayOfMonth = date.dayOfMonth
+    if (Sexagenary.contains(dayOfMonth)) {
+      dayDiff += sexagenaryDiff(sexagenary, dayOfMonth)
+    } else {
+      dayDiff += Date.indexOf(dayOfMonth)
+    }
 
-    firstDay
+    // Since we modify the day, we need to clone it as the table can
+    // be read multiple times.
+    val day = clone(firstDay)
+    day.add(Calendar.DAY_OF_MONTH, dayDiff)
+    day
   }
 
+  private def clone(date: GregorianCalendar) =
+    new GregorianCalendar(
+      date.get(Calendar.YEAR),
+      date.get(Calendar.MONTH),
+      date.get(Calendar.DAY_OF_MONTH))
+
+  /** 
+    * Return the number of days in difference between the indicated
+    * `month` and the 1st day of that year. Calculation is based on
+    * sexagenary of the 1st day of each month. 
+    */
+  private def daysFromNewYear(month: String, months: Array[Month]) = {
+    def days(daysDiff: Int, prevSexagenary: String, ms: Array[Month]): Int = {
+      val diff = sexagenaryDiff(prevSexagenary, ms(0).sexagenary)
+      // One month can only have 29 or 30 days. Value 0 is for the 1st
+      // month in the year.
+      assert((diff == 0) || (diff == 29) || (diff == 30))
+      val updatedDaysDiff =  daysDiff + diff
+      if (month == ms(0).month) {
+        updatedDaysDiff
+      } else {
+        days(updatedDaysDiff, ms(0).sexagenary, ms.tail)
+      }
+    }
+
+    days(0, months(0).sexagenary, months)
+  }
 
   /**
     * The grammar for a Chinese date is as follows:
@@ -51,7 +105,7 @@ object ChineseCalendar {
     *                   is not allowed. When only use era, it should
     *                   be unique. When use both, they are concatenated together like 漢武帝建元.
     * @param year 元年|二年|三年|...
-    * @param month the grammar is: month = [春|夏|秋|冬] [閏] 正月|二月|三月|...|十月|十一月|十二月
+    * @param month the grammar is: month = [春|夏|秋|冬] [閏] 正月|一月|二月|三月|...|十月|十一月|十二月
     *        Note that whether the combination of season/month is valid or not is not checked.
     * @param dayOfMonth the grammar is:
     *        dayOfMonth = Sexagenary|朔|初一|初二|...|初九|初十|十一|十二|...|十九|二十|廿一|廿二|...|廿九|三十|
@@ -72,26 +126,38 @@ object ChineseCalendar {
   }
 
   private def parseDate(s: String): ChineseDate = {
-    var dayOfMonth = ""
+    var dayOfMonth = "初一"   // Default day of month.
     var endIndex = s.length
-    if (s.endsWith("日")) {
-      val k = s.lastIndexOf("月")
-      assert(k != -1)
-      endIndex = k + 1
-      dayOfMonth = s.substring(k + 1)
+    if (s.takeRight(1) == "朔") {
+      dayOfMonth = "初一"
+      endIndex -= 1
+    } else {
+      val t = s.takeRight(2)
+      if (Sexagenary.contains(t) || Date.contains(t)) {
+        endIndex -= 2
+        val k = s.lastIndexOf("月")
+        assert(k + 1 == endIndex)
+        dayOfMonth = t
+      }
     }
 
     parseMonth(s.substring(0, endIndex), dayOfMonth)
   }
 
   private def parseMonth(s: String, dayOfMonth: String): ChineseDate = {
-    var month = ""
+    var month = "一月"  // Default month
     var endIndex = s.length
     if (s.endsWith("月")) {
       val k = s.lastIndexOf("年")
       assert(k != -1)
       endIndex = k + 1
-      month = s.substring(k + 1)
+      if (Array("春", "夏", "秋", "冬").contains(s.substring(k + 1, k + 2))) {
+        month = s.substring(k + 2)
+      } else {
+        month = s.substring(k + 1)        
+      }
+      if (month == "正月")
+        month = "一月"
     }
 
     parseYear(s.substring(0, endIndex), month, dayOfMonth)
@@ -143,17 +209,19 @@ object ChineseCalendar {
     "六十", "六十一", "六十二", "六十三", "六十四", "六十五", "六十六", "六十七", "六十八", "六十九"
   )
   private val Date = Array(
-    "", "", "", "", "", "", "", "", "", "",
-    "", "", "", "", "", "", "", "", "", "",
-    "", "", "", "", "", "", "", "", "", ""
+    "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
+    "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
+    "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
   )
   private val LeapMonth = "閏"
 
-  private val MonthInts = Array(-1, Calendar.JANUARY, Calendar.FEBRUARY)
+  private val MonthInts = Array(-1, Calendar.JANUARY, Calendar.FEBRUARY, Calendar.MARCH,
+    Calendar.APRIL, Calendar.MAY, Calendar.JUNE, Calendar.JULY,
+    Calendar.AUGUST, Calendar.SEPTEMBER, Calendar.OCTOBER, Calendar.NOVEMBER, Calendar.DECEMBER)
 
   /** Return a data (as in Gregorian Calendar) given year, month (only
     * January and February), and date. */
-  private def date(year: Int, month: Int, dayOfMonth: Int) =
+  def date(year: Int, month: Int, dayOfMonth: Int) =
     new GregorianCalendar(year, MonthInts(month), dayOfMonth)
 
   /** Return an array of months by parsing the string S, in the format of
@@ -242,34 +310,34 @@ object ChineseCalendar {
     y(45, 2, 6,  "甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳"),
     y(46, 1, 26, "戊戌 閏 戊辰 丁酉 丁卯 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳"), 
     y(47, 2, 14, "壬戌 壬辰 辛酉 辛卯 庚申 庚寅 庚申 己丑 己未 戊子 戊午 丁亥"),
-    y(48, 2, 4,  ""), 
-    y(49, 2, 22, ""),
-    y(50, 2, 11, ""), 
-    y(51, 1, 31, ""),
-    y(52, 2, 99, ""), 
-    y(53, 2, 99, ""),
-    y(54, 2, 99, ""), 
-    y(55, 2, 99, ""),
-    y(56, 2, 99, ""), 
-    y(57, 2, 99, ""),
-    y(58, 2, 99, ""), 
-    y(59, 2, 99, ""),
-    y(60, 2, 99, ""),
-    y(61, 2, 99, ""),
-    y(62, 2, 99, ""), 
-    y(63, 2, 99, ""),
-    y(64, 2, 99, ""), 
-    y(65, 2, 99, ""),
-    y(66, 2, 99, ""), 
-    y(67, 2, 99, ""),
-    y(68, 2, 99, ""), 
-    y(69, 2, 99, ""),
-    y(70, 2, 99, ""), 
-    y(71, 2, 99, ""),
-    y(72, 2, 99, ""), 
-    y(73, 2, 99, ""),
-    y(74, 2, 99, ""), 
-    y(75, 2, 99, ""),
+    y(48, 2, 4,  "丁巳 丙戌 丙辰 乙酉 乙卯 甲申 甲寅 癸未 癸丑 壬午 閏 壬子 壬午 辛亥"), 
+    y(49, 2, 22, "辛巳 庚戌 庚辰 己酉 己卯 戊申 戊寅 丁未 丁丑 丙午 丙子 乙巳"),
+    y(50, 2, 11, "乙亥 甲辰 甲戌 甲辰 癸酉 癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子"), 
+    y(51, 1, 31, "己巳 己亥 戊辰 戊戌 丁卯 丁酉 閏 丁卯 丙申 丙寅 乙未 乙丑 甲午 甲子"),
+    y(52, 2, 19, "癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅 庚申 己丑 己未 己丑 戊午"), 
+    y(53, 2, 8,  "戊子 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子"),
+    y(54, 1, 28, "壬午 壬子 辛巳 閏 辛亥 庚辰 庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子"), 
+    y(55, 2, 16, "丙午 乙亥 乙巳 甲戌 甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未"),
+    y(56, 2, 5,  "庚子 庚午 己亥 己巳 戊戌 戊辰 丁酉 丁卯 丙申 丙寅 丙申 乙丑 閏 乙未"), 
+    y(57, 2, 23, "甲子 甲午 癸亥 癸巳 壬戌 壬辰 辛酉 辛卯 庚申 庚寅 己未 己丑"),
+    y(58, 2, 13, "己未 戊子 戊午 丁亥 丁巳 丙戌 丙辰 乙酉 乙卯 甲申 甲寅 癸未"), 
+    y(59, 2, 2,  "癸丑 壬午 壬子 辛巳 辛亥 辛巳 庚戌 庚辰 己酉 閏 己卯 戊申 戊寅 丁未"),
+    y(60, 2, 21, "丁丑 丙午 丙子 乙巳 乙亥 甲辰 甲戌 甲辰 癸酉 癸卯 壬申 壬寅"),
+    y(61, 2, 9,  "辛未 辛丑 庚午 庚子 己巳 己亥 戊辰 戊戌 丁卯 丁酉 丙寅 丙申"),
+    y(62, 1, 30, "丙寅 乙未 乙丑 甲午 甲子 閏 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅 庚申"), 
+    y(63, 2, 17, "己丑 己未 戊子 戊午 戊子 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉 甲寅"),
+    y(64, 2, 7,  "甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 辛亥 庚辰 庚戌 己卯 己酉"), 
+    y(65, 1, 26, "戊寅 閏 戊申 丁丑 丁未 丙子 丙午 乙亥 乙巳 甲戌 甲辰 癸酉 癸卯 癸酉"),
+    y(66, 2, 14, "壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳 戊戌 戊辰 丁酉 丁卯"), 
+    y(67, 2, 3,  "丙申 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳 壬戌 閏 壬辰 辛酉 辛卯"),
+    y(68, 2, 22, "庚申 庚寅 己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉"), 
+    y(69, 2, 11, "乙卯 甲申 甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰 庚戌 庚辰"),
+    y(70, 1, 31, "己酉 己卯 戊申 戊寅 丁未 丁丑 丙午 閏 丙子 乙巳 乙亥 甲辰 甲戌 癸卯"), 
+    y(71, 2, 19, "癸酉 癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子 己巳 己亥 戊辰 戊戌"),
+    y(72, 2, 8,  "丁卯 丁酉 丙寅 丙申 乙丑 乙未 乙丑 甲午 甲子 癸巳 癸亥 壬辰"), 
+    y(73, 1, 28, "壬戌 辛卯 辛酉 閏 庚寅 庚申 己丑 己未 戊子 戊午 戊子 丁巳 丁亥 丙辰"),
+    y(74, 2, 16, "丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 庚戌"), 
+    y(75, 2, 5,  "庚辰 庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午 乙亥 閏 乙巳 甲戌"),
     y(76, 2, 99, ""), 
     y(77, 2, 99, ""),
     y(78, 2, 99, ""), 

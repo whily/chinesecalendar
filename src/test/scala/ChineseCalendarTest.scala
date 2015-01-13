@@ -38,15 +38,21 @@ class ChineseCalendarSpec extends FunSpec with Matchers {
     }
 
     it("Check date.") {
-      toGregorianCalendar("漢平帝元始元年") should be (new GregorianCalendar(1, Calendar.FEBRUARY, 11))
-      toGregorianCalendar("元始元年") should be (new GregorianCalendar(1, Calendar.FEBRUARY, 11))
-      toGregorianCalendar("元始二年") should be (new GregorianCalendar(2, Calendar.FEBRUARY, 1))
-      toGregorianCalendar("元始三年") should be (new GregorianCalendar(3, Calendar.FEBRUARY, 20))
-      //toGregorianCalendar("元始元年一月朔") should be (new GregorianCalendar(1, Calendar.FEBRUARY, 11))
-      //toGregorianCalendar("元始元年二月朔") should be (new GregorianCalendar(1, Calendar.MARCH, 13))
-      //toGregorianCalendar("元始元年二月己丑") should be (new GregorianCalendar(1, Calendar.MARCH, 13))
-      //toGregorianCalendar("元始元年二月己亥") should be (new GregorianCalendar(1, Calendar.MARCH, 23))
-      //toGregorianCalendar("元始元年二月己酉") should be (new GregorianCalendar(1, Calendar.APRIL, 2))
+      toGregorianCalendar("漢平帝元始元年") should be (date(1, 2, 11))
+      toGregorianCalendar("元始元年") should be (date(1, 2, 11))
+      toGregorianCalendar("元始二年") should be (date(2, 2, 1))
+      toGregorianCalendar("元始三年") should be (date(3, 2, 20))
+      toGregorianCalendar("元始元年一月朔") should be (date(1, 2, 11))
+      toGregorianCalendar("元始元年正月朔") should be (date(1, 2, 11))
+      toGregorianCalendar("元始元年正月初二") should be (date(1, 2, 12))
+      toGregorianCalendar("元始元年一月十一") should be (date(1, 2, 21))            
+      toGregorianCalendar("元始元年二月朔") should be (date(1, 3, 13))
+      toGregorianCalendar("元始元年二月十一") should be (date(1, 3, 23))      
+      toGregorianCalendar("元始元年二月己丑") should be (date(1, 3, 13))
+      toGregorianCalendar("元始元年二月己亥") should be (date(1, 3, 23))
+      toGregorianCalendar("元始元年二月己酉") should be (date(1, 4, 2))
+      toGregorianCalendar("元始元年春二月己酉") should be (date(1, 4, 2))
+      toGregorianCalendar("元始元年三月廿一") should be (date(1, 5, 1))              
     }
   }
 }
