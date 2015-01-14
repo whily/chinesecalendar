@@ -43,25 +43,21 @@ object ChineseCalendar {
     val monarchEra = date.monarchEra
 
     val Year(firstDay, months) = eraMap(monarchEra) match {
-      case ((start, table), ad) => table(ad - start + yearOffset)
+      case (table, ad) =>
+        val start = table(0).firstDay.get(Calendar.YEAR) // Year of the 1st entry in the table.
+        table(ad - start + yearOffset)
     }
 
-    var dayDiff = daysFromNewYear(date.month, months)
-    // Find the sexagenary of the 1st day in the matching month. It can
-    // be done in daysFromNewYear(), but implemented below to make
-    // daysFromNewYear() clearer.
-    val Some(Month(_, sexagenary)) = months.find(_.month == date.month)
+    val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
-    if (Sexagenary.contains(dayOfMonth)) {
-      dayDiff += sexagenaryDiff(sexagenary, dayOfMonth)
-    } else {
-      dayDiff += Date.indexOf(dayOfMonth)
-    }
+    val deltaDiff =
+      if (Sexagenary.contains(dayOfMonth)) sexagenaryDiff(sexagenary, dayOfMonth)
+      else Date.indexOf(dayOfMonth)
 
     // Since we modify the day, we need to clone it as the table can
     // be read multiple times.
     val day = clone(firstDay)
-    day.add(Calendar.DAY_OF_MONTH, dayDiff)
+    day.add(Calendar.DAY_OF_MONTH, dayDiff + deltaDiff)
     day
   }
 
@@ -77,14 +73,15 @@ object ChineseCalendar {
     * sexagenary of the 1st day of each month. 
     */
   private def daysFromNewYear(month: String, months: Array[Month]) = {
-    def days(daysDiff: Int, prevSexagenary: String, ms: Array[Month]): Int = {
+    def days(daysDiff: Int, prevSexagenary: String, ms: Array[Month]): (Int, String) = {
       val diff = sexagenaryDiff(prevSexagenary, ms(0).sexagenary)
       // One month can only have 29 or 30 days. Value 0 is for the 1st
       // month in the year.
       assert((diff == 0) || (diff == 29) || (diff == 30))
+
       val updatedDaysDiff =  daysDiff + diff
       if (month == ms(0).month) {
-        updatedDaysDiff
+        (updatedDaysDiff, ms(0).sexagenary)
       } else {
         days(updatedDaysDiff, ms(0).sexagenary, ms.tail)
       }
@@ -261,8 +258,7 @@ object ChineseCalendar {
     Year(date(year, month, dayOfMonth), months(monthStr))
 
   // Information from 中国史历日和中西历日对照表 (方诗铭，方小芬 著)
-  // The first element is the start year for the first entry in the corresponding array.
-  private val ADYears = (1, Array(
+  private val ADYears = Array(
     y(1,  2, 11, "己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌 丙辰 乙酉 乙卯 甲申"), 
     y(2,  2, 1,  "甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰 閏 庚戌 己卯 己酉 戊寅 戊申"),
     y(3,  2, 20, "戊寅 丁未 丁丑 丙午 丙子 乙巳 乙亥 甲辰 甲戌 癸卯 癸酉 壬寅"),
@@ -338,38 +334,38 @@ object ChineseCalendar {
     y(73, 1, 28, "壬戌 辛卯 辛酉 閏 庚寅 庚申 己丑 己未 戊子 戊午 戊子 丁巳 丁亥 丙辰"),
     y(74, 2, 16, "丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 庚戌"), 
     y(75, 2, 5,  "庚辰 庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午 乙亥 閏 乙巳 甲戌"),
-    y(76, 2, 99, ""), 
-    y(77, 2, 99, ""),
-    y(78, 2, 99, ""), 
-    y(79, 2, 99, ""),
-    y(80, 2, 99, ""),
-    y(81, 2, 99, ""),
-    y(82, 2, 99, ""), 
-    y(83, 2, 99, ""),
-    y(84, 2, 99, ""), 
-    y(85, 2, 99, ""),
-    y(86, 2, 99, ""), 
-    y(87, 2, 99, ""),
-    y(88, 2, 99, ""), 
-    y(89, 2, 99, ""),
-    y(90, 2, 99, ""), 
-    y(91, 2, 99, ""),
-    y(92, 2, 99, ""), 
-    y(93, 2, 99, ""),
-    y(94, 2, 99, ""), 
-    y(95, 2, 99, ""),
-    y(96, 2, 99, ""), 
-    y(97, 2, 99, ""),
-    y(98, 2, 99, ""), 
-    y(99, 2, 99, ""),
-    y(100, 2, 99, ""),
-    y(101, 2, 99, ""),
-    y(102, 2, 99, ""), 
-    y(103, 2, 99, ""),
-    y(104, 2, 99, ""), 
-    y(105, 2, 99, ""),
-    y(106, 2, 99, ""), 
-    y(107, 2, 99, ""),
+    y(76, 2, 24, "甲辰 癸酉 癸卯 壬申 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳"), 
+    y(77, 2, 12, "戊戌 戊辰 丁酉 丁卯 丙申 丙寅 乙未 乙丑 乙未 甲子 甲午 癸亥"),
+    y(78, 2, 2,  "癸巳 壬戌 壬辰 辛酉 辛卯 庚申 庚寅 己未 閏 己丑 戊午 戊子 丁巳 丁亥"), 
+    y(79, 2, 21, "丁巳 丙戌 丙辰 乙酉 乙卯 甲申 甲寅 癸未 癸丑 壬午 壬子 辛巳"),
+    y(80, 2, 10, "辛亥 庚辰 庚戌 庚辰 己酉 己卯 戊申 戊寅 丁未 丁丑 丙午 丙子"),
+    y(81, 2, 17, "乙巳 乙亥 甲辰 甲戌 癸卯 閏 癸酉 壬寅 壬申 壬寅 辛未 辛丑 庚午 庚子"),
+    y(82, 2, 7,  "己巳 己亥 戊辰 戊戌 丁卯 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午"), 
+    y(83, 2, 99, "甲子 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅 庚申 己丑 己未 戊子"),
+    y(84, 1, 27, "戊午 閏 丁亥 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子"), 
+    y(85, 2, 13, "辛巳 辛亥 庚辰 庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午"),
+    y(86, 2, 2,  "乙亥 乙巳 甲戌 甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 閏 辛未 庚子 庚午"), 
+    y(87, 2, 21, "己亥 己巳 戊戌 戊辰 丁酉 丁卯 丙申 丙寅 丙申 乙丑 乙未 甲子"),
+    y(88, 2, 11, "甲午 癸亥 癸巳 壬戌 壬辰 辛酉 辛卯 庚申 庚寅 己未 己丑 己未"), 
+    y(89, 1, 30, "戊子 戊午 丁亥 丁巳 丙戌 丙辰 乙酉 閏 乙卯 甲申 甲寅 癸未 癸丑 壬午"),
+    y(90, 2, 18, "壬子 辛巳 辛亥 辛巳 庚戌 庚辰 己酉 己卯 戊申 戊寅 丁未 丁丑"), 
+    y(91, 2, 7,  "丙午 丙子 乙巳 乙亥 甲辰 甲戌 甲辰 癸酉 癸卯 壬申 壬寅 辛未"),
+    y(92, 1, 28, "辛丑 庚午 庚子 閏 己巳 己亥 戊辰 戊戌 丁卯 丁酉 丙寅 丙申 丙寅 乙未"), 
+    y(93, 2, 15, "乙丑 甲午 甲子 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅 庚申 己丑"),
+    y(94, 2, 4,  "己未 戊子 戊午 戊子 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉 甲寅 閏 甲申 癸丑"), 
+    y(95, 2, 23, "癸未 壬子 壬午 辛亥 辛巳 辛亥 庚辰 庚戌 己卯 己酉 戊寅 戊申"),
+    y(96, 2, 12, "丁丑 丁未 丙子 丙午 乙亥 乙巳 甲戌 甲辰 癸酉 癸卯 癸酉 壬寅"), 
+    y(97, 2, 1,  "壬申 辛丑 辛未 庚子 庚午 己亥 己巳 戊戌 閏 戊辰 丁酉 丁卯 丙申 丙寅"),
+    y(98, 2, 20, "丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳 壬戌 壬辰 辛酉 辛卯 庚申"), 
+    y(99, 2, 9,  "庚寅 己未 己丑 戊午 戊子 戊午 丁亥 丁巳 丙戌 丙辰 乙酉 乙卯"),
+    y(100, 1, 29, "甲申 甲寅 癸未 癸丑 壬午 閏 壬子 辛巳 辛亥 庚辰 庚戌 庚辰 己酉 己卯"),
+    y(101, 2, 16, "戊申 戊寅 丁未 丁丑 丙午 丙子 乙巳 乙亥 甲辰 甲戌 癸卯 癸酉"),
+    y(102, 2, 6,  "癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子 己巳 己亥 戊辰 戊戌 丁卯"), 
+    y(103, 1, 26, "丁酉 閏 丙寅 丙申 乙丑 乙未 乙丑 甲午 甲子 癸巳 癸亥 壬辰 壬戌 辛卯"),
+    y(104, 2, 14, "辛酉 庚寅 庚申 己丑 己未 戊子 戊午 戊子 丁巳 丁亥 丙辰 丙戌"), 
+    y(105, 2, 2,  "乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥 閏 辛巳 庚戌 庚辰 庚戌"),
+    y(106, 2, 21, "己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午 乙亥 乙巳 甲戌 甲辰"), 
+    y(107, 2, 10, "癸酉 癸卯 壬申 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳 戊戌"),
     y(108, 2, 99, ""), 
     y(109, 2, 99, ""),
     y(110, 2, 99, ""), 
@@ -662,8 +658,8 @@ object ChineseCalendar {
     y(397, 2, 99, ""),
     y(398, 2, 99, ""), 
     y(399, 2, 99, "")
-  ))
-  private val ShuYears = (223, Array(
+  )
+  private val ShuYears = Array(
     y(223, 2, 99, ""),
     y(224, 2, 99, ""), 
     y(225, 2, 99, ""),
@@ -722,8 +718,8 @@ object ChineseCalendar {
     y(278, 2, 99, ""), 
     y(279, 2, 99, ""),
     y(280, 2, 99, "")
-  ))
-  private val WuYears = (222, Array(
+  )
+  private val WuYears = Array(
     y(222, 2, 99, ""), 
     y(223, 2, 99, ""),
     y(224, 2, 99, ""), 
@@ -766,7 +762,7 @@ object ChineseCalendar {
     y(261, 2, 99, ""),
     y(262, 2, 99, ""), 
     y(263, 2, 99, "")
-  ))  
+  )  
 
   // The 1st element of the value is the corresponding table, while
   // the 2nd element is the start year in Gregorian Calendar.
@@ -913,7 +909,7 @@ object ChineseCalendar {
     (List("", ""), (ADYears, 122)),
     (List("", ""), (ADYears, 122))    
   )
-  private var eraMap = new mutable.HashMap[String, ((Int, Array[Year]), Int)]()
+  private var eraMap = new mutable.HashMap[String, (Array[Year], Int)]()
   for (era <- eraList) {
     val (list, info) = era
     for (e <- list) {
@@ -928,5 +924,49 @@ object ChineseCalendar {
       map(a(i)) = i
     }
     map
+  }
+
+  // Check sanity of year tables.
+  private def checkYearTable(table: Array[Year]): Boolean = {
+    // Calculate the first day of next year based on the first day of
+    // current year and the sum of the sexagenary diffenrence of the
+    // months.
+    var calculatedFirstDay = clone(table(0).firstDay)
+    // The following value is selected to make the code also work for
+    // the first year in the table.
+    var prevSexagenary = table(0).months(0).sexagenary
+
+    for (year <- table) {
+      val Year(firstDay, months) = year
+      if (months.length > 0) { // Ignore placeholders.
+        calculatedFirstDay.add(Calendar.DAY_OF_MONTH,
+          sexagenaryDiff(prevSexagenary, months(0).sexagenary))
+        if (firstDay != calculatedFirstDay) {
+          print(firstDay)
+          return false
+        }
+
+        val (dayDiff, sexagenary) = daysFromNewYear(months.last.month, months)
+        calculatedFirstDay.add(Calendar.DAY_OF_MONTH, dayDiff)
+        prevSexagenary = sexagenary
+      }
+    }
+
+    true
+  }
+
+  // Return a string which represents a pretty print version of Gregorian calendar.
+  private def ppCalendar(date: GregorianCalendar) {
+    (date.get(Calendar.YEAR) + 1).toString + "-" +
+      (date.get(Calendar.MONTH) + 1).toString + "-" +
+      (date.get(Calendar.DAY_OF_MONTH) + 1).toString
+  }
+
+  // Regresssion test to ensure the data tables are correct. Made
+  // public so this can be called from as regression test.
+  def sanityCheck: Boolean = {
+    checkYearTable(ADYears) &&
+    checkYearTable(ShuYears) &&
+    checkYearTable(WuYears)
   }
 }
