@@ -38,6 +38,11 @@ class ChineseCalendarSpec extends FunSpec with Matchers {
     }
 
     it("Check date.") {
+      // Note that the regression tests are for AD 1/2/3, however it
+      // should be noted that GregorianCalendar implemented in Java is
+      // only accurate after March 1, AD 4. See
+      // http://docs.oracle.com/javase/7/docs/api/java/util/GregorianCalendar.html
+      // However the following tests are still OK as leap year is not involved.
       toGregorianCalendar("漢平帝元始元年") should be (date(1, 2, 11))
       toGregorianCalendar("元始元年") should be (date(1, 2, 11))
       toGregorianCalendar("元始二年") should be (date(2, 2, 1))
@@ -52,7 +57,11 @@ class ChineseCalendarSpec extends FunSpec with Matchers {
       toGregorianCalendar("元始元年二月己亥") should be (date(1, 3, 23))
       toGregorianCalendar("元始元年二月己酉") should be (date(1, 4, 2))
       toGregorianCalendar("元始元年春二月己酉") should be (date(1, 4, 2))
-      toGregorianCalendar("元始元年三月廿一") should be (date(1, 5, 1))              
+      toGregorianCalendar("元始元年三月廿一") should be (date(1, 5, 1))
+    }
+
+    it("Check data sanity.") {
+      sanityCheck should be (true)
     }
   }
 }
