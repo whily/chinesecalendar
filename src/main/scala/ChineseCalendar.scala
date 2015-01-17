@@ -14,6 +14,17 @@ package net.whily.chinesecalendar
 import java.util.{Calendar, GregorianCalendar}
 import scala.collection.mutable    // For toMap()
 
+/**
+  * Chinese calendar.
+  * 
+  * @note
+  * Since underlying calendar implementation is only historically
+  * accurate since March 1, AD 4
+  * (http://docs.oracle.com/javase/7/docs/api/java/util/GregorianCalendar.html,
+  * Joda-Time has the same issue with GJChronology. Neither can handle
+  * the leap year problem), it is not advisable to handle date before
+  * that.
+  */
 object ChineseCalendar {
   // For debugging purpose only. Will be removed once code is stable.
   def main(args: Array[String]) {
