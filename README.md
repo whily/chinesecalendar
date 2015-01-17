@@ -1,11 +1,11 @@
 chinesecalendar
 ===============
 
-Chinese calendar is a Scala library for Chinese Calendar.
+Chinesecalendar is a Scala library for Chinese Calendar.
 
 Features to include:
 
-* Chinese Calendar between AD 1 to 33.
+* Chinese Calendar between AD 1 to 317.
 
 For more information about Chinesecalendar, please go to
   <https://github.com/whily/chinesecalendar>
@@ -16,7 +16,7 @@ Wiki pages can be found at
 Development
 -----------
 
-The following tools are needed to build Scasci from source:
+The following tools are needed to build Chinesecalendar from source:
 
 * JDK version 6/7 from <http://www.java.com> if Java is not available. 
   Note that JDK is preinstalled on Mac OS X and available via package manager
