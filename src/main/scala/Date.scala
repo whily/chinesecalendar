@@ -31,7 +31,10 @@ package net.whily.chinesecalendar
   * approach in http://en.wikipedia.org/wiki/Julian_calendar#Leap_year_error. 
   * This class can work correctly back to 2 Jan. 45 CE (the first Julian day).
   * 
-  * class Date is thread-safe and immutable. The equals method should be used for comparison.
+  * Julian/Gregorian cutover date is 15 October 1582.
+  * 
+  * class Date is thread-safe and immutable. The equals method should
+  * be used for comparison.
   * 
   * @param year       1 BCE is input and returnmed as 0, 2 BCE as -1, and so on.
   * @param month      January corresponds to 1, February to 2, and so on.
@@ -39,6 +42,10 @@ package net.whily.chinesecalendar
   *                   for the year and month, otherwise an exception will be thrown.
   */
 case class Date(val year: Int, val month: Int, val dayOfMonth: Int) {
+  // TODO: check validity of dayOfMonth given the year and month.
+  assert ((-44 <= year) && (1 <= month) && (month <= 12)
+    && (1 <= dayOfMonth) && (dayOfMonth <= 31))
+
   /** Equals method. */
   override def equals(other: Any): Boolean = other match {
     case that: Date => year == that.year && month == that.month &&
@@ -47,11 +54,57 @@ case class Date(val year: Int, val month: Int, val dayOfMonth: Int) {
   }
 
   /** Checks if the year is a leap year. */
-  def isLeapYear(): Boolean = false
+  def isLeapYear(): Boolean = {
+    if (year <= 0) {
+      if (LeapYearsBCE.contains(year)) true
+      else false
+    } else if (year <= 1582) { // Julian calendar.
+      if (year == 4) false
+      else if (year % 4 == 0) true
+      else false
+    } else { // Gregorian Calendar
+      if (year % 400 == 0) true
+      else if (year % 100 == 0) false
+      else if (year % 4 == 0) true
+      else false
+    }
+  }
+
+  /** Returns the first day of next month. */
+  private def firstDayNextMonth() = {
+    if (month == 12) Date(year + 1, 1, 1)
+    else Date(year, month + 1, 1)
+  }
 
   /** Returns a copy of this Date with the specified number of days added. */
-  def plusDays(daysToAdd: Int): Date = this
+  def plusDays(daysToAdd: Int): Date = {
+    // Current implementation is not efficient if daysToAdd is large
+    // (e.g. when daysToAdd corresponds to many years). 
+    assert(daysToAdd >= 0)
+
+    // Handle Julian/Gregorian clalendar cutover. In October, 4
+    // October 1582 was followed by 15 October 1582.
+    if ((year == 1582) && (month == 10) && (dayOfMonth <= 4) && (dayOfMonth + daysToAdd > 4)) {
+      return Date(1582, 10, 15).plusDays(daysToAdd - (5 - dayOfMonth))
+    }
+
+    val monthDays =
+      if (isLeapYear()) MonthDaysLeap(month - 1)
+      else MonthDaysNonLeap(month - 1)
+
+    if (dayOfMonth + daysToAdd <= monthDays) {
+      Date(year, month, dayOfMonth + daysToAdd)
+    } else
+      firstDayNextMonth.plusDays(daysToAdd - (monthDays - dayOfMonth) - 1)
+  }
 
   /** Output this date as a string, for example 1492-10-12. */
   override def toString(): String = "" + year + "-" + month + "-" + dayOfMonth
+
+  // Leap years in BCE, according to Scaliger. Assume BCE 1 is
+  // represented as 0. 
+  private val LeapYearsBCE = Set(-41, -38, -35, -32, -29, -26, -23, -20, -17, -14, -11, -8)
+
+  private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)    
 }

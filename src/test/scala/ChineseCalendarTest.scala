@@ -10,7 +10,6 @@
  */
 
 import net.whily.chinesecalendar.ChineseCalendar._
-import java.util.{Calendar, GregorianCalendar}
 import org.scalatest._
  
 class ChineseCalendarSpec extends FunSpec with Matchers {
@@ -38,26 +37,24 @@ class ChineseCalendarSpec extends FunSpec with Matchers {
     }
 
     it("Check date.") {
-      // Note that the regression tests are for CE 1/2/3, however it
-      // should be noted that GregorianCalendar implemented in Java is
-      // only accurate after March 1, CE 4. See
-      // http://docs.oracle.com/javase/7/docs/api/java/util/GregorianCalendar.html
-      // However the following tests are still OK as leap year is not involved.
-      toGregorianCalendar("漢平帝元始元年") should be (date(1, 2, 11))
-      toGregorianCalendar("元始元年") should be (date(1, 2, 11))
-      toGregorianCalendar("元始二年") should be (date(2, 2, 1))
-      toGregorianCalendar("元始三年") should be (date(3, 2, 20))
-      toGregorianCalendar("元始元年一月朔") should be (date(1, 2, 11))
-      toGregorianCalendar("元始元年正月朔") should be (date(1, 2, 11))
-      toGregorianCalendar("元始元年正月初二") should be (date(1, 2, 12))
-      toGregorianCalendar("元始元年一月十一") should be (date(1, 2, 21))            
-      toGregorianCalendar("元始元年二月朔") should be (date(1, 3, 13))
-      toGregorianCalendar("元始元年二月十一") should be (date(1, 3, 23))      
-      toGregorianCalendar("元始元年二月己丑") should be (date(1, 3, 13))
-      toGregorianCalendar("元始元年二月己亥") should be (date(1, 3, 23))
-      toGregorianCalendar("元始元年二月己酉") should be (date(1, 4, 2))
-      toGregorianCalendar("元始元年春二月己酉") should be (date(1, 4, 2))
-      toGregorianCalendar("元始元年三月廿一") should be (date(1, 5, 1))
+      toDate("漢平帝元始元年") should be (date(1, 2, 11))
+      toDate("元始元年") should be (date(1, 2, 11))
+      toDate("元始二年") should be (date(2, 2, 1))
+      toDate("元始三年") should be (date(3, 2, 20))
+      toDate("元始元年一月朔") should be (date(1, 2, 11))
+      toDate("元始元年正月朔") should be (date(1, 2, 11))
+      toDate("元始元年正月初二") should be (date(1, 2, 12))
+      toDate("元始元年一月十一") should be (date(1, 2, 21))            
+      toDate("元始元年二月朔") should be (date(1, 3, 13))
+      toDate("元始元年二月十一") should be (date(1, 3, 23))      
+      toDate("元始元年二月己丑") should be (date(1, 3, 13))
+      toDate("元始元年二月己亥") should be (date(1, 3, 23))
+      toDate("元始元年二月己酉") should be (date(1, 4, 2))
+      toDate("元始元年春二月己酉") should be (date(1, 4, 2))
+      toDate("元始元年三月廿一") should be (date(1, 5, 1))
+      // This actually tests that underlying calendar assumes that
+      // year 4 CE is not a leap year.
+      toDate("元始四年二月十一") should be (date(4, 3, 20))      
     }
 
     it("Check data sanity.") {
