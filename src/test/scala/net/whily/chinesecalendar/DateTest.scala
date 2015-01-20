@@ -13,7 +13,7 @@ import net.whily.chinesecalendar.Date._
 import net.whily.chinesecalendar.ChineseCalendar._
 import org.scalatest._
  
-class DateSpec extends FunSpec with Matchers {
+class DateTest extends FunSpec with Matchers {
   describe("Test Date calculation") {
     it("Check isLeapyear()") {
       date(-41, 3, 9) shouldBe 'isLeapYear

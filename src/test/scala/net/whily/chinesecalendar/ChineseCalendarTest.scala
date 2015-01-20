@@ -12,7 +12,7 @@
 import net.whily.chinesecalendar.ChineseCalendar._
 import org.scalatest._
  
-class ChineseCalendarSpec extends FunSpec with Matchers {
+class ChineseCalendarTest extends FunSpec with Matchers {
   describe("Test Chinese Calendar calculation") {
     it("Check months()") {
       // It is interesting that I should use "shoulbe be ===" to test two arrays. 
