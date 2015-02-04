@@ -243,6 +243,10 @@ object ChineseCalendar {
     new Date(year, month, dayOfMonth)
 
   // Information from 中国史历日和中西历日对照表 (方诗铭，方小芬 著)
+  // It's possible that different calendars are used in the same time,
+  // but they may share the same calendar for some time.
+  // Example: 魏文帝黃初 and 吳大帝黃武
+  private val ce222 = y(222, 1, 30, "丙寅 丙申 乙丑 乙未 甲子 甲午 閏 癸亥 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉")
   private val CEYears = Array(
     y(1,  2, 11, "己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌 丙辰 乙酉 乙卯 甲申"), 
     y(2,  2, 1,  "甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰 閏 庚戌 己卯 己酉 戊寅 戊申"),
@@ -465,7 +469,7 @@ object ChineseCalendar {
     y(219, 2, 3,  "甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰 庚戌 己卯 閏 己酉 己卯 戊申"),
     y(220, 2, 22, "戊寅 丁未 丁丑 丙午 丙子 乙巳 乙亥 甲辰 甲戌 癸卯 癸酉 壬寅"), 
     y(221, 2, 10, "壬申 辛丑 辛未 辛丑 庚午 庚子 己巳 己亥 戊辰 戊戌 丁卯 丁酉"),
-    y(222, 1, 30, "丙寅 丙申 乙丑 乙未 甲子 甲午 閏 癸亥 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉"), 
+    ce222,
     y(223, 2, 18, "庚寅 庚申 己丑 己未 戊子 戊午 丁亥 丁巳 丙戌 丙辰 丙戌 乙卯"),
     y(224, 2, 8,  "乙酉 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 庚戌 庚辰 己酉"), 
     y(225, 1, 27, "己卯 戊申 戊寅 閏 戊申 丁丑 丁未 丙子 丙午 乙亥 乙巳 甲戌 甲辰 癸酉"),
@@ -845,11 +849,11 @@ object ChineseCalendar {
     y(599, 2, 28, "")    
   )
   private val ShuYears = Array(
-    y(223, 2, 28, ""),
-    y(224, 2, 28, ""), 
-    y(225, 2, 28, ""),
-    y(226, 2, 28, ""), 
-    y(227, 2, 28, ""),
+    y(223, 2, 18, "庚寅 己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉 乙卯"),
+    y(224, 2, 7,  "甲申 甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰 庚戌 己卯 己酉"),
+    y(225, 1, 26, "戊寅 戊申 戊寅 丁未 閏 丁丑 丙午 丙子 乙巳 乙亥 甲辰 甲戌 癸卯 癸酉"),
+    y(226, 2, 14, "壬寅 壬申 辛丑 辛未 庚子 庚午 庚子 己巳 己亥 戊辰 戊戌 丁卯"), 
+    y(227, 2, 4,  "丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳 壬戌 壬辰 壬戌 閏 辛卯"),    
     y(228, 2, 28, ""), 
     y(229, 2, 28, ""),
     y(230, 2, 28, ""), 
@@ -905,7 +909,7 @@ object ChineseCalendar {
     y(280, 2, 28, "")
   )
   private val WuYears = Array(
-    y(222, 2, 28, ""), 
+    ce222,
     y(223, 2, 28, ""),
     y(224, 2, 28, ""), 
     y(225, 2, 28, ""),
@@ -997,6 +1001,8 @@ object ChineseCalendar {
     (List("漢獻帝建安"), (CEYears, 196)),  // Also used by 段正明, although exact duration unknown.
     (List("漢獻帝延康"), (CEYears, 220)),
     (List("魏文帝黃初", "黃初"), (CEYears, 220)),
+    (List("蜀昭烈帝章武", "章武"), (CEYears, 221)),
+    (List("吳大帝黃武", "黃武"), (WuYears, 223)),        
     (List("魏明帝太和"), (CEYears, 227)),
     (List("魏明帝青龍"), (CEYears, 233)),
     (List("魏明帝景初", "景初"), (CEYears, 237)),
