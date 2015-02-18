@@ -70,32 +70,59 @@ case class Date(val year: Int, val month: Int, val dayOfMonth: Int) {
     }
   }
 
+  /** Returns the number of days in the month. */
+  def monthDays() = {
+    if (isLeapYear()) MonthDaysLeap(month - 1)
+    else MonthDaysNonLeap(month - 1)
+  }
+
   /** Returns the first day of next month. */
   private def firstDayNextMonth() = {
     if (month == 12) Date(year + 1, 1, 1)
     else Date(year, month + 1, 1)
   }
 
-  /** Returns a copy of this Date with the specified number of days added. */
+  /** Returns the last day of previous month. */
+  private def lastDayPreviousMonth() = {
+    if (month == 1) Date(year - 1, 12, 31)
+    else Date(year, month - 1, Date(year, month - 1, 1).monthDays())
+  }
+
+  /** 
+    * Returns a copy of this Date with the specified number of days added. 
+    * 
+    * @param daysToAdd can be either positive or negative.
+    */
   def plusDays(daysToAdd: Int): Date = {
     // Current implementation is not efficient if daysToAdd is large
-    // (e.g. when daysToAdd corresponds to many years). 
-    assert(daysToAdd >= 0)
+    // (e.g. when daysToAdd corresponds to many years).
+
+    if (daysToAdd == 0)
+      return this
 
     // Handle Julian/Gregorian clalendar cutover. In October, 4
     // October 1582 was followed by 15 October 1582.
-    if ((year == 1582) && (month == 10) && (dayOfMonth <= 4) && (dayOfMonth + daysToAdd > 4)) {
-      return Date(1582, 10, 15).plusDays(daysToAdd - (5 - dayOfMonth))
+    if ((year == 1582) && (month == 10)) {
+      if ((dayOfMonth <= 4) && (dayOfMonth + daysToAdd > 4)) {
+        return Date(1582, 10, 15).plusDays(daysToAdd - (5 - dayOfMonth))
+      } else if ((dayOfMonth >= 15) && (dayOfMonth + daysToAdd < 15)) {
+        return Date(1582, 10, 4).plusDays(daysToAdd - (14 - dayOfMonth))
+      }
     }
 
-    val monthDays =
-      if (isLeapYear()) MonthDaysLeap(month - 1)
-      else MonthDaysNonLeap(month - 1)
-
-    if (dayOfMonth + daysToAdd <= monthDays) {
-      Date(year, month, dayOfMonth + daysToAdd)
-    } else
-      firstDayNextMonth.plusDays(daysToAdd - (monthDays - dayOfMonth) - 1)
+    if (daysToAdd > 0) {
+      if (dayOfMonth + daysToAdd <= monthDays()) {
+        Date(year, month, dayOfMonth + daysToAdd)
+      } else {
+        firstDayNextMonth.plusDays(daysToAdd - (monthDays() - dayOfMonth) - 1)
+      }
+    } else {
+      if (dayOfMonth + daysToAdd >= 1) {
+        Date(year, month, dayOfMonth + daysToAdd)
+      } else {
+        lastDayPreviousMonth.plusDays(daysToAdd + dayOfMonth)
+      }
+    }
   }
 
   /** Output this date as a string, for example 1492-10-12. */
