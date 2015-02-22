@@ -1,5 +1,5 @@
 /**
- * Test cases for Date.scala.
+ * Test cases for HistDate.scala.
  * 
  * @author  Yujian Zhang <yujian{dot}zhang[at]gmail(dot)com>
  *
@@ -9,7 +9,7 @@
  * Copyright (C) 2015 Yujian Zhang
  */
 
-import net.whily.chinesecalendar.Date._
+import net.whily.chinesecalendar.HistDate._
 import net.whily.chinesecalendar.ChineseCalendar._
 import org.scalatest._
  

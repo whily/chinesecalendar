@@ -41,14 +41,14 @@ package net.whily.chinesecalendar
   * @param dayOfMonth the 1st day as 1, the 2nd day as 2, and so on. It must be valid
   *                   for the year and month, otherwise an exception will be thrown.
   */
-case class Date(val year: Int, val month: Int, val dayOfMonth: Int) {
+case class HistDate(val year: Int, val month: Int, val dayOfMonth: Int) {
   // TODO: check validity of dayOfMonth given the year and month.
   assert ((-44 <= year) && (1 <= month) && (month <= 12)
     && (1 <= dayOfMonth) && (dayOfMonth <= 31))
 
   /** Equals method. */
   override def equals(other: Any): Boolean = other match {
-    case that: Date => year == that.year && month == that.month &&
+    case that: HistDate => year == that.year && month == that.month &&
       dayOfMonth == that.dayOfMonth
     case _ => false
   }
@@ -78,22 +78,22 @@ case class Date(val year: Int, val month: Int, val dayOfMonth: Int) {
 
   /** Returns the first day of next month. */
   private def firstDayNextMonth() = {
-    if (month == 12) Date(year + 1, 1, 1)
-    else Date(year, month + 1, 1)
+    if (month == 12) HistDate(year + 1, 1, 1)
+    else HistDate(year, month + 1, 1)
   }
 
   /** Returns the last day of previous month. */
   private def lastDayPreviousMonth() = {
-    if (month == 1) Date(year - 1, 12, 31)
-    else Date(year, month - 1, Date(year, month - 1, 1).monthDays())
+    if (month == 1) HistDate(year - 1, 12, 31)
+    else HistDate(year, month - 1, HistDate(year, month - 1, 1).monthDays())
   }
 
   /** 
-    * Returns a copy of this Date with the specified number of days added. 
+    * Returns a copy of this HistDate with the specified number of days added. 
     * 
     * @param daysToAdd can be either positive or negative.
     */
-  def plusDays(daysToAdd: Int): Date = {
+  def plusDays(daysToAdd: Int): HistDate = {
     // Current implementation is not efficient if daysToAdd is large
     // (e.g. when daysToAdd corresponds to many years).
 
@@ -104,21 +104,21 @@ case class Date(val year: Int, val month: Int, val dayOfMonth: Int) {
     // October 1582 was followed by 15 October 1582.
     if ((year == 1582) && (month == 10)) {
       if ((dayOfMonth <= 4) && (dayOfMonth + daysToAdd > 4)) {
-        return Date(1582, 10, 15).plusDays(daysToAdd - (5 - dayOfMonth))
+        return HistDate(1582, 10, 15).plusDays(daysToAdd - (5 - dayOfMonth))
       } else if ((dayOfMonth >= 15) && (dayOfMonth + daysToAdd < 15)) {
-        return Date(1582, 10, 4).plusDays(daysToAdd - (14 - dayOfMonth))
+        return HistDate(1582, 10, 4).plusDays(daysToAdd - (14 - dayOfMonth))
       }
     }
 
     if (daysToAdd > 0) {
       if (dayOfMonth + daysToAdd <= monthDays()) {
-        Date(year, month, dayOfMonth + daysToAdd)
+        HistDate(year, month, dayOfMonth + daysToAdd)
       } else {
         firstDayNextMonth.plusDays(daysToAdd - (monthDays() - dayOfMonth) - 1)
       }
     } else {
       if (dayOfMonth + daysToAdd >= 1) {
-        Date(year, month, dayOfMonth + daysToAdd)
+        HistDate(year, month, dayOfMonth + daysToAdd)
       } else {
         lastDayPreviousMonth.plusDays(daysToAdd + dayOfMonth)
       }

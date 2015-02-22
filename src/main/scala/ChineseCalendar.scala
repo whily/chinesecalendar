@@ -38,7 +38,7 @@ object ChineseCalendar {
     else z
   }
 
-  def toDate(date: ChineseDate): Date = {
+  def toDate(date: ChineseDate): HistDate = {
     val year = date.year.dropRight(1)   // Remove 年
     val yearOffset = Numbers.indexOf(year) - 1
     val monarchEra = date.monarchEra
@@ -53,7 +53,7 @@ object ChineseCalendar {
     val dayOfMonth = date.dayOfMonth
     val deltaDiff =
       if (Sexagenary.contains(dayOfMonth)) sexagenaryDiff(sexagenary, dayOfMonth)
-      else Date.indexOf(dayOfMonth)
+      else Dates.indexOf(dayOfMonth)
 
     firstDay.plusDays(dayDiff + deltaDiff)
   }
@@ -98,13 +98,13 @@ object ChineseCalendar {
     * @param dayOfMonth the grammar is:
     *        dayOfMonth = Sexagenary|朔|初一|初二|...|初九|初十|十一|十二|...|十九|二十|廿一|廿二|...|廿九|三十|
     */  
-  def toDate(date: String): Date = {
+  def toDate(date: String): HistDate = {
     // An example of string with minimum length: 黃初元年
     assert(date.length >= 4)  
     toDate(parseDate(date))
   }
 
-  def fromDate(date: Date): String = {
+  def fromDate(date: HistDate): String = {
     ""
   }
 
@@ -121,7 +121,7 @@ object ChineseCalendar {
       endIndex -= 1
     } else {
       val t = s.takeRight(2)
-      if (Sexagenary.contains(t) || Date.contains(t)) {
+      if (Sexagenary.contains(t) || Dates.contains(t)) {
         endIndex -= 2
         val k = s.lastIndexOf("月")
         assert(k + 1 == endIndex)
@@ -196,7 +196,7 @@ object ChineseCalendar {
     "五十", "五十一", "五十二", "五十三", "五十四", "五十五", "五十六", "五十七", "五十八", "五十九",
     "六十", "六十一", "六十二", "六十三", "六十四", "六十五", "六十六", "六十七", "六十八", "六十九"
   )
-  private val Date = Array(
+  private val Dates = Array(
     "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
     "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
     "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
@@ -233,14 +233,14 @@ object ChineseCalendar {
     * @param firstDay   the first day in Julian/Gregorian Calendar.
     * @param months     the 12 or 13 months in the year
     */
-  private case class Year(firstDay: Date, months: Array[Month])
+  private case class Year(firstDay: HistDate, months: Array[Month])
 
   /** Return object Year given year, month, dayOfMonth, months. */
   private def y(year: Int, month: Int, dayOfMonth: Int, monthStr: String) =
     Year(date(year, month, dayOfMonth), months(monthStr))
 
   def date(year: Int, month: Int, dayOfMonth: Int) =
-    new Date(year, month, dayOfMonth)
+    new HistDate(year, month, dayOfMonth)
 
   // Information from 中国史历日和中西历日对照表 (方诗铭，方小芬 著)
   // It's possible that different calendars are used in the same time,
