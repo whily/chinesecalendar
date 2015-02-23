@@ -43,8 +43,10 @@ package net.whily.chinesecalendar
   */
 case class HistDate(val year: Int, val month: Int, val dayOfMonth: Int) {
   // TODO: check validity of dayOfMonth given the year and month.
-  assert ((-44 <= year) && (1 <= month) && (month <= 12)
-    && (1 <= dayOfMonth) && (dayOfMonth <= 31))
+  if (!((-44 <= year) && (1 <= month) && (month <= 12)
+    && (1 <= dayOfMonth) && (dayOfMonth <= 31))) {
+    throw new IllegalArgumentException("HistDate: illegal arguments.")
+  }
 
   /** Equals method. */
   override def equals(other: Any): Boolean = other match {

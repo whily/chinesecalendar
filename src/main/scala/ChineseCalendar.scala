@@ -68,7 +68,9 @@ object ChineseCalendar {
       val diff = sexagenaryDiff(prevSexagenary, ms(0).sexagenary)
       // One month can only have 29 or 30 days. Value 0 is for the 1st
       // month in the year.
-      assert((diff == 0) || (diff == 29) || (diff == 30))
+      if ((diff != 0) && (diff != 29) && (diff != 30)) {
+        throw new RuntimeException("Month length is incorrect: " + months)
+      }
 
       val updatedDaysDiff =  daysDiff + diff
       if (month == ms(0).month) {
@@ -100,7 +102,9 @@ object ChineseCalendar {
     */  
   def toDate(date: String): HistDate = {
     // An example of string with minimum length: 黃初元年
-    assert(date.length >= 4)  
+    if (date.length < 4) {
+      throw new IllegalArgumentException("toDate(): illegal argument date: " + date)
+    }
     toDate(parseDate(date))
   }
 
@@ -124,7 +128,9 @@ object ChineseCalendar {
       if (Sexagenary.contains(t) || Dates.contains(t)) {
         endIndex -= 2
         val k = s.lastIndexOf("月")
-        assert(k + 1 == endIndex)
+        if (k + 1 != endIndex) {
+          throw new IllegalArgumentException("parseDate(): illegal argument s: " + s)
+        }
         dayOfMonth = t
       }
     }
@@ -137,7 +143,9 @@ object ChineseCalendar {
     var endIndex = s.length
     if (s.endsWith("月")) {
       val k = s.lastIndexOf("年")
-      assert(k != -1)
+      if (k == -1) {
+        throw new IllegalArgumentException("parseMonth(): illegal argument s: " + s)
+      }
       endIndex = k + 1
       if (Array("春", "夏", "秋", "冬").contains(s.substring(k + 1, k + 2))) {
         month = s.substring(k + 2)
@@ -152,7 +160,9 @@ object ChineseCalendar {
   }
 
   private def parseYear(s: String, month: String, dayOfMonth: String): ChineseDate = {
-    assert(s.takeRight(1) == "年")
+    if (s.takeRight(1) != "年") {
+      throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
+    }
 
     var t = s.dropRight(1)
 
@@ -165,12 +175,16 @@ object ChineseCalendar {
         if (year == "元") {
           year = "一"
         }
-        assert(Numbers.contains(year))
+        if (!Numbers.contains(year)) {
+          throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
+        }
       }
     }
 
     val monarchEra = t.dropRight(year.length)
-    assert(eraMap.contains(monarchEra))
+    if (!eraMap.contains(monarchEra)) {
+      throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
+    }
 
     ChineseDate(monarchEra, year + "年", month, dayOfMonth)
   }
