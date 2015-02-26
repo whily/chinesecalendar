@@ -19,21 +19,45 @@ import scala.collection.mutable
 object Chinese {
   /** Convert Simplified Chinese to Traditional Chinese. */
   def Simplified2Traditional(s: String) =
-    s.map { c =>
-      if (Simplified2TraditionalCharacterMap.contains(c))
-        Simplified2TraditionalCharacterMap(c)
-      else
-        c
-    }
+    ChineseConvCore(s, Simplified2TraditionalMaps)
 
-  /** Convert Traditional Chinese to Simplified Chinese. */
+  /** Convert Traditional Chinese to Simplified Chinese. */  
   def Traditional2Simplified(s: String) =
-    s.map { c =>
-      if (Traditional2SimplifiedCharacterMap.contains(c))
-        Traditional2SimplifiedCharacterMap(c)
-      else
-        c
-    }    
+    ChineseConvCore(s, Traditional2SimplifiedMaps)    
+
+  def ChineseConvCore(s: String, maps: (mutable.HashMap[Char, Char], mutable.HashMap[String, String])) = {
+    val (characterMap, wordMap) = maps
+    val result = s.toArray
+    var index = 0
+    while (index < s.length) {
+      var wordMatch = false
+      var wordLength = maxWordLength
+      if (s.length - index < wordLength) {
+        wordLength = s.length - index
+      }
+      while ((wordLength >= 2) && !wordMatch) {
+        val w = s.substring(index, index + wordLength)
+        if (wordMap.contains(w)) {
+          val v = wordMap(w)
+          for (i <- Range(0, wordLength)) {
+            result(index + i) = v(i)
+          }
+          wordMatch = true
+          index += wordLength
+        }
+        wordLength -= 1
+      }
+      if (!wordMatch) {
+        val c = s(index)
+        if (characterMap.contains(c)) {
+          result(index) = characterMap(c)
+        }
+        index += 1
+      }
+        
+    }
+    result.mkString("")
+  }  
 
   /* 简化字总表（1986年新版）. 
    * 
@@ -343,10 +367,20 @@ object Chinese {
   }
 
   private var Simplified2TraditionalWordMap = new mutable.HashMap[String, String]()
-  private var Traditional2SimplifiedWordMap = new mutable.HashMap[String, String]()  
+  private var Traditional2SimplifiedWordMap = new mutable.HashMap[String, String]()
+  private var maxWordLength = 2
   for (wordPair <- WordTable) {
     val (simplified, traditional) = wordPair
+    assert(simplified.length == traditional.length)
     Simplified2TraditionalWordMap(simplified) = traditional
     Traditional2SimplifiedWordMap(traditional) = simplified
+    if (simplified.length > maxWordLength) {
+      maxWordLength = simplified.length
+    }
   }
+
+  private val Simplified2TraditionalMaps =
+    (Simplified2TraditionalCharacterMap, Simplified2TraditionalWordMap)
+  private val Traditional2SimplifiedMaps =
+    (Traditional2SimplifiedCharacterMap, Traditional2SimplifiedWordMap)
 }
