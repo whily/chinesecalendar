@@ -34,6 +34,11 @@ class ChineseCalendarTest extends FunSpec with Matchers {
                Month("六月", "丙子"), Month("七月", "丙午"), Month("八月", "乙亥"), 
                Month("九月", "乙巳"), Month("十月", "甲戌"), Month("十一月", "甲辰"), 
                Month("十二月", "癸酉")))
+      months("己亥 己巳 進 戊戌 戊辰 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午") should be ===
+      (Array(Month("一月", "己亥"), Month("二月", "己巳"), Month("四月", "戊戌"),
+             Month("五月", "戊辰"), Month("六月", "丁酉"), Month("七月", "丙寅"),
+             Month("八月", "丙申"), Month("九月", "乙丑"), Month("十月", "乙未"),
+             Month("十一月", "甲子"), Month("十二月", "甲午")))      
     }
 
     it("Check date.") {
@@ -54,7 +59,9 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("元始元年三月廿一") should be (date(1, 5, 1))
       // This actually tests that underlying calendar assumes that
       // year 4 CE is not a leap year.
-      toDate("元始四年二月十一") should be (date(4, 3, 20))      
+      toDate("元始四年二月十一") should be (date(4, 3, 20))
+
+      toDate("景初元年四月初一") should be (date(237, 4, 13))
     }
 
     it("Check data sanity.") {

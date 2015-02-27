@@ -216,6 +216,7 @@ object ChineseCalendar {
     "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
   )
   private val LeapMonth = "閏"
+  private val ForwardMonth = "進"
 
   /** Return an array of months by parsing the string S, in the format of
     *   sexageneray1 sexagenary2 ...
@@ -227,15 +228,16 @@ object ChineseCalendar {
     var result: List[Month] = Nil
     var prefix = ""
     for (word <- words) {
-      if (word != LeapMonth) {
-        if (prefix == LeapMonth)
-          monthIndex -= 1
+      word match {
+        case LeapMonth => prefix = LeapMonth
+        case ForwardMonth => monthIndex += 1
+        case _ =>
+          if (prefix == LeapMonth)
+            monthIndex -= 1
 
-        result = Month(prefix + Numbers(monthIndex) + "月", word) :: result
-        prefix = ""
-        monthIndex += 1
-      } else {
-        prefix = LeapMonth
+          result = Month(prefix + Numbers(monthIndex) + "月", word) :: result
+          prefix = ""
+          monthIndex += 1
       }
     }
     result.reverse.toArray
@@ -268,12 +270,12 @@ object ChineseCalendar {
   private val ce227 = y(227, 2, 4,  "丁酉 丁卯 丙申 丙寅 乙未 乙丑 甲午 甲子 癸巳 癸亥 癸巳 壬戌 閏 壬辰")
   private val ce228 = y(228, 2, 23, "辛酉 辛卯 庚申 庚寅 己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌")
   private val ce229 = y(229, 2, 11, "乙卯 乙酉 乙卯 甲申 甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰")    
-  private val ce230 = y(230, 2, 1,  "庚戌 己卯 己酉") 
-  private val ce231 = y(231, 2, 20, "")
-  private val ce232 = y(232, 2, 9,  "") 
-  private val ce233 = y(233, 1, 28, "")
-  private val ce234 = y(234, 2, 16, "")
-  private val ce235 = y(235, 2, 6,  "")
+  private val ce230 = y(230, 2, 1,  "庚戌 己卯 己酉 戊寅 戊申 戊寅 丁未 丁丑 丙午 閏 丙子 乙巳 乙亥 甲辰") 
+  private val ce231 = y(231, 2, 20, "甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 庚子 己巳 己亥")
+  private val ce232 = y(232, 2, 9,  "戊辰 戊戌 丁卯 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳") 
+  private val ce233 = y(233, 1, 28, "壬戌 壬辰 壬戌 辛卯 辛酉 閏 庚寅 庚申 己丑 己未 戊子 戊午 丁亥 丁巳")
+  private val ce234 = y(234, 2, 16, "丙戌 丙辰 乙酉 乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥")
+  private val ce235 = y(235, 2, 6,  "辛巳 庚戌 庚辰 己酉 己卯 戊申 戊寅 丁未 丁丑 丁未 丙子 丙午")
   private val ce236 = y(236, 1, 26, "乙亥 閏 乙巳 甲戌 甲辰 癸酉 癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子 庚午")  
   private val CEYears = Array(
     y(1,  2, 11, "己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌 丙辰 乙酉 乙卯 甲申"), 
@@ -499,8 +501,8 @@ object ChineseCalendar {
     y(221, 2, 10, "壬申 辛丑 辛未 辛丑 庚午 庚子 己巳 己亥 戊辰 戊戌 丁卯 丁酉"),
     ce222, ce223, ce224, ce225, ce226, ce227, ce228, ce229, ce230, ce231, ce232,
     ce233, ce234, ce235, ce236,
-    y(237, 2, 13, ""),
-    y(238, 2, 2,  ""), 
+    y(237, 2, 13, "己亥 己巳 進 戊戌 戊辰 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午"), // 三月，魏改元“景初”，建丑，以三月为四月，十二月为正月
+    y(238, 1, 3,  "癸亥"), 
     y(239, 2, 21, ""),
     y(240, 2, 10, ""), 
     y(241, 1, 29, ""),
@@ -919,14 +921,14 @@ object ChineseCalendar {
     y(226, 2, 14, "壬寅 壬申 辛丑 辛未 庚子 庚午 庚子 己巳 己亥 戊辰 戊戌 丁卯"), 
     y(227, 2, 4,  "丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳 壬戌 壬辰 壬戌 閏 辛卯"),    
     y(228, 2, 23, "辛酉 庚寅 庚申 己丑 己未 戊子 戊午 丁亥 丁巳 丙戌 丙辰 乙酉"),     
-    // y(229, 2, 28, "乙卯 甲申 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 庚戌 庚辰"),
-    // y(230, 2, 28, "己酉 己卯 戊申 戊寅"), 
-    y(231, 2, 28, ""),
-    y(232, 2, 28, ""), 
-    y(233, 2, 28, ""),
-    y(234, 2, 28, ""), 
-    y(235, 2, 28, ""),
-    y(236, 2, 28, ""), 
+    y(229, 2, 11, "乙卯 甲申 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 庚戌 庚辰"),
+    y(230, 1, 31, "己酉 己卯 戊申 戊寅 丁未 丁丑 丁未 丙子 閏 丙午 乙亥 乙巳 甲戌 甲辰"),
+    y(231, 2, 19, "癸酉 癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子 己巳 己亥 己巳 戊戌"),
+    y(232, 2, 9,  "戊辰 丁酉 丁卯 丙申 丙寅 乙未 乙丑 甲午 甲子 癸巳 癸亥 壬辰"),
+    y(233, 1, 28, "壬戌 辛卯 辛酉 辛卯 庚申 閏 庚寅 己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 "),
+    y(234, 2, 16, "丙戌 乙卯 乙酉 甲寅 甲申 甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥"),
+    y(235, 2, 5,  "庚辰 庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午 丙子 乙巳"),
+    y(236, 1, 26, "乙亥 甲辰 閏 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳"),
     y(237, 2, 28, ""),
     y(238, 2, 28, ""), 
     y(239, 2, 28, ""),
