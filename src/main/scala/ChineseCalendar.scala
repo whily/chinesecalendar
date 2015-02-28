@@ -217,6 +217,7 @@ object ChineseCalendar {
   )
   private val LeapMonth = "閏"
   private val ForwardMonth = "進"
+  private val LaterMonth = "後"  
 
   /** Return an array of months by parsing the string S, in the format of
     *   sexageneray1 sexagenary2 ...
@@ -230,9 +231,10 @@ object ChineseCalendar {
     for (word <- words) {
       word match {
         case LeapMonth => prefix = LeapMonth
+        case LaterMonth => prefix = LaterMonth
         case ForwardMonth => monthIndex += 1
         case _ =>
-          if (prefix == LeapMonth)
+          if ((prefix == LeapMonth) || (prefix == LaterMonth))
             monthIndex -= 1
 
           result = Month(prefix + Numbers(monthIndex) + "月", word) :: result
@@ -502,8 +504,8 @@ object ChineseCalendar {
     ce222, ce223, ce224, ce225, ce226, ce227, ce228, ce229, ce230, ce231, ce232,
     ce233, ce234, ce235, ce236,
     y(237, 2, 13, "己亥 己巳 進 戊戌 戊辰 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午"), // 三月，魏改元“景初”，建丑，以三月为四月，十二月为正月
-    y(238, 1, 3,  "癸亥"), 
-    y(239, 2, 21, ""),
+    y(238, 1, 3,  "癸亥 癸巳 壬戌 壬辰 辛酉 辛卯 庚申 庚寅 庚申 己丑 己未 閏 戊子 戊午"), 
+    y(239, 1, 22, "丁亥 丁巳 丙戌 丙辰 乙酉 乙卯 甲申 甲寅 癸未 癸丑 壬午 壬子 後 壬午"),
     y(240, 2, 10, ""), 
     y(241, 1, 29, ""),
     y(242, 2, 17, ""), 
@@ -868,9 +870,9 @@ object ChineseCalendar {
   private val ShuYears = Array(
     ce223, ce224, ce225, ce226, ce227, ce228, ce229, ce230, ce231, ce232, ce233,
     ce234, ce235, ce236,
-    y(237, 2, 28, ""),
-    y(238, 2, 28, ""), 
-    y(239, 2, 28, ""),
+    y(237, 2, 13, "己亥 己巳 戊戌 戊辰 丁酉 丁卯 丙申 丙寅 乙未 乙丑 甲午 甲子"), // 三月，魏改元“景初”，建丑，蜀仍用四分历
+    y(238, 2, 2,  "癸巳 癸亥 壬辰 壬戌 壬辰 辛酉 辛卯 庚申 庚寅 己未 閏 己丑 戊午 戊子"), 
+    y(239, 2, 21, "丁巳 丁亥 丙辰 丙戌 乙卯 乙酉 甲寅 甲申 甲寅 癸未 癸丑 壬午"),
     y(240, 2, 28, ""), 
     y(241, 2, 28, ""),
     y(242, 2, 28, ""), 
@@ -929,9 +931,9 @@ object ChineseCalendar {
     y(234, 2, 16, "丙戌 乙卯 乙酉 甲寅 甲申 甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥"),
     y(235, 2, 5,  "庚辰 庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午 丙子 乙巳"),
     y(236, 1, 26, "乙亥 甲辰 閏 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳"),
-    y(237, 2, 28, ""),
-    y(238, 2, 28, ""), 
-    y(239, 2, 28, ""),
+    y(237, 2, 12, "戊戌 戊辰 戊戌 丁卯 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥"), 
+    y(238, 2, 2,  "癸巳 壬戌 壬辰 辛酉 辛卯 辛酉 庚寅 庚申 己丑 己未 閏 戊子 戊午 丁亥"), 
+    y(239, 2, 21, "丁巳 丙戌 丙辰 乙酉 乙卯 甲申 甲寅 癸未 癸丑 癸未 壬子 壬午"),    
     y(240, 2, 28, ""), 
     y(241, 2, 28, ""),
     y(242, 2, 28, ""), 
