@@ -12,7 +12,7 @@
 package net.whily.chinesecalendar
 
 /**
-  * Date is an immutable date-time object that represents a date,
+  * HistDate is an immutable date-time object that represents a date,
   * often viewed as year-month-day. Time and timezone information are
   * not stored. Other date fields, such as day-of-year, day-of-week and
   * week-of-year, are not available either. 
@@ -24,6 +24,9 @@ package net.whily.chinesecalendar
   * Julian calendar has leap years every four years, whereas the
   * Gregorian has special rules for 100 and 400 years.
   * 
+  * Before 45 BCE, Proleptic Julian calendar is used, assuming BCE 49
+  * is leap year.
+  * 
   * The problem with GregorianCalendar in Java and/or GJChronology in
   * Joda-time is that proleptic Julian is used even before 1 Mar. CE
   * 4, which makes historical work inaccurate before that date. This
@@ -33,7 +36,7 @@ package net.whily.chinesecalendar
   * 
   * Julian/Gregorian cutover date is 15 October 1582.
   * 
-  * class Date is thread-safe and immutable. The equals method should
+  * class HistDate is thread-safe and immutable. The equals method should
   * be used for comparison.
   * 
   * @param year       1 BCE is input and returnmed as 0, 2 BCE as -1, and so on.
@@ -59,6 +62,7 @@ case class HistDate(val year: Int, val month: Int, val dayOfMonth: Int) {
   def isLeapYear(): Boolean = {
     if (year <= 0) {
       if (LeapYearsBCE.contains(year)) true
+      else if ((year <= -48) && (year % 4 == 0)) true // Proleptic Julian calendar
       else false
     } else if (year <= 1582) { // Julian calendar.
       if (year == 4) false
