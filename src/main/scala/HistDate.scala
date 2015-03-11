@@ -132,7 +132,14 @@ case class HistDate(val year: Int, val month: Int, val dayOfMonth: Int) {
   }
 
   /** Output this date as a string, for example 1492-10-12. */
-  override def toString(): String = "" + year + "-" + month + "-" + dayOfMonth
+  override def toString(): String = {
+    val monthDay = "年" + month + "月" + dayOfMonth + "日" 
+    if (year > 0) {
+      "" + year + monthDay
+    } else {
+      "公元前" + (1 - year) + monthDay
+    }
+  }
 
   // Leap years in BCE, according to Scaliger. Assume BCE 1 is
   // represented as 0. 
