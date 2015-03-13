@@ -71,6 +71,20 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("景初三年後十二月初一") should be (date(240, 1, 12))      
     }
 
+    it("Check monthLength().") {
+      monthLength("元始元年正月") should be (30)
+      monthLength("元始元年二月") should be (29)
+      monthLength("元始元年十二月") should be (30)
+      monthLength("魏高貴鄉公甘露元年十二月") should be (29)
+      monthLength("吳會稽王太平元年十二月") should be (30)            
+    }
+
+    it("Check sexagenaries().") {
+      sexagenaries("甲子", 3).mkString(" ") should be ("甲子 乙丑 丙寅")
+      // Test wrap around.
+      sexagenaries("辛酉", 5).mkString(" ") should be ("辛酉 壬戌 癸亥 甲子 乙丑")      
+    }
+
     it("Check data sanity.") {
       sanityCheck should be (true)
     }

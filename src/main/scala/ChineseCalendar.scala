@@ -38,7 +38,49 @@ object ChineseCalendar {
     else z
   }
 
+  /** Return an array of in-order sexagenaries, with `start` as the 1st
+    * element, and the array has `length` elements. */
+  def sexagenaries(start: String, length: Int): Array[String] = {
+    assert((Sexagenary.contains(start)) && (length > 1))
+    val result = new Array[String](length)
+    val index = Sexagenary.indexOf(start)
+
+    for (i <- 0 until length) {
+      result(i) = Sexagenary((index + i) % 60)
+    }
+    result
+  }
+
   def toDate(date: ChineseDate): HistDate = {
+    val (firstDay, months) = lookupDate(date)
+    val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
+    val dayOfMonth = date.dayOfMonth
+    val deltaDiff =
+      if (Sexagenary.contains(dayOfMonth)) sexagenaryDiff(sexagenary, dayOfMonth)
+      else Dates.indexOf(dayOfMonth)
+
+    firstDay.plusDays(dayDiff + deltaDiff)
+  }
+
+  /** Return the month information corresponding to the `date`. */
+  private def findMonth(date: ChineseDate): Month = {
+    val (_, months) = lookupDate(date)
+    val Some(month) = months.find(_.month == date.month)
+    month
+  }
+
+  /** Return the number of days of the month which the date belongs to. */
+  def monthLength(date: ChineseDate): Int = findMonth(date).length
+
+  /** Return the number of days of the month which the date belongs to. */
+  def monthLength(date: String): Int = monthLength(parseDate(date))
+
+  /** Return the sexagenary of the 1st day of the month. */
+  def sexagenary1stDayOfMonth(date: String): String =
+    findMonth(parseDate(date)).sexagenary
+
+  // Get table information from date.
+  private def lookupDate(date: ChineseDate): (HistDate, Array[Month]) = { 
     val year = date.year.dropRight(1)   // Remove 年
     val yearOffset = Numbers.indexOf(year) - 1
     val monarchEra = date.monarchEra
@@ -49,13 +91,7 @@ object ChineseCalendar {
         table(ad - start + yearOffset)
     }
 
-    val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
-    val dayOfMonth = date.dayOfMonth
-    val deltaDiff =
-      if (Sexagenary.contains(dayOfMonth)) sexagenaryDiff(sexagenary, dayOfMonth)
-      else Dates.indexOf(dayOfMonth)
-
-    firstDay.plusDays(dayDiff + deltaDiff)
+    (firstDay, months)
   }
 
   /** 
@@ -194,6 +230,10 @@ object ChineseCalendar {
     * @param sexagenary sexagenary (干支) of the first day of the month
     */
   case class Month(month: String, sexagenary: String) {
+    /** Number of days in month. With current sexagenary based design, 
+      * month length can only be known after construction. */
+    var length = 0
+
     /** Equals method. */
     override def equals(other: Any): Boolean = other match {
       case that: Month => month == that.month && sexagenary == that.sexagenary
@@ -210,7 +250,8 @@ object ChineseCalendar {
     "五十", "五十一", "五十二", "五十三", "五十四", "五十五", "五十六", "五十七", "五十八", "五十九",
     "六十", "六十一", "六十二", "六十三", "六十四", "六十五", "六十六", "六十七", "六十八", "六十九"
   )
-  private val Dates = Array(
+  // Not so good to publish an array here. TODO: encapsulates.
+  val Dates = Array(
     "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
     "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
     "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"
@@ -242,7 +283,15 @@ object ChineseCalendar {
           monthIndex += 1
       }
     }
-    result.reverse.toArray
+    val resultArray = result.reverse.toArray
+
+    // Calcualte month length. Note that the length of the last month
+    // will be calcualted in setMonthLength().
+    for (i <- 0 until resultArray.length - 1) {
+      resultArray(i).length =
+        sexagenaryDiff(resultArray(i).sexagenary, resultArray(i + 1).sexagenary)
+    }
+    resultArray
   }
 
   /**
@@ -282,7 +331,6 @@ object ChineseCalendar {
   private val ce240 = y(240, 2, 10, "辛亥 辛巳 庚戌 庚辰 己酉 己卯 戊申 戊寅 丁未 丁丑 丙午 丙子")
   private val ce247 = y(247, 2, 22, "庚子 庚午 己亥 己巳 戊戌 戊辰 丁酉 丁卯 丙申 丙寅 丙申 乙丑")
   private val ce248 = y(248, 2, 12, "乙未 甲子 甲午 癸亥 癸巳 壬戌 壬辰 辛酉 辛卯 庚申 庚寅 己未")
-  private val ce256 = y(256, 2, 13, "戊寅 戊申 丁丑 丁未 丙子 丙午 乙亥 乙巳 甲戌 甲辰 癸酉 癸卯")
   private val ce261 = y(261, 2, 17, "己酉 己卯 戊申 戊寅 丁未 丁丑 丙午 丙子 乙巳 乙亥 甲辰 甲戌")
   private val ce265 = y(265, 2, 3,  "丙辰 丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥 閏 辛巳 庚戌")
   private val ce269 = y(269, 2, 19, "癸巳 壬戌 壬辰 辛酉 辛卯 庚申 庚寅 己未 己丑 戊午 戊子 丁巳")
@@ -535,7 +583,8 @@ object ChineseCalendar {
     y(253, 2, 15, "乙丑 乙未 乙丑 甲午 甲子 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅"),
     y(254, 2, 5,  "庚申 己丑 己未 戊子 戊午 丁亥 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉"), 
     y(255, 1, 25, "甲寅 閏 甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 庚戌 庚辰 庚戌 己卯 己酉"),
-    ce256,
+    // For year CE 256, see comment in CE Years.
+    y(256, 2, 13, "戊寅 戊申 丁丑 丁未 丙子 丙午 乙亥 乙巳 甲戌 甲辰 癸酉 癸卯"),    
     y(257, 2, 1,  "壬申 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳 戊戌 閏 戊辰 丁酉 丁卯"),
     y(258, 2, 20, "丙申 丙寅 乙未 乙丑 甲午 甲子 甲午 癸亥 癸巳 壬戌 壬辰 辛酉"), 
     y(259, 2, 10, "辛卯 庚申 庚寅 己未 己丑 戊午 戊子 丁巳 丁亥 丁巳 丙戌 丙辰"),
@@ -1442,7 +1491,10 @@ object ChineseCalendar {
     y(253, 2, 16, "丙寅 乙未 乙丑 甲午 甲子 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅"),
     y(254, 2, 5,  "庚申 己丑 己未 戊子 戊午 戊子 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉"), 
     y(255, 1, 25, "甲寅 閏 甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 辛亥 庚辰 庚戌 己卯 己酉"),
-    ce256,
+    // This is same as Wu Years. The reason we duplicate is that the
+    // 1st day of new year is different, so we need two copies to keep the month length
+    // of the last month of CE 256.
+    y(256, 2, 13, "戊寅 戊申 丁丑 丁未 丙子 丙午 乙亥 乙巳 甲戌 甲辰 癸酉 癸卯"),
     y(257, 2, 2,  "癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳 戊戌 閏 戊辰 丁酉 丁卯"),
     y(258, 2, 20, "丙申 丙寅 乙未 乙丑 乙未 甲子 甲午 癸亥 癸巳 壬戌 壬辰 辛酉"), 
     y(259, 2, 10, "辛卯 庚申 庚寅 己未 己丑 戊午 戊子 戊午 丁亥 丁巳 丙戌 丙辰"),
@@ -1681,6 +1733,43 @@ object ChineseCalendar {
 
     true
   }
+
+  // Calculate month length for the last month in each year.
+  // Note that for the last month of the last year in a table, we need to call
+  // setMonthLengthLastYear().
+  private def setMonthLength(table: Array[Year]) {
+    for (i <- 0 until table.length - 1) {
+      val months = table(i).months
+      val lastMonth = months(months.length - 1)
+      val monthLength =
+        sexagenaryDiff(lastMonth.sexagenary, table(i + 1).months(0).sexagenary)
+      if ((lastMonth.length > 0) && (lastMonth.length != monthLength)) {
+        // Since some year record is shared by different tables, check
+        // whether there is collision. If yes, then corresponding data
+        // will be copied to different tables instead of beinig shared.
+        throw new RuntimeException("Sharing should be replaced by copying: index "
+          + i + " months: " + months.mkString(":"))
+      }
+      lastMonth.length = monthLength
+    }
+  }
+
+  // Set the month length of the last month of the last year in a
+  // table, with the length from manual calculation.
+  private def setMonthLengthLastYear(table: Array[Year], length: Int) {
+    val lastYear = table(table.length - 1)
+    val lastMonth = lastYear.months(lastYear.months.length - 1)
+    // No more check as in setMonthLength since manual check is done.
+    lastMonth.length = length
+  }
+
+  setMonthLength(CEYears)
+  setMonthLength(ShuYears)
+  setMonthLength(WuYears)
+
+  // Value 30 is tentatively set.
+  setMonthLengthLastYear(ShuYears, 30)
+  // No need for WuYears as the last year is shared with Wei.
 
   // Regresssion test to ensure the data tables are correct. Made
   // public so this can be called from as regression test.
