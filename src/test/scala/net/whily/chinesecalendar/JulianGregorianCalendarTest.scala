@@ -1,5 +1,5 @@
 /**
- * Test cases for HistDate.scala.
+ * Test cases for JulianGregorianCalendar.scala.
  * 
  * @author  Yujian Zhang <yujian{dot}zhang[at]gmail(dot)com>
  *
@@ -9,11 +9,11 @@
  * Copyright (C) 2015 Yujian Zhang
  */
 
-import net.whily.chinesecalendar.HistDate._
+import net.whily.chinesecalendar.JulianGregorianCalendar._
 import net.whily.chinesecalendar.ChineseCalendar._
 import org.scalatest._
  
-class DateTest extends FunSpec with Matchers {
+class JulianGregorianCalendarTest extends FunSpec with Matchers {
   describe("Test Date calculation") {
     it("Check isLeapyear()") {
       date(-41, 3, 9) should not be 'isLeapYear

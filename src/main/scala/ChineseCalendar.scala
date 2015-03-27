@@ -51,7 +51,7 @@ object ChineseCalendar {
     result
   }
 
-  def toDate(date: ChineseDate): HistDate = {
+  def toDate(date: ChineseDate): JulianGregorianCalendar = {
     val (firstDay, months) = lookupDate(date)
     val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
@@ -80,7 +80,7 @@ object ChineseCalendar {
     findMonth(parseDate(date)).sexagenary
 
   // Get table information from date.
-  private def lookupDate(date: ChineseDate): (HistDate, Array[Month]) = { 
+  private def lookupDate(date: ChineseDate): (JulianGregorianCalendar, Array[Month]) = { 
     val year = date.year.dropRight(1)   // Remove 年
     val yearOffset = Numbers.indexOf(year) - 1
     val monarchEra = date.monarchEra
@@ -136,7 +136,7 @@ object ChineseCalendar {
     * @param dayOfMonth the grammar is:
     *        dayOfMonth = Sexagenary|朔|初一|初二|...|初九|初十|十一|十二|...|十九|二十|廿一|廿二|...|廿九|三十|
     */  
-  def toDate(date: String): HistDate = {
+  def toDate(date: String): JulianGregorianCalendar = {
     // An example of string with minimum length: 黃初元年
     if (date.length < 4) {
       throw new IllegalArgumentException("toDate(): illegal argument date: " + date)
@@ -144,7 +144,7 @@ object ChineseCalendar {
     toDate(parseDate(date))
   }
 
-  def fromDate(date: HistDate): String = {
+  def fromDate(date: JulianGregorianCalendar): String = {
     ""
   }
 
@@ -300,14 +300,14 @@ object ChineseCalendar {
     * @param firstDay   the first day in Julian/Gregorian Calendar.
     * @param months     the 12 or 13 months in the year
     */
-  private case class Year(firstDay: HistDate, months: Array[Month])
+  private case class Year(firstDay: JulianGregorianCalendar, months: Array[Month])
 
   /** Return object Year given year, month, dayOfMonth, months. */
   private def y(year: Int, month: Int, dayOfMonth: Int, monthStr: String) =
     Year(date(year, month, dayOfMonth), months(monthStr))
 
   def date(year: Int, month: Int, dayOfMonth: Int) =
-    new HistDate(year, month, dayOfMonth)
+    new JulianGregorianCalendar(year, month, dayOfMonth)
 
   // Information from 中国史历日和中西历日对照表 (方诗铭，方小芬 著)
   // It's possible that different calendars are used in the same time,
