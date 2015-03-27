@@ -17,36 +17,38 @@ package net.whily.chinesecalendar
   * not stored. Other date fields, such as day-of-year, day-of-week and
   * week-of-year, are not available either. 
   * 
-  * Historically accurate date is implemented from 45 BCE forward to
-  * current day. This is a hybrid Gregorian/Julian calendar system on
-  * October 15, 1582. Before this date, the proleptic Julian calendar
-  * (proleptic means extending indefinitely) until 1 Mar. CE 4. The
-  * Julian calendar has leap years every four years, whereas the
-  * Gregorian has special rules for 100 and 400 years.
+  * The calendar is essentially same as class GregorianCalendar() in
+  * Java, i.e. a hybrid Gregorian/Julian calendar system with cutover
+  * date as 15 October 1582. Gregorian Calendar is used after the
+  * cutover while proleptic Julian calendar (proleptic means extending
+  * indefinitely) is used before it.
   * 
-  * Before 45 BCE, Proleptic Julian calendar is used, assuming BCE 49
-  * is leap year.
+  * Originally the target is to model irregular leap years in
+  * Roman history (e.g. CE 4 is not a leap year). However such
+  * ambition is abandoned:
   * 
-  * The problem with GregorianCalendar in Java and/or GJChronology in
-  * Joda-time is that proleptic Julian is used even before 1 Mar. CE
-  * 4, which makes historical work inaccurate before that date. This
-  * class handles irregular Julian years according to Scaliger
-  * approach in http://en.wikipedia.org/wiki/Julian_calendar#Leap_year_error. 
-  * This class can work correctly back to 2 Jan. 45 CE (the first Julian day).
+  * 1) There is no firm conclusion on the real situation of leap year
+  * error
   * 
-  * Julian/Gregorian cutover date is 15 October 1582.
+  * 2) The main purpose of using a reference calendar (as in this
+  *    class) is for easy reference. Therefore using a calendar system
+  *    which has some usage scenarios is more important than
+  *    accurately model Roman calendar. Propleptic Julian calendar is
+  *    widely used in astronomoy to document eclipses
+  *    (e.g. http://eclipse.gsfc.nasa.gov/SEhelp/calendar.html), which
+  *    seems to be a more interesting choice.
   * 
   * class HistDate is thread-safe and immutable. The equals method should
   * be used for comparison.
   * 
-  * @param year       1 BCE is input and returnmed as 0, 2 BCE as -1, and so on.
+  * @param year       1 BCE is input and returned as 0, 2 BCE as -1, and so on.
   * @param month      January corresponds to 1, February to 2, and so on.
   * @param dayOfMonth the 1st day as 1, the 2nd day as 2, and so on. It must be valid
   *                   for the year and month, otherwise an exception will be thrown.
   */
 case class HistDate(val year: Int, val month: Int, val dayOfMonth: Int) {
   // TODO: check validity of dayOfMonth given the year and month.
-  if (!((-44 <= year) && (1 <= month) && (month <= 12)
+  if (!((1 <= month) && (month <= 12)
     && (1 <= dayOfMonth) && (dayOfMonth <= 31))) {
     throw new IllegalArgumentException("HistDate: illegal arguments.")
   }
@@ -60,13 +62,8 @@ case class HistDate(val year: Int, val month: Int, val dayOfMonth: Int) {
 
   /** Checks if the year is a leap year. */
   def isLeapYear(): Boolean = {
-    if (year <= 0) {
-      if (LeapYearsBCE.contains(year)) true
-      else if ((year <= -48) && (year % 4 == 0)) true // Proleptic Julian calendar
-      else false
-    } else if (year <= 1582) { // Julian calendar.
-      if (year == 4) false
-      else if (year % 4 == 0) true
+    if (year <= 1582) { // Proleptic Julian calendar.
+      if (year % 4 == 0) true
       else false
     } else { // Gregorian Calendar
       if (year % 400 == 0) true
@@ -140,11 +137,6 @@ case class HistDate(val year: Int, val month: Int, val dayOfMonth: Int) {
       "公元前" + (1 - year) + monthDay
     }
   }
-
-  // Leap years in BCE, according to Scaliger. Assume BCE 1 is
-  // represented as 0. 
-  private val LeapYearsBCE = Set(-41, -38, -35, -32, -29, -26, -23, -20, -17, -14, -11, -8)
-
   private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
   private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)    
 }
