@@ -48,6 +48,9 @@ class ChineseCalendarTest extends FunSpec with Matchers {
     }
 
     it("Check date.") {
+      // 漢平帝即位
+      toDate("漢哀帝元壽二年九月辛酉") should be (date(0, 10, 17))
+
       toDate("漢平帝元始元年") should be (date(1, 2, 12))
       toDate("元始元年") should be (date(1, 2, 12))
       toDate("元始二年") should be (date(2, 2, 2))

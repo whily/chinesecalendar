@@ -300,7 +300,7 @@ object ChineseCalendar {
     * @param firstDay   the first day in Julian/Gregorian Calendar.
     * @param months     the 12 or 13 months in the year
     */
-  private case class Year(firstDay: JulianGregorianCalendar, months: Array[Month])
+  private case class Year(var firstDay: JulianGregorianCalendar, months: Array[Month])
 
   /** Return object Year given year, month, dayOfMonth, months. */
   private def y(year: Int, month: Int, dayOfMonth: Int, monthStr: String) =
@@ -313,6 +313,32 @@ object ChineseCalendar {
   // It's possible that different calendars are used in the same time,
   // but they may share the same calendar for some time.
   // Example: 魏文帝黃初 and 吳大帝黃武
+
+  // The date of the first day of the year is calculated instead of
+  // specified.
+  private val BCEYears = Array(
+    // y(-19,   2, 28, ""),            
+    // y(-18,   2, 28, ""),        
+    // y(-17,   2, 28, ""),        
+    // y(-16,   2, 28, ""),        
+    // y(-15,   2, 28, ""),        
+    // y(-14,   2, 28, ""),        
+    // y(-13,   2, 28, ""),        
+    // y(-12,   2, 28, ""),        
+    // y(-11,   2, 28, ""),    
+    // y(-10,   2, 28, ""),    
+    y(-9,   2, 28, "丁巳 丁亥 丙辰 丙戌 丙辰 乙酉 乙卯 甲申 甲寅 癸未 閏 癸丑 壬午 壬子"),            
+    y(-8,   2, 28, "辛巳 辛亥 庚辰 庚戌 己卯 己酉 己卯 戊申 戊寅 丁未 丁丑 丙午"),        
+    y(-7,   2, 28, "丙子 乙巳 乙亥 甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未 辛丑"),        
+    y(-6,   2, 28, "庚午 庚子 己巳 己亥 戊辰 戊戌 丁卯 閏 丁酉 丙寅 丙申 乙丑 乙未 甲子"),        
+    y(-5,   2, 28, "甲午 甲子 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅 庚申 己丑 己未"),        
+    y(-4,   2, 28, "戊子 戊午 丁亥 丁巳 丙戌 丙辰 丙戌 乙卯 乙酉 甲寅 甲申 癸丑"),        
+    y(-3,   2, 28, "癸未 壬子 壬午 閏 辛亥 辛巳 庚戌 庚辰 己酉 己卯 戊申 戊寅 戊申 丁丑"),        
+    y(-2,   2, 28, "丁未 丙子 丙午 乙亥 乙巳 甲戌 甲辰 癸酉 癸卯 壬申 壬寅 辛未"),        
+    y(-1,   2, 28, "辛丑 辛未 庚子 庚午 己亥 己巳 戊戌 戊辰 丁酉 丁卯 丙申 閏 丙寅 乙未"),    
+    y(0,    2, 28, "乙丑 甲午 甲子 癸巳 癸亥 癸巳 壬戌 壬辰 辛酉 辛卯 庚申 庚寅")
+  )
+
   private val ce222 = y(222, 1, 30, "丙寅 丙申 乙丑 乙未 甲子 甲午 閏 癸亥 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉")
   private val ce223 = y(223, 2, 18, "庚寅 庚申 己丑 己未 戊子 戊午 丁亥 丁巳 丙戌 丙辰 丙戌 乙卯")
   private val ce224 = y(224, 2, 8,  "乙酉 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 庚戌 庚辰 己酉")
@@ -1522,6 +1548,16 @@ object ChineseCalendar {
   // The 1st element of the value is the corresponding table, while
   // the 2nd element is the start year in Gregorian Calendar.
   private val eraList = List(
+    (List("漢成帝建始"), (BCEYears, -31)),
+    (List("漢成帝河平", "河平"), (BCEYears, -27)),
+    (List("漢成帝陽朔", "陽朔"), (BCEYears, -23)),
+    (List("漢成帝鴻嘉", "鴻嘉"), (BCEYears, -19)),
+    (List("漢成帝永始"), (BCEYears, -15)),
+    (List("漢成帝元延", "元延"), (BCEYears, -11)),
+    (List("漢成帝綏和", "綏和"), (BCEYears, -7)),        
+    (List("漢哀帝建平"), (BCEYears, -5)),
+    (List("漢哀帝太初元將", "太初元將"), (BCEYears, -4)),
+    (List("漢哀帝元壽"), (BCEYears, -1)),        
     (List("漢平帝元始", "元始"), (CEYears, 1)),
     (List("漢孺子嬰居攝", "居攝"), (CEYears, 6)),
     (List("漢孺子嬰初始", "初始"), (CEYears, 8)),
@@ -1764,10 +1800,35 @@ object ChineseCalendar {
     lastMonth.length = length
   }
 
+  implicit class RichInt(val value: Int) extends AnyVal {
+    def downto (n: Int) = value to n by -1
+    def downtil (n: Int) = value until n by -1
+  }
+
+  // Set the date of the first day of each year of BCE years.
+  private def setDateFirstDayBCE() {
+    var firstDay = CEYears(0).firstDay
+    var sexagenary = CEYears(0).months(0).sexagenary
+    for (i <- BCEYears.length - 1 downto 0) {
+      val year = BCEYears(i)
+      var daysDiff = 0
+      for (month <- year.months.reverse) {
+        daysDiff += sexagenaryDiff(month.sexagenary, sexagenary)
+        sexagenary = month.sexagenary
+      }
+      firstDay = firstDay.plusDays(-daysDiff)
+      year.firstDay = firstDay
+    }
+  }
+
+  setDateFirstDayBCE()
+
+  setMonthLength(BCEYears)
   setMonthLength(CEYears)
   setMonthLength(ShuYears)
   setMonthLength(WuYears)
 
+  setMonthLengthLastYear(BCEYears, 29)  
   // Value 30 is tentatively set.
   setMonthLengthLastYear(ShuYears, 30)
   // No need for WuYears as the last year is shared with Wei.
@@ -1775,6 +1836,7 @@ object ChineseCalendar {
   // Regresssion test to ensure the data tables are correct. Made
   // public so this can be called from as regression test.
   def sanityCheck: Boolean = {
+    checkYearTable(BCEYears) &&
     checkYearTable(CEYears) &&
     checkYearTable(ShuYears) &&
     checkYearTable(WuYears)
