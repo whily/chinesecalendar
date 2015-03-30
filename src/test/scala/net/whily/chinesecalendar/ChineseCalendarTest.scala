@@ -48,9 +48,15 @@ class ChineseCalendarTest extends FunSpec with Matchers {
     }
 
     it("Check date.") {
+      // Check historical dates from zh.wikipedia.org.
+      // 漢宣帝即位
+      //toDate("元平元年七月庚申") should be (date(-73, 9, 10))
+      // 漢宣帝崩
+      toDate("漢宣帝黃龍元年十二月甲戌") should be (date(-47, 1, 10))
       // 漢平帝即位
       toDate("漢哀帝元壽二年九月辛酉") should be (date(0, 10, 17))
 
+      // Check based on book tables.
       toDate("漢平帝元始元年") should be (date(1, 2, 12))
       toDate("元始元年") should be (date(1, 2, 12))
       toDate("元始二年") should be (date(2, 2, 2))
@@ -67,7 +73,6 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("元始元年春二月己酉") should be (date(1, 4, 3))
       toDate("元始元年三月廿一") should be (date(1, 5, 2))
       toDate("元始四年二月十一") should be (date(4, 3, 20))
-
       toDate("景初元年四月初一") should be (date(237, 4, 13))
       toDate("景初三年後十二月初一") should be (date(240, 1, 12))      
     }
