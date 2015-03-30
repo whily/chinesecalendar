@@ -18,14 +18,14 @@ import scala.collection.mutable
   */
 object Chinese {
   /** Convert Simplified Chinese to Traditional Chinese. */
-  def Simplified2Traditional(s: String) =
-    ChineseConvCore(s, Simplified2TraditionalMaps)
+  def simplified2Traditional(s: String) =
+    chineseConvCore(s, simplified2TraditionalMaps)
 
   /** Convert Traditional Chinese to Simplified Chinese. */  
-  def Traditional2Simplified(s: String) =
-    ChineseConvCore(s, Traditional2SimplifiedMaps)    
+  def traditional2Simplified(s: String) =
+    chineseConvCore(s, traditional2SimplifiedMaps)    
 
-  def ChineseConvCore(s: String, maps: (mutable.HashMap[Char, Char], mutable.HashMap[String, String])) = {
+  def chineseConvCore(s: String, maps: (mutable.HashMap[Char, Char], mutable.HashMap[String, String])) = {
     val (characterMap, wordMap) = maps
     val result = s.toArray
     var index = 0
@@ -361,32 +361,32 @@ object Chinese {
     ("丑态百出", "醜態百出"), ("跳梁小丑", "跳梁小醜")
   )
 
-  private var Simplified2TraditionalCharacterMap = new mutable.HashMap[Char, Char]()
-  private var Traditional2SimplifiedCharacterMap = new mutable.HashMap[Char, Char]()  
+  private var simplified2TraditionalCharacterMap = new mutable.HashMap[Char, Char]()
+  private var traditional2SimplifiedCharacterMap = new mutable.HashMap[Char, Char]()  
   for (charPair <- CharacterTable) {
     val simplified = charPair(0)
     assert(charPair.length >= 2)
-    Simplified2TraditionalCharacterMap(simplified) = charPair(1)
+    simplified2TraditionalCharacterMap(simplified) = charPair(1)
     for (traditional <- charPair.substring(1)) {
-      Traditional2SimplifiedCharacterMap(traditional) = simplified
+      traditional2SimplifiedCharacterMap(traditional) = simplified
     }
   }
 
-  private var Simplified2TraditionalWordMap = new mutable.HashMap[String, String]()
-  private var Traditional2SimplifiedWordMap = new mutable.HashMap[String, String]()
+  private var simplified2TraditionalWordMap = new mutable.HashMap[String, String]()
+  private var traditional2SimplifiedWordMap = new mutable.HashMap[String, String]()
   private var maxWordLength = 2
   for (wordPair <- WordTable) {
     val (simplified, traditional) = wordPair
     assert(simplified.length == traditional.length)
-    Simplified2TraditionalWordMap(simplified) = traditional
-    Traditional2SimplifiedWordMap(traditional) = simplified
+    simplified2TraditionalWordMap(simplified) = traditional
+    traditional2SimplifiedWordMap(traditional) = simplified
     if (simplified.length > maxWordLength) {
       maxWordLength = simplified.length
     }
   }
 
-  private val Simplified2TraditionalMaps =
-    (Simplified2TraditionalCharacterMap, Simplified2TraditionalWordMap)
-  private val Traditional2SimplifiedMaps =
-    (Traditional2SimplifiedCharacterMap, Traditional2SimplifiedWordMap)
+  private val simplified2TraditionalMaps =
+    (simplified2TraditionalCharacterMap, simplified2TraditionalWordMap)
+  private val traditional2SimplifiedMaps =
+    (traditional2SimplifiedCharacterMap, traditional2SimplifiedWordMap)
 }
