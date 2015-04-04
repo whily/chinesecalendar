@@ -3381,10 +3381,14 @@ object ChineseCalendar {
     (List("", ""), (CEYears, 122))    
   )
   private var eraMap = new mutable.HashMap[String, (Array[Year], Int)]()
+  private var eraNameList: List[String] = Nil
   for (era <- eraList) {
     val (list, info) = era
     for (e <- list) {
       eraMap(e) = info
+      if (e != "") {
+        eraNameList = e :: eraNameList
+      }
     }
   }
 
@@ -3399,7 +3403,7 @@ object ChineseCalendar {
 
   /** Return the array of era names. */
   def eraNames() = {
-    eraMap.keys.toArray
+    eraNameList.reverse.toArray
   }
 
   // Check sanity of year tables.
