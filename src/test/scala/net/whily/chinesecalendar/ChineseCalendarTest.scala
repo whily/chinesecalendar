@@ -10,6 +10,7 @@
  */
 
 import net.whily.chinesecalendar.ChineseCalendar._
+import net.whily.chinesecalendar.Chinese._
 import org.scalatest._
  
 class ChineseCalendarTest extends FunSpec with Matchers {
@@ -103,6 +104,12 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
     it("Check data sanity.") {
       sanityCheck should be (true)
+    }
+
+    it("Check Simplified/Traditional Chinese conversion of era names.") {
+      for (eraName <- eraNames()) {
+        simplified2Traditional(traditional2Simplified(eraName)) should be (eraName)
+      }
     }
   }
 }
