@@ -58,7 +58,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       // 昌邑王被废黜
       toDate("漢昭帝元平元年六月癸巳") should be (date(-73, 8, 14))         
       // 漢宣帝即位
-      toDate("元平元年七月庚申") should be (date(-73, 9, 10))
+      toDate("漢昭帝元平元年七月庚申") should be (date(-73, 9, 10))
       // 漢宣帝崩
       toDate("漢宣帝黃龍元年十二月甲戌") should be (date(-47, 1, 10))
       // 漢平帝即位
@@ -66,31 +66,31 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       // Check based on book tables.
       toDate("漢平帝元始元年") should be (date(1, 2, 12))
-      toDate("元始元年") should be (date(1, 2, 12))
-      toDate("元始二年") should be (date(2, 2, 2))
-      toDate("元始三年") should be (date(3, 2, 21))
-      toDate("元始元年一月朔") should be (date(1, 2, 12))
-      toDate("元始元年正月朔") should be (date(1, 2, 12))
-      toDate("元始元年正月初二") should be (date(1, 2, 13))
-      toDate("元始元年一月十一") should be (date(1, 2, 22))            
-      toDate("元始元年二月朔") should be (date(1, 3, 14))
-      toDate("元始元年二月十一") should be (date(1, 3, 24))      
-      toDate("元始元年二月己丑") should be (date(1, 3, 14))
-      toDate("元始元年二月己亥") should be (date(1, 3, 24))
-      toDate("元始元年二月己酉") should be (date(1, 4, 3))
-      toDate("元始元年春二月己酉") should be (date(1, 4, 3))
-      toDate("元始元年三月廿一") should be (date(1, 5, 2))
-      toDate("元始四年二月十一") should be (date(4, 3, 20))
-      toDate("景初元年四月初一") should be (date(237, 4, 13))
-      toDate("景初三年後十二月初一") should be (date(240, 1, 12))
+      toDate("漢平帝元始元年") should be (date(1, 2, 12))
+      toDate("漢平帝元始二年") should be (date(2, 2, 2))
+      toDate("漢平帝元始三年") should be (date(3, 2, 21))
+      toDate("漢平帝元始元年一月朔") should be (date(1, 2, 12))
+      toDate("漢平帝元始元年正月朔") should be (date(1, 2, 12))
+      toDate("漢平帝元始元年正月初二") should be (date(1, 2, 13))
+      toDate("漢平帝元始元年一月十一") should be (date(1, 2, 22))            
+      toDate("漢平帝元始元年二月朔") should be (date(1, 3, 14))
+      toDate("漢平帝元始元年二月十一") should be (date(1, 3, 24))      
+      toDate("漢平帝元始元年二月己丑") should be (date(1, 3, 14))
+      toDate("漢平帝元始元年二月己亥") should be (date(1, 3, 24))
+      toDate("漢平帝元始元年二月己酉") should be (date(1, 4, 3))
+      toDate("漢平帝元始元年春二月己酉") should be (date(1, 4, 3))
+      toDate("漢平帝元始元年三月廿一") should be (date(1, 5, 2))
+      toDate("漢平帝元始四年二月十一") should be (date(4, 3, 20))
+      toDate("魏明帝景初元年四月初一") should be (date(237, 4, 13))
+      toDate("魏明帝景初三年後十二月初一") should be (date(240, 1, 12))
 
       toDate("晉武帝咸寧元年") should be (date(275, 2, 13))      
     }
 
     it("Check monthLength().") {
-      monthLength("元始元年正月") should be (30)
-      monthLength("元始元年二月") should be (29)
-      monthLength("元始元年十二月") should be (30)
+      monthLength("漢平帝元始元年正月") should be (30)
+      monthLength("漢平帝元始元年二月") should be (29)
+      monthLength("漢平帝元始元年十二月") should be (30)
       monthLength("魏高貴鄉公甘露元年十二月") should be (29)
       monthLength("吳會稽王太平元年十二月") should be (30)            
     }
