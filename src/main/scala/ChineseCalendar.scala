@@ -3385,8 +3385,8 @@ object ChineseCalendar {
   for (era <- eraList) {
     val (list, info) = era
     for (e <- list) {
-      eraMap(e) = info
       if (e != "") {
+        eraMap(e) = info
         eraNameList = e :: eraNameList
       }
     }
