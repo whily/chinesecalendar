@@ -55,5 +55,11 @@ class JulianGregorianCalendarTest extends FunSpec with Matchers {
       date(1582, 10, 15).plusDays(-2) should be (date(1582, 10, 3))
       date(1582, 10, 17).plusDays(-3) should be (date(1582, 10, 4))      
     }
+
+    it("Check ordering.") {
+      date(1, 9, 10) should be < date(2, 3, 4)
+      date(1, 2, 12) should be < date(1, 3, 4)
+      date(1, 2, 3) should be < date(1, 2, 9)
+    }
   }
 }

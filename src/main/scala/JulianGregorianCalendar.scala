@@ -46,7 +46,8 @@ package net.whily.chinesecalendar
   * @param dayOfMonth the 1st day as 1, the 2nd day as 2, and so on. It must be valid
   *                   for the year and month, otherwise an exception will be thrown.
   */
-case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth: Int) {
+case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth: Int)
+  extends Ordered[JulianGregorianCalendar] {
   // TODO: check validity of dayOfMonth given the year and month.
   if (!((1 <= month) && (month <= 12)
     && (1 <= dayOfMonth) && (dayOfMonth <= 31))) {
@@ -137,6 +138,17 @@ case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth
       "公元前" + (1 - year) + monthDay
     }
   }
+
+  def compare(that: JulianGregorianCalendar) = {
+    val yearDiff = year - that.year
+    if (yearDiff != 0) yearDiff
+    else {
+      val monthDiff = month - that.month
+      if (monthDiff != 0) monthDiff
+      else dayOfMonth - that.dayOfMonth
+    }
+  }
+
   private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
   private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)    
 }
