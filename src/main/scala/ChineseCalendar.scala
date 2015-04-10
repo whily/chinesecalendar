@@ -56,7 +56,8 @@ object ChineseCalendar {
     val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
     val deltaDiff =
-      if (Sexagenary.contains(dayOfMonth)) sexagenaryDiff(sexagenary, dayOfMonth)
+      if (dayOfMonth == "晦") monthLength(date) - 1
+      else if (Sexagenary.contains(dayOfMonth)) sexagenaryDiff(sexagenary, dayOfMonth)
       else Dates.indexOf(dayOfMonth)
 
     firstDay.plusDays(dayDiff + deltaDiff)
@@ -134,7 +135,7 @@ object ChineseCalendar {
     * @param month the grammar is: month = [春|夏|秋|冬] [閏] 正月|一月|二月|三月|...|十月|十一月|十二月
     *        Note that whether the combination of season/month is valid or not is not checked.
     * @param dayOfMonth the grammar is:
-    *        dayOfMonth = Sexagenary|朔|初一|初二|...|初九|初十|十一|十二|...|十九|二十|廿一|廿二|...|廿九|三十|
+    *        dayOfMonth = Sexagenary|朔|晦|初一|初二|...|初九|初十|十一|十二|...|十九|二十|廿一|廿二|...|廿九|三十|
     */  
   def toDate(date: String): JulianGregorianCalendar = {
     // An example of string with minimum length: 黃初元年
@@ -149,7 +150,15 @@ object ChineseCalendar {
     * primarily in history books, e.g. 《資治通鑑》.
     */
   def fromDate(date: JulianGregorianCalendar): List[String] = {
-    Nil
+    var result: List[String] = Nil
+
+    for (era <- eraSegmentArray) {
+      if (era.contains(date)) {
+        result = "" :: result
+      }
+    }
+
+    result.reverse
   }
 
   case class ChineseDate(monarchEra: String, year: String, 
@@ -163,6 +172,9 @@ object ChineseCalendar {
     if (s.takeRight(1) == "朔") {
       dayOfMonth = "初一"
       endIndex -= 1
+    } else if (s.takeRight(1) == "晦") {
+      dayOfMonth = "晦" // Will handle later as the month lenght is not known.
+      endIndex -= 1  
     } else {
       val t = s.takeRight(2)
       if (Sexagenary.contains(t) || Dates.contains(t)) {
@@ -3182,33 +3194,30 @@ object ChineseCalendar {
     ce277, ce278, ce279, ce280
   )  
 
-  // The elements:
+  // The tuple has five elements:
   // - 1st: era name
-  // - 2nd: the duration of the period, indicates as a tuple (start, end),
-  //        for one interval only.
-  //        If one era corresponds to multiple intervals, each interval should
-  //        be entered separately.
-  //        If there is only one interval, then only the *start* is indicated,
-  //        and empty string indicates that the era starts at the new year.
-  //        If start and end are non-empty, the concatenation of era name and start/end
-  //        should be a valid date of ChineseCalendar (i.e. the concatenation
-  //        with possibly addition of 元年 for start_* can be passed to
-  //        toDate() without any error/exception).
-  //        For start:
-  //          Empty string indicates that the era starts at the new year.
-  //          The default date for start is 初一,
-  //        For end:
-  //          Empty string indicates that it is calculated based on the
-  //          start of next era.
-  //          Default date for end is the end of the month.
-  // - 3rd: the previous era.
-  //        Empty string is used to indicate the previous entry in the array.
-  //        Needed for navigation through months.
-  // - 4th: the next era.
-  //        Empty string is used to indicate the next entry in the array.
-  //        Needed for navigation through months.  
-  // - 5th: another tuple, with the 1st element indicating the corresponding table,
-  //        while the 2nd element is the start year in Julian/Gregorian Calendar.
+  // - 2nd and 3rd indicates the duration of the period, as start & end.
+  //   If one era corresponds to multiple intervals, each interval should
+  //   be entered separately.
+  //   If start and end are non-empty, the concatenation of era name and start/end
+  //   should be a valid date of ChineseCalendar (i.e. the concatenation
+  //   with possibly addition of 元年 for start_* can be passed to
+  //   toDate() without any error/exception).
+  //   For *start*:
+  //     Empty string indicates that the era starts at the new year.
+  //     The default date for *start* is 初一,
+  //   For *end*:
+  //     Empty string indicates that it is calculated based on the
+  //       start of next era.
+  //   Default date for *end* is the end of the month.
+  // - 4th: the previous era.
+  //   Empty string is used to indicate the previous entry in the array.
+  //   Needed for navigation through months.
+  // - 5th: the next era.
+  //   Empty string is used to indicate the next entry in the array.
+  //   Needed for navigation through months.  
+  // - 6th: another tuple, with the 1st element indicating the corresponding table,
+  //   while the 2nd element is the start year in Julian/Gregorian Calendar.
   //
   // There is no requirement on the order of the start date, since it
   // is convenient to input data for a dynasty consecuritively when
@@ -3221,157 +3230,157 @@ object ChineseCalendar {
     // ("漢武帝元鼎", (BCEYears, -115)),
     // ("漢武帝元封", (BCEYears, -109)),
     // ("漢武帝太初", (BCEYears, -103)),
-    ("漢武帝天漢", ("", ""), "", "", (BCEYears, -99)),
-    ("漢武帝太始", ("", ""), "", "", (BCEYears, -95)),
-    ("漢武帝征和", ("", ""), "", "", (BCEYears, -91)),
-    ("漢武帝後元", ("", ""), "", "", (BCEYears, -87)),        
-    ("漢昭帝始元", ("", ""), "", "", (BCEYears, -85)),
-    ("漢昭帝元鳳", ("八月", ""), "", "", (BCEYears, -79)),
-    ("漢昭帝元平", ("", ""), "", "", (BCEYears, -73)),        
-    ("漢宣帝本始", ("", ""), "", "", (BCEYears, -72)),
-    ("漢宣帝地節", ("", ""), "", "", (BCEYears, -68)),
-    ("漢宣帝元康", ("", ""), "", "", (BCEYears, -64)),
-    ("漢宣帝神爵", ("三月", ""), "", "", (BCEYears, -60)),
-    ("漢宣帝五鳳", ("", ""), "", "", (BCEYears, -56)),
-    ("漢宣帝甘露", ("", ""), "", "", (BCEYears, -52)),        
-    ("漢宣帝黃龍", ("", ""), "", "", (BCEYears, -48)),    
-    ("漢元帝初元", ("", ""), "", "", (BCEYears, -47)),
-    ("漢元帝永光", ("", ""), "", "", (BCEYears, -42)),
-    ("漢元帝建昭", ("", ""), "", "", (BCEYears, -37)),        
-    ("漢元帝竟寧", ("", ""), "", "", (BCEYears, -32)),    
-    ("漢成帝建始", ("", ""), "", "", (BCEYears, -31)),
-    ("漢成帝河平", ("三月", ""), "", "", (BCEYears, -27)),
-    ("漢成帝陽朔", ("", ""), "", "", (BCEYears, -23)),
-    ("漢成帝鴻嘉", ("", ""), "", "", (BCEYears, -19)),
-    ("漢成帝永始", ("", ""), "", "", (BCEYears, -15)),
-    ("漢成帝元延", ("", ""), "", "", (BCEYears, -11)),
-    ("漢成帝綏和", ("", ""), "", "", (BCEYears, -7)),
-    ("漢哀帝建平", ("", ""), "", "", (BCEYears, -5)),
-    ("漢哀帝太初元將", ("六月", ""), "", "", (BCEYears, -4)),
-    ("漢哀帝建平", ("二年八月", ""), "", "", (BCEYears, -5)),    
-    ("漢哀帝元壽", ("", ""), "", "", (BCEYears, -1)),        
-    ("漢平帝元始", ("", ""), "", "", (CEYears, 1)),
-    ("漢孺子嬰居攝", ("", ""), "", "", (CEYears, 6)),
-    ("漢孺子嬰初始", ("十一月", ""), "", "", (CEYears, 8)),
-    ("新王莽始建國", ("", ""), "", "", (CEYears, 9)),
-    ("新王莽天鳳", ("", ""), "", "", (CEYears, 14)),
-    ("新王莽地皇", ("", "四年九月"), "", "", (CEYears, 20)),
-    ("劉玄更始", ("二月", "三年九月"), "", "", (CEYears, 23)),
-    ("漢光武帝建武", ("六月", ""), "", "", (CEYears, 25)),
-    ("漢光武帝建武中元", ("四月", ""), "", "", (CEYears, 56)),
-    ("漢明帝永平", ("", ""), "", "", (CEYears, 58)),
-    ("漢章帝建初", ("", ""), "", "", (CEYears, 76)),
-    ("漢章帝元和", ("八月", ""), "", "", (CEYears, 84)),
-    ("漢章帝章和", ("七月", ""), "", "", (CEYears, 87)),
-    ("漢和帝永元", ("", ""), "", "", (CEYears, 89)),
-    ("漢和帝元興", ("四月", ""), "", "", (CEYears, 105)),
-    ("漢殤帝延平", ("", ""), "", "", (CEYears, 106)),
-    ("漢安帝永初", ("", ""), "", "", (CEYears, 107)),
-    ("漢安帝元初", ("", ""), "", "", (CEYears, 114)),
-    ("漢安帝永寧", ("四月", ""), "", "", (CEYears, 120)),
-    ("漢安帝建光", ("七月", ""), "", "", (CEYears, 121)),
-    ("漢安帝延光", ("三月", ""), "", "", (CEYears, 122)),
-    ("漢順帝永建", ("", ""), "", "", (CEYears, 126)),
-    ("漢順帝陽嘉", ("三月", ""), "", "", (CEYears, 132)),
-    ("漢順帝永和", ("", ""), "", "", (CEYears, 136)),
-    ("漢順帝漢安", ("", ""), "", "", (CEYears, 142)),
-    ("漢順帝建康", ("四月", ""), "", "", (CEYears, 144)),
-    ("漢沖帝永憙", ("", ""), "", "", (CEYears, 145)),
-    ("漢質帝本初", ("", ""), "", "", (CEYears, 146)),
-    ("漢桓帝建和", ("", ""), "", "", (CEYears, 147)),
-    ("漢桓帝和平", ("", ""), "", "", (CEYears, 150)),
-    ("漢桓帝元嘉", ("", ""), "", "", (CEYears, 151)),
-    ("漢桓帝永興", ("五月", ""), "", "", (CEYears, 153)),
-    ("漢桓帝永壽", ("", ""), "", "", (CEYears, 155)),
-    ("漢桓帝延熹", ("六月", ""), "", "", (CEYears, 158)),
-    ("漢桓帝永康", ("六月", ""), "", "", (CEYears, 167)),
-    ("漢靈帝建寧", ("", ""), "", "", (CEYears, 168)),
-    ("漢靈帝熹平", ("五月", ""), "", "", (CEYears, 172)),
-    ("漢靈帝光和", ("三月", ""), "", "", (CEYears, 178)),
-    ("漢靈帝中平", ("十二月", ""), "", "", (CEYears, 184)),
-    ("漢少帝光熹", ("四月", ""), "", "", (CEYears, 189)),
-    ("漢少帝昭寧", ("八月", ""), "", "", (CEYears, 189)),
-    ("漢獻帝永漢", ("九月", ""), "", "", (CEYears, 189)),
-    ("漢獻帝中平", ("十二月", ""), "", "", (CEYears, 184)),      
-    ("漢獻帝初平", ("", ""), "", "", (CEYears, 190)),
-    ("漢獻帝興平", ("", ""), "", "", (CEYears, 194)),
-    ("漢獻帝建安", ("", ""), "", "", (CEYears, 196)),
-    ("漢獻帝延康", ("三月", ""), "", "", (CEYears, 220)),
-    ("魏文帝黃初", ("十月", ""), "", "", (CEYears, 220)),
-    ("魏明帝太和", ("", ""), "", "", (CEYears, 227)),
-    ("魏明帝青龍", ("二月", ""), "", "", (CEYears, 233)),
-    ("魏明帝景初", ("三月", ""), "", "", (CEYears, 237)),
-    ("魏齊王芳正始", ("", ""), "", "", (CEYears, 240)),
-    ("魏齊王芳嘉平", ("四月", ""), "", "", (CEYears, 249)),
-    ("魏高貴鄉公正元", ("十月", ""), "", "", (CEYears, 254)),
-    ("魏高貴鄉公甘露", ("六月", ""), "", "", (CEYears, 256)),
-    ("魏陳留王景元", ("六月", ""), "", "", (CEYears, 260)),
-    ("魏陳留王咸熙", ("五月", ""), "", "晉武帝泰始", (CEYears, 264)),    
-    ("蜀昭烈帝章武", ("四月", ""), "魏文帝黃初", "", (CEYears, 221)),
-    ("蜀後主建興", ("五月", ""), "", "", (ShuYears, 223)),
-    ("蜀後主延熙", ("", ""), "", "", (ShuYears, 238)),
-    ("蜀後主景耀", ("", ""), "", "", (ShuYears, 258)),
-    ("蜀後主炎興", ("八月", "十一月"), "", "魏陳留王景元", (ShuYears, 263)),                  
-    ("吳大帝黃武", ("十月", ""), "魏文帝黃初", "", (WuYears, 222)),
-    ("吳大帝黃龍", ("四月", ""), "", "", (WuYears, 229)),
-    ("吳大帝嘉禾", ("", ""), "", "", (WuYears, 232)),        
-    ("吳大帝赤烏", ("八月", ""), "", "", (WuYears, 238)),            
-    ("吳大帝太元", ("五月", ""), "", "", (WuYears, 251)),
-    ("吳大帝神鳳", ("二月", ""), "", "", (WuYears, 252)),
-    ("吳會稽王建興", ("四月", ""), "", "", (WuYears, 252)),            
-    ("吳會稽王五鳳", ("", ""), "", "", (WuYears, 254)),            
-    ("吳會稽王太平", ("十月", ""), "", "", (WuYears, 256)),                
-    ("吳景帝永安", ("十月", ""), "", "", (WuYears, 258)),    
-    ("吳末帝元興", ("七月", ""), "", "", (WuYears, 264)),
-    ("吳末帝甘露", ("四月", ""), "", "", (WuYears, 265)),
-    ("吳末帝寶鼎", ("八月", ""), "", "", (WuYears, 266)),
-    ("吳末帝建衡", ("十月", ""), "", "", (WuYears, 269)),
-    ("吳末帝鳳凰", ("", ""), "", "", (WuYears, 272)),
-    ("吳末帝天冊", ("", ""), "", "", (WuYears, 275)),        
-    ("吳末帝天璽", ("七月", ""), "", "", (WuYears, 276)),
-    ("吳末帝天紀", ("", "三月"), "", "晉武帝太康", (WuYears, 277)),      
-    ("晉武帝泰始", ("十二月", ""), "魏陳留王咸熙", "", (CEYears, 265)),
-    ("晉武帝咸寧", ("", ""), "", "", (CEYears, 275)),
-    ("晉武帝太康", ("四月", ""), "", "", (CEYears, 280)),
-    ("晉武帝太熙", ("", ""), "", "", (CEYears, 290)),
-    ("晉惠帝永熙", ("四月", ""), "", "", (CEYears, 290)),    
-    ("晉惠帝永平", ("", ""), "", "", (CEYears, 291)),
-    ("晉惠帝元康", ("三月", ""), "", "", (CEYears, 291)),    
-    ("晉惠帝永康", ("", ""), "", "", (CEYears, 300)),
-    ("晉惠帝永寧", ("四月", ""), "", "", (CEYears, 301)),
-    ("晉惠帝太安", ("十二月", ""), "", "", (CEYears, 302)),
-    ("晉惠帝永安", ("", ""), "", "", (CEYears, 304)),
-    ("晉惠帝建武", ("七月", ""), "", "", (CEYears, 304)),
-    ("晉惠帝永興", ("十二月", ""), "", "", (CEYears, 304)),    
-    ("晉惠帝光熙", ("六月", ""), "", "", (CEYears, 306)),
-    ("晉懷帝永嘉", ("", ""), "", "", (CEYears, 307)),
-    ("晉愍帝建興", ("四月", ""), "", "", (CEYears, 313)),
-    ("晉元帝建武", ("三月", ""), "", "", (CEYears, 317)),
-    ("晉元帝大興", ("三月", ""), "", "", (CEYears, 318)),
-    ("晉元帝永昌", ("", ""), "", "", (CEYears, 322)),
-    ("晉明帝太寧", ("三月", ""), "", "", (CEYears, 323)),
-    ("晉成帝咸和", ("二月", ""), "", "", (CEYears, 326)),
-    ("晉成帝咸康", ("", ""), "", "", (CEYears, 335)),
-    ("晉康帝建元", ("", ""), "", "", (CEYears, 343)),
-    ("晉穆帝永和", ("", ""), "", "", (CEYears, 345)),
-    ("晉穆帝昇平", ("", ""), "", "", (CEYears, 357)),
-    ("晉哀帝隆和", ("", ""), "", "", (CEYears, 362)),
-    ("晉哀帝興寧", ("二月", ""), "", "", (CEYears, 363)),
-    ("晉廢帝太和", ("", ""), "", "", (CEYears, 366)),
-    ("晉簡文帝咸安", ("十一月", ""), "", "", (CEYears, 371)),
-    ("晉孝武帝寧康", ("", ""), "", "", (CEYears, 373)),
-    ("晉孝武帝太元", ("", ""), "", "", (CEYears, 376)),
-    ("晉安帝隆安", ("", ""), "", "", (CEYears, 397)),
-    ("晉安帝元興", ("", ""), "", "", (CEYears, 402)),
+    ("漢武帝天漢", "", "", "", "", (BCEYears, -99)),
+    ("漢武帝太始", "", "", "", "", (BCEYears, -95)),
+    ("漢武帝征和", "", "", "", "", (BCEYears, -91)),
+    ("漢武帝後元", "", "", "", "", (BCEYears, -87)),        
+    ("漢昭帝始元", "", "", "", "", (BCEYears, -85)),
+    ("漢昭帝元鳳", "八月", "", "", "", (BCEYears, -79)),
+    ("漢昭帝元平", "", "", "", "", (BCEYears, -73)),        
+    ("漢宣帝本始", "", "", "", "", (BCEYears, -72)),
+    ("漢宣帝地節", "", "", "", "", (BCEYears, -68)),
+    ("漢宣帝元康", "", "", "", "", (BCEYears, -64)),
+    ("漢宣帝神爵", "三月", "", "", "", (BCEYears, -60)),
+    ("漢宣帝五鳳", "", "", "", "", (BCEYears, -56)),
+    ("漢宣帝甘露", "", "", "", "", (BCEYears, -52)),        
+    ("漢宣帝黃龍", "", "", "", "", (BCEYears, -48)),    
+    ("漢元帝初元", "", "", "", "", (BCEYears, -47)),
+    ("漢元帝永光", "", "", "", "", (BCEYears, -42)),
+    ("漢元帝建昭", "", "", "", "", (BCEYears, -37)),        
+    ("漢元帝竟寧", "", "", "", "", (BCEYears, -32)),    
+    ("漢成帝建始", "", "", "", "", (BCEYears, -31)),
+    ("漢成帝河平", "三月", "", "", "", (BCEYears, -27)),
+    ("漢成帝陽朔", "", "", "", "", (BCEYears, -23)),
+    ("漢成帝鴻嘉", "", "", "", "", (BCEYears, -19)),
+    ("漢成帝永始", "", "", "", "", (BCEYears, -15)),
+    ("漢成帝元延", "", "", "", "", (BCEYears, -11)),
+    ("漢成帝綏和", "", "", "", "", (BCEYears, -7)),
+    ("漢哀帝建平", "", "", "", "", (BCEYears, -5)),
+    ("漢哀帝太初元將", "六月", "", "", "", (BCEYears, -4)),
+    ("漢哀帝建平", "二年八月", "", "", "", (BCEYears, -5)),    
+    ("漢哀帝元壽", "", "", "", "", (BCEYears, -1)),        
+    ("漢平帝元始", "", "", "", "", (CEYears, 1)),
+    ("漢孺子嬰居攝", "", "", "", "", (CEYears, 6)),
+    ("漢孺子嬰初始", "十一月", "", "", "", (CEYears, 8)),
+    ("新王莽始建國", "", "", "", "", (CEYears, 9)),
+    ("新王莽天鳳", "", "", "", "", (CEYears, 14)),
+    ("新王莽地皇", "", "四年九月", "", "", (CEYears, 20)),
+    ("劉玄更始", "二月", "三年九月", "", "", (CEYears, 23)),
+    ("漢光武帝建武", "六月", "", "", "", (CEYears, 25)),
+    ("漢光武帝建武中元", "四月", "", "", "", (CEYears, 56)),
+    ("漢明帝永平", "", "", "", "", (CEYears, 58)),
+    ("漢章帝建初", "", "", "", "", (CEYears, 76)),
+    ("漢章帝元和", "八月", "", "", "", (CEYears, 84)),
+    ("漢章帝章和", "七月", "", "", "", (CEYears, 87)),
+    ("漢和帝永元", "", "", "", "", (CEYears, 89)),
+    ("漢和帝元興", "四月", "", "", "", (CEYears, 105)),
+    ("漢殤帝延平", "", "", "", "", (CEYears, 106)),
+    ("漢安帝永初", "", "", "", "", (CEYears, 107)),
+    ("漢安帝元初", "", "", "", "", (CEYears, 114)),
+    ("漢安帝永寧", "四月", "", "", "", (CEYears, 120)),
+    ("漢安帝建光", "七月", "", "", "", (CEYears, 121)),
+    ("漢安帝延光", "三月", "", "", "", (CEYears, 122)),
+    ("漢順帝永建", "", "", "", "", (CEYears, 126)),
+    ("漢順帝陽嘉", "三月", "", "", "", (CEYears, 132)),
+    ("漢順帝永和", "", "", "", "", (CEYears, 136)),
+    ("漢順帝漢安", "", "", "", "", (CEYears, 142)),
+    ("漢順帝建康", "四月", "", "", "", (CEYears, 144)),
+    ("漢沖帝永憙", "", "", "", "", (CEYears, 145)),
+    ("漢質帝本初", "", "", "", "", (CEYears, 146)),
+    ("漢桓帝建和", "", "", "", "", (CEYears, 147)),
+    ("漢桓帝和平", "", "", "", "", (CEYears, 150)),
+    ("漢桓帝元嘉", "", "", "", "", (CEYears, 151)),
+    ("漢桓帝永興", "五月", "", "", "", (CEYears, 153)),
+    ("漢桓帝永壽", "", "", "", "", (CEYears, 155)),
+    ("漢桓帝延熹", "六月", "", "", "", (CEYears, 158)),
+    ("漢桓帝永康", "六月", "", "", "", (CEYears, 167)),
+    ("漢靈帝建寧", "", "", "", "", (CEYears, 168)),
+    ("漢靈帝熹平", "五月", "", "", "", (CEYears, 172)),
+    ("漢靈帝光和", "三月", "", "", "", (CEYears, 178)),
+    ("漢靈帝中平", "十二月", "", "", "", (CEYears, 184)),
+    ("漢少帝光熹", "四月", "", "", "", (CEYears, 189)),
+    ("漢少帝昭寧", "八月", "", "", "", (CEYears, 189)),
+    ("漢獻帝永漢", "九月", "", "", "", (CEYears, 189)),
+    ("漢獻帝中平", "十二月", "", "", "", (CEYears, 184)),      
+    ("漢獻帝初平", "", "", "", "", (CEYears, 190)),
+    ("漢獻帝興平", "", "", "", "", (CEYears, 194)),
+    ("漢獻帝建安", "", "", "", "", (CEYears, 196)),
+    ("漢獻帝延康", "三月", "", "", "", (CEYears, 220)),
+    ("魏文帝黃初", "十月", "", "", "", (CEYears, 220)),
+    ("魏明帝太和", "", "", "", "", (CEYears, 227)),
+    ("魏明帝青龍", "二月", "", "", "", (CEYears, 233)),
+    ("魏明帝景初", "三月", "", "", "", (CEYears, 237)),
+    ("魏齊王芳正始", "", "", "", "", (CEYears, 240)),
+    ("魏齊王芳嘉平", "四月", "", "", "", (CEYears, 249)),
+    ("魏高貴鄉公正元", "十月", "", "", "", (CEYears, 254)),
+    ("魏高貴鄉公甘露", "六月", "", "", "", (CEYears, 256)),
+    ("魏陳留王景元", "六月", "", "", "", (CEYears, 260)),
+    ("魏陳留王咸熙", "五月", "", "", "晉武帝泰始", (CEYears, 264)),    
+    ("蜀昭烈帝章武", "四月", "", "魏文帝黃初", "", (CEYears, 221)),
+    ("蜀後主建興", "五月", "", "", "", (ShuYears, 223)),
+    ("蜀後主延熙", "", "", "", "", (ShuYears, 238)),
+    ("蜀後主景耀", "", "", "", "", (ShuYears, 258)),
+    ("蜀後主炎興", "八月", "十一月", "", "魏陳留王景元", (ShuYears, 263)),                  
+    ("吳大帝黃武", "十月", "", "魏文帝黃初", "", (WuYears, 222)),
+    ("吳大帝黃龍", "四月", "", "", "", (WuYears, 229)),
+    ("吳大帝嘉禾", "", "", "", "", (WuYears, 232)),        
+    ("吳大帝赤烏", "八月", "", "", "", (WuYears, 238)),            
+    ("吳大帝太元", "五月", "", "", "", (WuYears, 251)),
+    ("吳大帝神鳳", "二月", "", "", "", (WuYears, 252)),
+    ("吳會稽王建興", "四月", "", "", "", (WuYears, 252)),            
+    ("吳會稽王五鳳", "", "", "", "", (WuYears, 254)),            
+    ("吳會稽王太平", "十月", "", "", "", (WuYears, 256)),                
+    ("吳景帝永安", "十月", "", "", "", (WuYears, 258)),    
+    ("吳末帝元興", "七月", "", "", "", (WuYears, 264)),
+    ("吳末帝甘露", "四月", "", "", "", (WuYears, 265)),
+    ("吳末帝寶鼎", "八月", "", "", "", (WuYears, 266)),
+    ("吳末帝建衡", "十月", "", "", "", (WuYears, 269)),
+    ("吳末帝鳳凰", "", "", "", "", (WuYears, 272)),
+    ("吳末帝天冊", "", "", "", "", (WuYears, 275)),        
+    ("吳末帝天璽", "七月", "", "", "", (WuYears, 276)),
+    ("吳末帝天紀", "", "三月", "", "晉武帝太康", (WuYears, 277)),      
+    ("晉武帝泰始", "十二月", "", "魏陳留王咸熙", "", (CEYears, 265)),
+    ("晉武帝咸寧", "", "", "", "", (CEYears, 275)),
+    ("晉武帝太康", "四月", "", "", "", (CEYears, 280)),
+    ("晉武帝太熙", "", "", "", "", (CEYears, 290)),
+    ("晉惠帝永熙", "四月", "", "", "", (CEYears, 290)),    
+    ("晉惠帝永平", "", "", "", "", (CEYears, 291)),
+    ("晉惠帝元康", "三月", "", "", "", (CEYears, 291)),    
+    ("晉惠帝永康", "", "", "", "", (CEYears, 300)),
+    ("晉惠帝永寧", "四月", "", "", "", (CEYears, 301)),
+    ("晉惠帝太安", "十二月", "", "", "", (CEYears, 302)),
+    ("晉惠帝永安", "", "", "", "", (CEYears, 304)),
+    ("晉惠帝建武", "七月", "", "", "", (CEYears, 304)),
+    ("晉惠帝永興", "十二月", "", "", "", (CEYears, 304)),    
+    ("晉惠帝光熙", "六月", "", "", "", (CEYears, 306)),
+    ("晉懷帝永嘉", "", "", "", "", (CEYears, 307)),
+    ("晉愍帝建興", "四月", "", "", "", (CEYears, 313)),
+    ("晉元帝建武", "三月", "", "", "", (CEYears, 317)),
+    ("晉元帝大興", "三月", "", "", "", (CEYears, 318)),
+    ("晉元帝永昌", "", "", "", "", (CEYears, 322)),
+    ("晉明帝太寧", "三月", "", "", "", (CEYears, 323)),
+    ("晉成帝咸和", "二月", "", "", "", (CEYears, 326)),
+    ("晉成帝咸康", "", "", "", "", (CEYears, 335)),
+    ("晉康帝建元", "", "", "", "", (CEYears, 343)),
+    ("晉穆帝永和", "", "", "", "", (CEYears, 345)),
+    ("晉穆帝昇平", "", "", "", "", (CEYears, 357)),
+    ("晉哀帝隆和", "", "", "", "", (CEYears, 362)),
+    ("晉哀帝興寧", "二月", "", "", "", (CEYears, 363)),
+    ("晉廢帝太和", "", "", "", "", (CEYears, 366)),
+    ("晉簡文帝咸安", "十一月", "", "", "", (CEYears, 371)),
+    ("晉孝武帝寧康", "", "", "", "", (CEYears, 373)),
+    ("晉孝武帝太元", "", "", "", "", (CEYears, 376)),
+    ("晉安帝隆安", "", "", "", "", (CEYears, 397)),
+    ("晉安帝元興", "", "", "", "", (CEYears, 402)),
     // Note used in 《資治通鑑》
-    // ("晉安帝大亨", ("", ""), "", "", (CEYears, 402)),
-    ("晉安帝義熙", ("", ""), "", "", (CEYears, 405)),
-    ("晉恭帝元熙", ("", ""), "", "", (CEYears, 419))
+    // ("晉安帝大亨", "", "", "", "", (CEYears, 402)),
+    ("晉安帝義熙", "", "", "", "", (CEYears, 405)),
+    ("晉恭帝元熙", "", "十一月", "", "", (CEYears, 419))
   )
 
   private var eraMap = new mutable.HashMap[String, (Array[Year], Int)]()
   for (era <- eraArray) {
-    val (eraName, duration, prev, next, info) = era
+    val (eraName, _, _, _, _, info) = era
     if (eraName != "") {
       eraMap(eraName) = info
     }
@@ -3391,24 +3400,6 @@ object ChineseCalendar {
     val eraNameList = eraMap.keys.toList sortWith (_ < _)
     eraNameList.toArray
   }
-
-  /** Information for era segment, which is defined as a consecutive duration 
-    * of one era.
-    * @param era era name
-    * @param start the first day of the era segment
-    * @param end the last day of the era segment 
-    * @param prev the previous era.
-    * @param next the next era.
-    */
-  case class EraSegment(era: String, start: JulianGregorianCalendar,
-    end: JulianGregorianCalendar,
-    prev: String, next: String) {
-  }
-
-  private var eraSegmentList: List[EraSegment] = Nil
-
-  eraSegmentList = eraSegmentList sortWith (_.start < _.start)
-  private val eraSegmentArray = eraSegmentList.toArray
 
   // Check sanity of year tables.
   private def checkYearTable(table: Array[Year]): Boolean = {
@@ -3503,6 +3494,69 @@ object ChineseCalendar {
   // Value 30 is tentatively set.
   setMonthLengthLastYear(ShuYears, 30)
   // No need for WuYears as the last year is shared with Wei.
+
+
+  /** Information for era segment, which is defined as a consecutive duration 
+    * of one era.
+    * @param era era name
+    * @param start the first day of the era segment
+    * @param end the last day of the era segment 
+    * @param prev the previous era.
+    * @param next the next era.
+    */
+  case class EraSegment(era: String, start: JulianGregorianCalendar,
+    var end: JulianGregorianCalendar,
+    prev: String, next: String) {
+    /** Returns true if the era segment contains the `date`. */
+    def contains(date: JulianGregorianCalendar) =
+      (start <= date) && (date <= end)
+  }
+
+  private var eraSegmentArray = new Array[EraSegment](eraArray.length)
+
+  /* Post process eraArray to generate eraSegmentArray. */
+  private def processEraArray() {
+    for (i <- 0 until eraArray.length) {
+      val (eraName, start, end, prev, next, _) = eraArray(i)
+
+      val eraStartSuffix =
+        if (start == "") "元年"
+        else if (start.contains("年")) start
+        else "元年" + start
+      val startDate = toDate(eraName + eraStartSuffix)
+
+      val eraEndSuffix =
+        if (end.contains("年")) end
+        else if (end != "") "元年" + end
+        else ""
+      val endDate =
+        // We don't handle default case here as it is simpler to calculate it later.
+        if (end == "") date(0, 1, 1)
+        else toDate(eraName + eraEndSuffix)
+
+      val prev_ =
+        if ((prev == "") && (i > 0)) eraArray(i - 1)._4
+        else prev
+
+      val next_ = 
+        if ((next == "") && (i < eraArray.length - 1))  eraArray(i + 1)._5
+        else next
+
+      eraSegmentArray(i) = EraSegment(eraName, startDate, endDate, prev, next)
+    }
+
+    // 2nd pass, to calculate the end date for defualt case.
+    for (i <- 0 until eraSegmentArray.length) {
+      if (eraArray(i)._3 == "") { // Default case for end.
+        assert(i != eraSegmentArray.length - 1)
+        eraSegmentArray(i).end = eraSegmentArray(i + 1).start.plusDays(-1)
+      }
+    }
+
+    eraSegmentArray = eraSegmentArray sortWith (_.start < _.start)
+  }
+
+  processEraArray()
 
   // TODO:
   def checkEraArray() {

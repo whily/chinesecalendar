@@ -73,7 +73,8 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("漢平帝元始元年一月朔") should be (date(1, 2, 12))
       toDate("漢平帝元始元年正月朔") should be (date(1, 2, 12))
       toDate("漢平帝元始元年正月初二") should be (date(1, 2, 13))
-      toDate("漢平帝元始元年一月十一") should be (date(1, 2, 22))            
+      toDate("漢平帝元始元年一月十一") should be (date(1, 2, 22))
+      toDate("漢平帝元始元年一月晦") should be (date(1, 3, 13))                  
       toDate("漢平帝元始元年二月朔") should be (date(1, 3, 14))
       toDate("漢平帝元始元年二月十一") should be (date(1, 3, 24))      
       toDate("漢平帝元始元年二月己丑") should be (date(1, 3, 14))
@@ -84,7 +85,6 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("漢平帝元始四年二月十一") should be (date(4, 3, 20))
       toDate("魏明帝景初元年四月初一") should be (date(237, 4, 13))
       toDate("魏明帝景初三年後十二月初一") should be (date(240, 1, 12))
-
       toDate("晉武帝咸寧元年") should be (date(275, 2, 13))      
     }
 
