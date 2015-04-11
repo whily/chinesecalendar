@@ -67,5 +67,10 @@ class JulianGregorianCalendarTest extends FunSpec with Matchers {
       date(1582, 10, 4).toJdn() should be (date(1582, 10, 15).toJdn() - 1)
       date(2000, 1, 1).toJdn() should be (2451545)
     }
+
+    it("Check binary -.") {
+      date(2000, 12, 31) - date(1999, 12, 31) should be (366)
+      date(1582, 10, 4) - date(1582, 10, 15) should be (-1)
+    }
   }
 }

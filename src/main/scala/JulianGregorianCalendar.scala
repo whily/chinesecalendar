@@ -164,6 +164,8 @@ case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth
     }
   }
 
+  def - (that: JulianGregorianCalendar) = toJdn() - that.toJdn()
+
   private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
   private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)    
 }
