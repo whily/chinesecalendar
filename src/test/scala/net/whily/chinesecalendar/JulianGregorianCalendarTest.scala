@@ -61,5 +61,11 @@ class JulianGregorianCalendarTest extends FunSpec with Matchers {
       date(1, 2, 12) should be < date(1, 3, 4)
       date(1, 2, 3) should be < date(1, 2, 9)
     }
+
+    it("Check toJdn().") {
+      date(-4712, 1, 1).toJdn() should be (0)
+      date(1582, 10, 4).toJdn() should be (date(1582, 10, 15).toJdn() - 1)
+      date(2000, 1, 1).toJdn() should be (2451545)
+    }
   }
 }

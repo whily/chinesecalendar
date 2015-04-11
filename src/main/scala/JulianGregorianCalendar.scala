@@ -149,6 +149,21 @@ case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth
     }
   }
 
+  /** Return Julian Day Number of the date starting from noon. */
+  def toJdn() = {
+    // Based on algorithm from
+    //   http://en.wikipedia.org/wiki/Julian_day#Converting_Julian_or_Gregorian_calendar_date_to_Julian_Day_Number
+    val a = (14 - month) / 12
+    val y = year + 4800 - a
+    val m = month + 12 * a - 3
+
+    if (this >= JulianGregorianCalendar(1582, 10, 15)) {
+      dayOfMonth + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045
+    } else {
+      dayOfMonth + (153 * m + 2) / 5 + 365 * y + y / 4 - 32083
+    }
+  }
+
   private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
   private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)    
 }
