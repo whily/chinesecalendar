@@ -124,18 +124,13 @@ case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth
       }
     }
 
+    if ((1 <= dayOfMonth + daysToAdd) && (dayOfMonth + daysToAdd <= monthDays()))
+      return JulianGregorianCalendar(year, month, dayOfMonth + daysToAdd)
+
     if (daysToAdd > 0) {
-      if (dayOfMonth + daysToAdd <= monthDays()) {
-        JulianGregorianCalendar(year, month, dayOfMonth + daysToAdd)
-      } else {
-        firstDayNextMonth.plusDays(daysToAdd - (monthDays() - dayOfMonth) - 1)
-      }
+      firstDayNextMonth.plusDays(daysToAdd - (monthDays() - dayOfMonth) - 1)
     } else {
-      if (dayOfMonth + daysToAdd >= 1) {
-        JulianGregorianCalendar(year, month, dayOfMonth + daysToAdd)
-      } else {
-        lastDayPreviousMonth.plusDays(daysToAdd + dayOfMonth)
-      }
+      lastDayPreviousMonth.plusDays(daysToAdd + dayOfMonth)
     }
   }
 
