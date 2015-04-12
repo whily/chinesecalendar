@@ -11,6 +11,17 @@
 
 package net.whily.chinesecalendar
 
+object JulianGregorianCalendar {
+  /** Returns the number of days in the month. */
+  def monthDays(leapYear: Boolean, month: Int) = {
+    if (leapYear) MonthDaysLeap(month - 1)
+    else MonthDaysNonLeap(month - 1)
+  }
+
+  private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+  private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)     
+}
+
 /**
   * JulianGregorianCalendar is an immutable date-time object that represents a date,
   * often viewed as year-month-day. Time and timezone information are
@@ -76,8 +87,7 @@ case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth
 
   /** Returns the number of days in the month. */
   def monthDays() = {
-    if (isLeapYear()) MonthDaysLeap(month - 1)
-    else MonthDaysNonLeap(month - 1)
+    JulianGregorianCalendar.monthDays(isLeapYear(), month)
   }
 
   /** Returns the first day of next month. */
@@ -165,7 +175,4 @@ case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth
   }
 
   def - (that: JulianGregorianCalendar) = toJdn() - that.toJdn()
-
-  private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)    
 }
