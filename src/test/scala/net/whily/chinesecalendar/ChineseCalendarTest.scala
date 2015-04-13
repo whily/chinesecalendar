@@ -96,6 +96,15 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       monthLength("吳會稽王太平元年十二月") should be (30)            
     }
 
+    it("Check plusDays().") {
+      // Within same month.
+      parseDate("漢平帝元始元年二月十一").plusDays(10) should be (parseDate("漢平帝元始元年二月廿一"))
+      parseDate("漢平帝元始元年二月己丑").plusDays(11) should be (parseDate("漢平帝元始元年二月庚子"))
+      parseDate("漢平帝元始元年二月廿一").plusDays(-10) should be (parseDate("漢平帝元始元年二月十一"))
+      parseDate("漢平帝元始元年二月庚子").plusDays(-11) should be (parseDate("漢平帝元始元年二月己丑"))
+      parseDate("漢平帝元始元年二月晦").plusDays(-10) should be (parseDate("漢平帝元始元年二月十九"))                     
+    }
+
     it("Check sexagenaries().") {
       sexagenaries("甲子", 3).mkString(" ") should be ("甲子 乙丑 丙寅")
       // Test wrap around.

@@ -13,6 +13,78 @@ package net.whily.chinesecalendar
 
 import scala.collection.mutable    // For toMap()
 
+case class ChineseCalendar(monarchEra: String, year: String,
+  month: String, dayOfMonth: String) {
+  /** Equals method. */
+  override def equals(other: Any): Boolean = other match {
+    case that: ChineseCalendar => monarchEra == that.monarchEra &&
+      year == that.year && month == that.month && dayOfMonth == that.dayOfMonth
+    case _ => false
+  }
+  
+  /** Return the difference between current date and start of the month. */
+  def dayDiff() = {
+    if (dayOfMonth == "晦") ChineseCalendar.monthLength(this) - 1
+    else if (ChineseCalendar.Sexagenary.contains(dayOfMonth)) {
+      val sexagenary = ChineseCalendar.findMonth(this).sexagenary
+      ChineseCalendar.sexagenaryDiff(sexagenary, dayOfMonth)
+    }
+    else ChineseCalendar.Dates.indexOf(dayOfMonth)
+  }
+
+  /**
+    * Returns a copy of this ChineseCalendar with the specified number of days added. 
+    * 
+    * @param daysToAdd can be either positive or negative.
+    */
+  def plusDays(daysToAdd: Int): ChineseCalendar = {
+   // Current implementation is not efficient if daysToAdd is large
+    // (e.g. when daysToAdd corresponds to many years).
+
+    val month = ChineseCalendar.findMonth(this)
+
+    if (daysToAdd == 0)
+      return this
+
+    val newDay = dayDiff() + 1 + daysToAdd
+    if ((1 <= newDay) && (newDay <= ChineseCalendar.monthLength(this)))
+      return plusDaysThisMonth(daysToAdd)
+
+    if (daysToAdd > 0) {
+      this //firstDayNextMonth.plusDays(daysToAdd - (monthDays() - dayOfMonth) - 1)
+    } else {
+      this //lastDayPreviousMonth.plusDays(daysToAdd + dayOfMonth)
+    }
+  }
+
+  def plusDaysThisMonth(daysToAdd: Int) = {
+    var dom = ""
+    if (ChineseCalendar.Sexagenary.contains(dayOfMonth)) {
+      dom = ChineseCalendar.sexagenaryAdd(dayOfMonth, daysToAdd)
+    } else {
+      val date =
+        if (dayOfMonth == "晦") ChineseCalendar.Dates(ChineseCalendar.monthLength(this) - 1)
+        else dayOfMonth
+      dom = ChineseCalendar.dateAdd(date, daysToAdd)
+    }
+    ChineseCalendar(monarchEra, year, month, dom)
+  }
+
+  /** Returns the first day of next month. */
+  def firstDayNextMonth() = {
+    // TODO
+    this
+  }
+
+  /** Returns the last day of previous month. */
+  def lastDayPreviousMonth() = {
+    // TODO
+    this
+  }
+
+  override def toString = monarchEra + year + month + dayOfMonth
+}
+
 /**
   * Chinese calendar.
   */
@@ -38,6 +110,13 @@ object ChineseCalendar {
     else z
   }
 
+  /** Return a new sexagenary by adding `add` to the original `sexagenary`.*/
+  def sexagenaryAdd(sexagenary: String, add: Int) = {
+    var z = (Sexagenary.indexOf(sexagenary) + add) % 60
+    if (z < 0) z += 60
+    Sexagenary(z)
+  }
+
   /** Return an array of in-order sexagenaries, with `start` as the 1st
     * element, and the array has `length` elements. */
   def sexagenaries(start: String, length: Int): Array[String] = {
@@ -51,27 +130,22 @@ object ChineseCalendar {
     result
   }
 
-  def toDate(date: ChineseDate): JulianGregorianCalendar = {
+  def toDate(date: ChineseCalendar): JulianGregorianCalendar = {
     val (firstDay, months) = lookupDate(date)
     val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
-    val deltaDiff =
-      if (dayOfMonth == "晦") monthLength(date) - 1
-      else if (Sexagenary.contains(dayOfMonth)) sexagenaryDiff(sexagenary, dayOfMonth)
-      else Dates.indexOf(dayOfMonth)
-
-    firstDay.plusDays(dayDiff + deltaDiff)
+    firstDay.plusDays(dayDiff + date.dayDiff())
   }
 
   /** Return the month information corresponding to the `date`. */
-  private def findMonth(date: ChineseDate): Month = {
+  private def findMonth(date: ChineseCalendar): Month = {
     val (_, months) = lookupDate(date)
     val Some(month) = months.find(_.month == date.month)
     month
   }
 
   /** Return the number of days of the month which the date belongs to. */
-  def monthLength(date: ChineseDate): Int = findMonth(date).length
+  def monthLength(date: ChineseCalendar): Int = findMonth(date).length
 
   /** Return the number of days of the month which the date belongs to. */
   def monthLength(date: String): Int = monthLength(parseDate(date))
@@ -81,7 +155,7 @@ object ChineseCalendar {
     findMonth(parseDate(date)).sexagenary
 
   // Get table information from date.
-  private def lookupDate(date: ChineseDate): (JulianGregorianCalendar, Array[Month]) = { 
+  private def lookupDate(date: ChineseCalendar): (JulianGregorianCalendar, Array[Month]) = { 
     val year = date.year.dropRight(1)   // Remove 年
     val yearOffset = Numbers.indexOf(year) - 1
     val monarchEra = date.monarchEra
@@ -123,7 +197,7 @@ object ChineseCalendar {
   /**
     * The grammar for a Chinese date is as follows:
     * 
-    *   ChineseDate = monarchEra [year [month [dayOfMonth]]]
+    *   ChineseCalendar = monarchEra [year [month [dayOfMonth]]]
     * 
     * @param monarchEra This could be either the title of the monarch, 
     *                   or both the title and the era (年號).
@@ -161,12 +235,7 @@ object ChineseCalendar {
     result.reverse
   }
 
-  case class ChineseDate(monarchEra: String, year: String, 
-                         month: String, dayOfMonth: String) {
-    override def toString = monarchEra + year + month + dayOfMonth
-  }
-
-  private def parseDate(s: String): ChineseDate = {
+  def parseDate(s: String): ChineseCalendar = {
     var dayOfMonth = "初一"   // Default day of month.
     var endIndex = s.length
     if (s.takeRight(1) == "朔") {
@@ -190,7 +259,7 @@ object ChineseCalendar {
     parseMonth(s.substring(0, endIndex), dayOfMonth)
   }
 
-  private def parseMonth(s: String, dayOfMonth: String): ChineseDate = {
+  private def parseMonth(s: String, dayOfMonth: String): ChineseCalendar = {
     var month = "一月"  // Default month
     var endIndex = s.length
     if (s.endsWith("月")) {
@@ -211,7 +280,7 @@ object ChineseCalendar {
     parseYear(s.substring(0, endIndex), month, dayOfMonth)
   }
 
-  private def parseYear(s: String, month: String, dayOfMonth: String): ChineseDate = {
+  private def parseYear(s: String, month: String, dayOfMonth: String): ChineseCalendar = {
     if (s.takeRight(1) != "年") {
       throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
     }
@@ -238,7 +307,7 @@ object ChineseCalendar {
       throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
     }
 
-    ChineseDate(monarchEra, year + "年", month, dayOfMonth)
+    ChineseCalendar(monarchEra, year + "年", month, dayOfMonth)
   }
 
   /**
@@ -274,7 +343,11 @@ object ChineseCalendar {
   )
   private val LeapMonth = "閏"
   private val ForwardMonth = "進"
-  private val LaterMonth = "後"  
+  private val LaterMonth = "後"
+
+  /** Return a new date by adding `add` to the original `date`.*/
+  def dateAdd(date: String, add: Int) =
+    Dates(Dates.indexOf(date) + add)
 
   /** Return an array of months by parsing the string S, in the format of
     *   sexageneray1 sexagenary2 ...
@@ -3309,7 +3382,7 @@ object ChineseCalendar {
     ("魏文帝黃初", "十月", "", "", "", (CEYears, 220)),
     ("魏明帝太和", "", "", "", "", (CEYears, 227)),
     ("魏明帝青龍", "二月", "", "", "", (CEYears, 233)),
-    ("魏明帝景初", "三月", "", "", "", (CEYears, 237)),
+    ("魏明帝景初", "四月", "", "", "", (CEYears, 237)),
     ("魏齊王芳正始", "", "", "", "", (CEYears, 240)),
     ("魏齊王芳嘉平", "四月", "", "", "", (CEYears, 249)),
     ("魏高貴鄉公正元", "十月", "", "", "", (CEYears, 254)),
@@ -3499,14 +3572,16 @@ object ChineseCalendar {
   /** Information for era segment, which is defined as a consecutive duration 
     * of one era.
     * @param era era name
-    * @param start the first day of the era segment
+    * @param startChinese the first day of the era segment in Chinese calendar
     * @param end the last day of the era segment 
     * @param prev the previous era.
     * @param next the next era.
     */
-  case class EraSegment(era: String, start: JulianGregorianCalendar,
+  case class EraSegment(era: String, startChinese: ChineseCalendar,
     var end: JulianGregorianCalendar,
     prev: String, next: String) {
+    val start = toDate(startChinese)
+
     /** Returns true if the era segment contains the `date`. */
     def contains(date: JulianGregorianCalendar) =
       (start <= date) && (date <= end)
@@ -3523,7 +3598,7 @@ object ChineseCalendar {
         if (start == "") "元年"
         else if (start.contains("年")) start
         else "元年" + start
-      val startDate = toDate(eraName + eraStartSuffix)
+      val startChinese = parseDate(eraName + eraStartSuffix)
 
       val eraEndSuffix =
         if (end.contains("年")) end
@@ -3542,7 +3617,7 @@ object ChineseCalendar {
         if ((next == "") && (i < eraArray.length - 1))  eraArray(i + 1)._5
         else next
 
-      eraSegmentArray(i) = EraSegment(eraName, startDate, endDate, prev, next)
+      eraSegmentArray(i) = EraSegment(eraName, startChinese, endDate, prev, next)
     }
 
     // 2nd pass, to calculate the end date for defualt case.
