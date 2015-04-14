@@ -47,11 +47,12 @@ case class ChineseCalendar(monarchEra: String, year: String,
       return this
 
     val newDay = dayDiff() + 1 + daysToAdd
-    if ((1 <= newDay) && (newDay <= ChineseCalendar.monthLength(this)))
+    val monthDays = ChineseCalendar.monthLength(this)
+    if ((1 <= newDay) && (newDay <= monthDays))
       return plusDaysThisMonth(daysToAdd)
 
     if (daysToAdd > 0) {
-      this //firstDayNextMonth.plusDays(daysToAdd - (monthDays() - dayOfMonth) - 1)
+      firstDayNextMonth().plusDays(newDay - 1 - monthDays)
     } else {
       this //lastDayPreviousMonth.plusDays(daysToAdd + dayOfMonth)
     }
@@ -72,8 +73,15 @@ case class ChineseCalendar(monarchEra: String, year: String,
 
   /** Returns the first day of next month. */
   def firstDayNextMonth() = {
-    // TODO
-    this
+    val (_, months) = ChineseCalendar.lookupDate(this)
+    val i = months indexWhere (_.month == month)
+    if (i == months.length - 1) {
+      val yearNumber = ChineseCalendar.Numbers(ChineseCalendar.Numbers.indexOf(year.dropRight(1)) + 1)
+      ChineseCalendar.parseDate(monarchEra + yearNumber + year.takeRight(1))
+    } else {
+      ChineseCalendar(monarchEra, year, months(i + 1).month, "初一")
+    }
+    // TODO: Implement cross segment.
   }
 
   /** Returns the last day of previous month. */
@@ -82,7 +90,12 @@ case class ChineseCalendar(monarchEra: String, year: String,
     this
   }
 
-  override def toString = monarchEra + year + month + dayOfMonth
+  override def toString = {
+    val y = if (year == "一年") "元年" else year
+    val m = if (month == "一月") "正月" else month
+
+    monarchEra + y + m + dayOfMonth
+  }
 }
 
 /**
@@ -228,12 +241,16 @@ object ChineseCalendar {
 
     for (era <- eraSegmentArray) {
       if (era.contains(date)) {
-        result = "" :: result
+        val chineseDate = era.startChinese.plusDays(date - era.start)
+        result = chineseDate.toString() :: result
       }
     }
 
     result.reverse
   }
+
+  def fromDate(date: String): List[String] =
+    fromDate(JulianGregorianCalendar.fromString(date))
 
   def parseDate(s: String): ChineseCalendar = {
     var dayOfMonth = "初一"   // Default day of month.
@@ -3628,7 +3645,7 @@ object ChineseCalendar {
       }
     }
 
-    eraSegmentArray = eraSegmentArray sortWith (_.start < _.start)
+    eraSegmentArray = eraSegmentArray.sortBy(_.start)
   }
 
   processEraArray()

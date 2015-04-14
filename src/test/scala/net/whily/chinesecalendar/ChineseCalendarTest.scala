@@ -48,7 +48,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
         Month("後十二月", "壬午")))
     }
 
-    it("Check date.") {
+    it("Check toDate().") {
       // Check historical dates from zh.wikipedia.org.
       // 漢昭帝即位
       toDate("漢武帝後元二年二月戊辰") should be (date(-86, 3, 30))
@@ -66,7 +66,6 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("漢哀帝元壽二年九月辛酉") should be (date(0, 10, 17))
 
       // Check based on book tables.
-      toDate("漢平帝元始元年") should be (date(1, 2, 12))
       toDate("漢平帝元始元年") should be (date(1, 2, 12))
       toDate("漢平帝元始二年") should be (date(2, 2, 2))
       toDate("漢平帝元始三年") should be (date(3, 2, 21))
@@ -88,6 +87,12 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("晉武帝咸寧元年") should be (date(275, 2, 13))      
     }
 
+    it("Check fromDate().") {
+      fromDate(date(1, 2, 12)) should be === (List("漢平帝元始元年正月初一"))
+      fromDate(date(1, 2, 22)) should be === (List("漢平帝元始元年正月十一"))
+      fromDate(date(237, 4, 13)) should be === (List("蜀後主建興十五年三月初一", "吳大帝嘉禾六年三月初一", "魏明帝景初元年四月初一"))
+    }
+
     it("Check monthLength().") {
       monthLength("漢平帝元始元年正月") should be (30)
       monthLength("漢平帝元始元年二月") should be (29)
@@ -102,7 +107,14 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("漢平帝元始元年二月己丑").plusDays(11) should be (parseDate("漢平帝元始元年二月庚子"))
       parseDate("漢平帝元始元年二月廿一").plusDays(-10) should be (parseDate("漢平帝元始元年二月十一"))
       parseDate("漢平帝元始元年二月庚子").plusDays(-11) should be (parseDate("漢平帝元始元年二月己丑"))
-      parseDate("漢平帝元始元年二月晦").plusDays(-10) should be (parseDate("漢平帝元始元年二月十九"))                     
+      parseDate("漢平帝元始元年二月晦").plusDays(-10) should be (parseDate("漢平帝元始元年二月十九"))
+
+      parseDate("漢平帝元始元年").plusDays(30) should be (parseDate("漢平帝元始元年二月初一"))
+      parseDate("漢平帝元始元年二月初一").plusDays(29) should be (parseDate("漢平帝元始元年三月初一"))
+      parseDate("漢平帝元始元年二月初一").plusDays(60) should be (parseDate("漢平帝元始元年四月初二"))
+      parseDate("漢平帝元始元年十二月初一").plusDays(31) should be (parseDate("漢平帝元始二年一月初二"))            
+
+      parseDate("漢平帝元始元年二月己丑").plusDays(30) should be (parseDate("漢平帝元始元年三月初二"))
     }
 
     it("Check sexagenaries().") {
