@@ -25,6 +25,10 @@ class JulianGregorianCalendarTest extends FunSpec with Matchers {
       date(1700, 2, 3) should not be 'LeapYear
     }
 
+    it("Checking fromString()") {
+      fromString("1年2月3日") should be (date(1, 2, 3))
+    }
+
     it("Check plusDays()") {
       // Check when daysToAdd = 0
       date(1582, 10, 1).plusDays(0) should be (date(1582, 10, 1))

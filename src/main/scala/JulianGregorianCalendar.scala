@@ -11,6 +11,8 @@
 
 package net.whily.chinesecalendar
 
+import scala.util.matching.Regex
+
 object JulianGregorianCalendar {
   /** Returns the number of days in the month. */
   def monthDays(leapYear: Boolean, month: Int) = {
@@ -18,6 +20,13 @@ object JulianGregorianCalendar {
     else MonthDaysNonLeap(month - 1)
   }
 
+  def fromString(s: String) = {
+    val JGDate(year, month, dayOfMonth) = s
+    JulianGregorianCalendar(Integer.parseInt(year),
+      Integer.parseInt(month), Integer.parseInt(dayOfMonth))
+  }
+
+  private val JGDate = new Regex("(\\d+)年(\\d+)月(\\d+)日")
   private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
   private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)     
 }
