@@ -90,7 +90,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
     it("Check fromDate().") {
       fromDate(date(1, 2, 12)) should be === (List("漢平帝元始元年正月初一"))
       fromDate(date(1, 2, 22)) should be === (List("漢平帝元始元年正月十一"))
-      fromDate(date(237, 4, 13)) should be === (List("蜀後主建興十五年三月初一", "吳大帝嘉禾六年三月初一", "魏明帝景初元年四月初一"))
+      fromDate(date(237, 4, 13)) should be === (List("魏明帝景初元年四月初一", "蜀後主建興十五年三月初一", "吳大帝嘉禾六年三月初一"))
     }
 
     it("Check monthLength().") {

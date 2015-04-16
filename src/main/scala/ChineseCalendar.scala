@@ -246,7 +246,7 @@ object ChineseCalendar {
       }
     }
 
-    result.reverse
+    result.sortBy(ChineseCalendar.dynastyOrder(_))
   }
 
   def fromDate(date: String): List[String] =
@@ -398,6 +398,17 @@ object ChineseCalendar {
         sexagenaryDiff(resultArray(i).sexagenary, resultArray(i + 1).sexagenary)
     }
     resultArray
+  }
+
+  // Map value to order concurrent dynastiest. The lower the order,
+  // the higher the priority, i.e. appears first in
+  // ChineseCalendar::fromDate().
+  private val DynastyOrderMap = Map(
+    "魏" -> 1, "蜀" -> 2, "吳" -> 3)
+
+  def dynastyOrder(era: String) = {
+    val c = era.substring(0, 1)
+    if (DynastyOrderMap.contains(c)) DynastyOrderMap(c) else 0
   }
 
   /**
