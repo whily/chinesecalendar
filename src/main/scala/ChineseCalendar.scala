@@ -3681,18 +3681,20 @@ object ChineseCalendar {
 
   processEraArray()
 
-  // TODO:
-  def checkEraArray() {
-    // Make sure elements in eraArray() are in order.
-    true
-  }
-
-  def checkEveryDay() {
+  def checkEveryDay(): Boolean = {
     var day = date(1, 1, 1)
-    while (day < date(420, 1, 1)) {
-      // TODO: check the identity.
+    // TODO: optimize so we can actually check everyday.
+    while (day < date(20, 1, 1)) {
+      val chineseDates = fromDate(day)
+      for (chineseDate <- chineseDates) {
+        if (toDate(chineseDate) != day) {
+          return false
+        }
+      }
       day = day.plusDays(1)
     }
+
+    true
   }
 
   // Regresssion test to ensure the data tables are correct. Made

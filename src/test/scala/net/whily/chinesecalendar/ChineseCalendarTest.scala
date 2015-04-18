@@ -147,5 +147,9 @@ class ChineseCalendarTest extends FunSpec with Matchers {
         simplified2Traditional(traditional2Simplified(eraName)) should be (eraName)
       }
     }
+
+    it("Check conversion for every day.") {
+      checkEveryDay()  should be (true)
+    }
   }
 }
