@@ -73,7 +73,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
 
   /** Returns the first day of next month. */
   def firstDayNextMonth() = {
-    val (_, months) = ChineseCalendar.lookupDate(this)
+    val (_, months, _) = ChineseCalendar.lookupDate(this)
     val i = months indexWhere (_.month == month)
     if (i == months.length - 1) {
       val yearNumber = ChineseCalendar.Numbers(ChineseCalendar.Numbers.indexOf(year.dropRight(1)) + 1)
@@ -88,6 +88,12 @@ case class ChineseCalendar(monarchEra: String, year: String,
   def lastDayPreviousMonth() = {
     // TODO
     this
+  }
+
+  /** Return the sexagenary of the year. */
+  def yearSexagenary() = {
+    val (_, _, sexagenary) = ChineseCalendar.lookupDate(this)
+    sexagenary
   }
 
   override def toString = {
@@ -144,7 +150,7 @@ object ChineseCalendar {
   }
 
   def toDate(date: ChineseCalendar): JulianGregorianCalendar = {
-    val (firstDay, months) = lookupDate(date)
+    val (firstDay, months, _) = lookupDate(date)
     val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
     firstDay.plusDays(dayDiff + date.dayDiff())
@@ -152,7 +158,7 @@ object ChineseCalendar {
 
   /** Return the month information corresponding to the `date`. */
   private def findMonth(date: ChineseCalendar): Month = {
-    val (_, months) = lookupDate(date)
+    val (_, months, _) = lookupDate(date)
     val Some(month) = months.find(_.month == date.month)
     month
   }
@@ -168,18 +174,19 @@ object ChineseCalendar {
     findMonth(parseDate(date)).sexagenary
 
   // Get table information from date.
-  private def lookupDate(date: ChineseCalendar): (JulianGregorianCalendar, Array[Month]) = { 
+  private def lookupDate(date: ChineseCalendar):
+      (JulianGregorianCalendar, Array[Month], String) = {
     val year = date.year.dropRight(1)   // Remove 年
     val yearOffset = Numbers.indexOf(year) - 1
     val monarchEra = date.monarchEra
 
-    val Year(firstDay, months) = eraMap(monarchEra) match {
+    val Year(firstDay, months, sexagenary) = eraMap(monarchEra) match {
       case (table, ad) =>
         val start = table(0).firstDay.year // Year of the 1st entry in the table.
         table(ad - start + yearOffset)
     }
 
-    (firstDay, months)
+    (firstDay, months, sexagenary)
   }
 
   /** 
@@ -416,12 +423,14 @@ object ChineseCalendar {
     * 
     * @param firstDay   the first day in Julian/Gregorian Calendar.
     * @param months     the 12 or 13 months in the year
+    * @param sexagenary sexagenary of the year
     */
-  private case class Year(var firstDay: JulianGregorianCalendar, months: Array[Month])
+  private case class Year(var firstDay: JulianGregorianCalendar, months: Array[Month],
+    var sexagenary: String)
 
   /** Return object Year given year, month, dayOfMonth, months. */
   private def y(year: Int, month: Int, dayOfMonth: Int, monthStr: String) =
-    Year(date(year, month, dayOfMonth), months(monthStr))
+    Year(date(year, month, dayOfMonth), months(monthStr), "")
 
   def date(year: Int, month: Int, dayOfMonth: Int) =
     new JulianGregorianCalendar(year, month, dayOfMonth)
@@ -3513,7 +3522,7 @@ object ChineseCalendar {
     var prevSexagenary = table(0).months(0).sexagenary
 
     for (year <- table) {
-      val Year(firstDay, months) = year
+      val Year(firstDay, months, _) = year
       if (months.length > 6) { // Ignore placeholders.
         calculatedFirstDay = calculatedFirstDay.plusDays(
           sexagenaryDiff(prevSexagenary, months(0).sexagenary))
@@ -3596,6 +3605,17 @@ object ChineseCalendar {
   setMonthLengthLastYear(ShuYears, 30)
   // No need for WuYears as the last year is shared with Wei.
 
+  // Calculate the sexagenary in each year.
+  // @param startSexagenary the sexagenary of the first year in the table.
+  private def setSexagenary(startSexagenary: String, table: Array[Year]) {
+    for (i <- 0 until table.length) {
+      table(i).sexagenary = sexagenaryAdd(startSexagenary, i)
+    }
+  }
+  setSexagenary("戊寅", BCEYears)
+  setSexagenary("辛酉", CEYears)
+  setSexagenary("癸卯", ShuYears)
+  setSexagenary("壬寅", WuYears)
 
   /** Information for era segment, which is defined as a consecutive duration 
     * of one era.

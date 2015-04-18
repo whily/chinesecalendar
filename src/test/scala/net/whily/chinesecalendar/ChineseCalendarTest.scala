@@ -117,6 +117,21 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("漢平帝元始元年二月己丑").plusDays(30) should be (parseDate("漢平帝元始元年三月初二"))
     }
 
+    it("Check yearSexagenary().") {
+      // BCEYears
+      parseDate("漢武帝征和元年").yearSexagenary() should be ("己丑")
+
+      // CEYears
+      parseDate("漢平帝元始二年二月晦").yearSexagenary() should be ("壬戌")
+      parseDate("晉穆帝永和九年三月初三").yearSexagenary() should be ("癸丑")
+
+      // ShuYears
+      parseDate("蜀後主景耀三年").yearSexagenary() should be ("庚辰")
+
+      // WuYears
+      parseDate("吳會稽王太平三年").yearSexagenary() should be ("戊寅")      
+    }
+
     it("Check sexagenaries().") {
       sexagenaries("甲子", 3).mkString(" ") should be ("甲子 乙丑 丙寅")
       // Test wrap around.
