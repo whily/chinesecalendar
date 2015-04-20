@@ -117,6 +117,12 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("漢平帝元始元年二月己丑").plusDays(30) should be (parseDate("漢平帝元始元年三月初二"))
     }
 
+    it("Check firstDayNextMonth().") {
+      parseDate("漢平帝元始元年二月己丑").firstDayNextMonth() should be (parseDate("漢平帝元始元年三月初一"))
+      //parseDate("蜀昭烈帝章武三年四月初二").firstDayNextMonth() should be (parseDate("蜀後主建興元年五月初一"))      
+      //parseDate("蜀後主炎興元年十一月十一").firstDayNextMonth() should be (parseDate("魏陳留王景元四年十二月初一"))            
+    }
+
     it("Check yearSexagenary().") {
       // BCEYears
       parseDate("漢武帝征和元年").yearSexagenary() should be ("己丑")

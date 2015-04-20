@@ -52,7 +52,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
       return plusDaysThisMonth(daysToAdd)
 
     if (daysToAdd > 0) {
-      firstDayNextMonth().plusDays(newDay - 1 - monthDays)
+      firstDayNextMonthFast().plusDays(newDay - 1 - monthDays)
     } else {
       this //lastDayPreviousMonth.plusDays(daysToAdd + dayOfMonth)
     }
@@ -71,18 +71,37 @@ case class ChineseCalendar(monarchEra: String, year: String,
     ChineseCalendar(monarchEra, year, month, dom)
   }
 
-  /** Returns the first day of next month. */
-  def firstDayNextMonth() = {
+  /** Returns the first day of next month, fast in the sense that there
+    * is no check on era boundary. */
+  def firstDayNextMonthFast(): ChineseCalendar = {
     val (_, months, _) = ChineseCalendar.lookupDate(this)
-    val i = months indexWhere (_.month == month)
+    val i = months.indexWhere(_.month == month)
     if (i == months.length - 1) {
       val yearNumber = ChineseCalendar.Numbers(ChineseCalendar.Numbers.indexOf(year.dropRight(1)) + 1)
       ChineseCalendar.parseDate(monarchEra + yearNumber + year.takeRight(1))
     } else {
       ChineseCalendar(monarchEra, year, months(i + 1).month, "初一")
     }
-    // TODO: Implement cross segment.
   }
+
+  /** Returns the first day of next month, general in the sense that era
+    * boundary is considered.
+    * 
+    * TODO: optimize performance so we only need one versin. */
+  def firstDayNextMonth(): ChineseCalendar = {
+    val Some(eraSegment) = ChineseCalendar.eraSegmentArray.find(_.contains(this))
+    val nextChineseDate = firstDayNextMonthFast()
+    val nextDate = ChineseCalendar.toDate(nextChineseDate)
+    if (eraSegment.contains(nextDate))
+      return nextChineseDate
+
+    val nextEra = eraSegment.next
+    val Some(nextEraSegment) =
+      ChineseCalendar.eraSegmentArray.find(
+        e => e.contains(nextDate) && e.era == nextEra)
+
+    nextEraSegment.startChinese
+  }  
 
   /** Returns the last day of previous month. */
   def lastDayPreviousMonth() = {
@@ -3631,8 +3650,12 @@ object ChineseCalendar {
     val start = toDate(startChinese)
 
     /** Returns true if the era segment contains the `date`. */
-    def contains(date: JulianGregorianCalendar) =
+    def contains(date: JulianGregorianCalendar): Boolean =
       (start <= date) && (date <= end)
+
+    /** Returns true if the era segment contains the `chineseDate`. */
+    def contains(chineseDate: ChineseCalendar): Boolean = 
+      contains(toDate(chineseDate)) && (era == chineseDate.monarchEra)
   }
 
   private var eraSegmentArray = new Array[EraSegment](eraArray.length)
