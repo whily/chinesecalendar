@@ -54,7 +54,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
     if (daysToAdd > 0) {
       firstDayNextMonthFast().plusDays(newDay - 1 - monthDays)
     } else {
-      this //lastDayPreviousMonth.plusDays(daysToAdd + dayOfMonth)
+      lastDayPrevMonth().plusDays(newDay)
     }
   }
 
@@ -73,7 +73,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
 
   /** Returns the first day of next month, fast in the sense that there
     * is no check on era boundary. */
-  def firstDayNextMonthFast(): ChineseCalendar = {
+  private def firstDayNextMonthFast(): ChineseCalendar = {
     val (_, months, _) = ChineseCalendar.lookupDate(this)
     val i = months.indexWhere(_.month == month)
     if (i == months.length - 1) {
@@ -96,18 +96,41 @@ case class ChineseCalendar(monarchEra: String, year: String,
       return nextChineseDate
 
     val nextEra = eraSegment.next
-    val Some(nextEraSegment) =
-      ChineseCalendar.eraSegmentArray.find(
-        e => e.contains(nextDate) && e.era == nextEra)
-
-    nextEraSegment.startChinese
-  }  
-
-  /** Returns the last day of previous month. */
-  def lastDayPreviousMonth() = {
-    // TODO
-    this
+    val dates = ChineseCalendar.fromDate(nextDate)
+    val Some(chineseDate) = dates.find(_.startsWith(nextEra))
+    val result = ChineseCalendar.parseDate(chineseDate)
+    // Handle the case that different calendar systems are used,
+    // e.g. the Three Kingdoms.
+    // TODO: make this configurable as the plusDays() may go wrong.
+    ChineseCalendar(result.monarchEra, result.year, result.month, "初一")
   }
+
+  /** Returns the last day of previous month, considering era boundary.
+    * 
+    * TODO: optimize performance so we only need one versin. */
+  def lastDayPrevMonth(): ChineseCalendar = {
+    // We handle this function different from firstDayNextMonth()
+    // since the backtracking of previous month might cause index < 0.
+    val Some(eraSegment) = ChineseCalendar.eraSegmentArray.find(_.contains(this))
+    val firstDay = ChineseCalendar(monarchEra, year, month, "初一")
+    val prevDate = ChineseCalendar.toDate(firstDay).plusDays(-1)
+    val dates = ChineseCalendar.fromDate(prevDate)    
+    if (eraSegment.contains(prevDate)) {
+      val Some(chineseDate) = dates.find(_.startsWith(monarchEra))
+      ChineseCalendar.parseDate(chineseDate)
+    } else {
+      val prevEra = eraSegment.prev
+      val Some(chineseDate) = dates.find(_.startsWith(prevEra))
+      val result = ChineseCalendar.parseDate(chineseDate)
+      // Handle the case that different calendar systems are used,
+      // e.g. the Three Kingdoms.
+      // TODO: make this configurable as the plusDays() may go wrong.
+      val prevDateAdj = ChineseCalendar.toDate(ChineseCalendar(result.monarchEra, result.year, result.month, "晦"))
+      val datesAdj = ChineseCalendar.fromDate(prevDateAdj)
+      val Some(chineseDateAdj) = dates.find(_.startsWith(prevEra))
+      ChineseCalendar.parseDate(chineseDateAdj)
+    }
+  }    
 
   /** Return the sexagenary of the year. */
   def yearSexagenary() = {
@@ -3672,23 +3695,30 @@ object ChineseCalendar {
       val startChinese = parseDate(eraName + eraStartSuffix)
 
       val eraEndSuffix =
-        if (end.contains("年")) end
-        else if (end != "") "元年" + end
+        if (end.contains("年")) {
+          if (end.endsWith("月")) end + "晦"
+          else end
+        }
+        else if (end != "") {
+          if (end.endsWith("月")) "元年" + end + "晦"
+          else "元年" + end          
+        }
         else ""
+
       val endDate =
         // We don't handle default case here as it is simpler to calculate it later.
         if (end == "") date(0, 1, 1)
         else toDate(eraName + eraEndSuffix)
 
-      val prev_ =
-        if ((prev == "") && (i > 0)) eraArray(i - 1)._4
+      val prevNorm =
+        if ((prev == "") && (i > 0)) eraArray(i - 1)._1
         else prev
 
-      val next_ = 
-        if ((next == "") && (i < eraArray.length - 1))  eraArray(i + 1)._5
+      val nextNorm = 
+        if ((next == "") && (i < eraArray.length - 1))  eraArray(i + 1)._1
         else next
 
-      eraSegmentArray(i) = EraSegment(eraName, startChinese, endDate, prev, next)
+      eraSegmentArray(i) = EraSegment(eraName, startChinese, endDate, prevNorm, nextNorm)
     }
 
     // 2nd pass, to calculate the end date for defualt case.

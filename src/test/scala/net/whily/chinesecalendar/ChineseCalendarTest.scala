@@ -109,19 +109,33 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("漢平帝元始元年二月庚子").plusDays(-11) should be (parseDate("漢平帝元始元年二月己丑"))
       parseDate("漢平帝元始元年二月晦").plusDays(-10) should be (parseDate("漢平帝元始元年二月十九"))
 
+      // Different months, positive input.
       parseDate("漢平帝元始元年").plusDays(30) should be (parseDate("漢平帝元始元年二月初一"))
       parseDate("漢平帝元始元年二月初一").plusDays(29) should be (parseDate("漢平帝元始元年三月初一"))
       parseDate("漢平帝元始元年二月初一").plusDays(60) should be (parseDate("漢平帝元始元年四月初二"))
       parseDate("漢平帝元始元年十二月初一").plusDays(31) should be (parseDate("漢平帝元始二年一月初二"))            
-
       parseDate("漢平帝元始元年二月己丑").plusDays(30) should be (parseDate("漢平帝元始元年三月初二"))
+
+      // Diferent months, negative input.
+      parseDate("漢平帝元始元年二月初一").plusDays(-30) should be (parseDate("漢平帝元始元年一月初一"))
+      parseDate("漢平帝元始元年三月初一").plusDays(-29) should be (parseDate("漢平帝元始元年二月初一"))
+      parseDate("漢平帝元始元年四月初二").plusDays(-60) should be (parseDate("漢平帝元始元年二月初一"))
+      parseDate("漢平帝元始二年一月初二").plusDays(-31) should be (parseDate("漢平帝元始元年十二月初一"))            
+      parseDate("漢平帝元始元年三月初二").plusDays(-30) should be (parseDate("漢平帝元始元年二月初一"))
+      parseDate("漢平帝元始元年").plusDays(-1) should be (parseDate("漢哀帝元壽二年十二月廿九"))            
     }
 
     it("Check firstDayNextMonth().") {
       parseDate("漢平帝元始元年二月己丑").firstDayNextMonth() should be (parseDate("漢平帝元始元年三月初一"))
-      //parseDate("蜀昭烈帝章武三年四月初二").firstDayNextMonth() should be (parseDate("蜀後主建興元年五月初一"))      
-      //parseDate("蜀後主炎興元年十一月十一").firstDayNextMonth() should be (parseDate("魏陳留王景元四年十二月初一"))            
+      parseDate("蜀昭烈帝章武三年四月初二").firstDayNextMonth() should be (parseDate("蜀後主建興元年五月初一"))      
+      parseDate("蜀後主炎興元年十一月十一").firstDayNextMonth() should be (parseDate("魏陳留王景元四年十二月初一"))            
     }
+
+    it("Check lastDayPrevMonth().") {
+      parseDate("漢平帝元始元年三月初一").lastDayPrevMonth() should be (parseDate("漢平帝元始元年二月廿九"))
+      parseDate("蜀昭烈帝章武元年四月").lastDayPrevMonth() should be (parseDate("魏文帝黃初二年三月三十"))                  
+      parseDate("蜀後主建興元年五月初一").lastDayPrevMonth() should be (parseDate("蜀昭烈帝章武三年四月廿九"))      
+    }    
 
     it("Check yearSexagenary().") {
       // BCEYears
