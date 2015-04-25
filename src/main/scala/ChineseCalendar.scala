@@ -54,7 +54,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
     if (daysToAdd > 0) {
       firstDayNextMonthFast().plusDays(newDay - 1 - monthDays)
     } else {
-      lastDayPrevMonth().plusDays(newDay)
+      lastDayPrevMonth(true).plusDays(newDay)
     }
   }
 
@@ -87,8 +87,13 @@ case class ChineseCalendar(monarchEra: String, year: String,
   /** Returns the first day of next month, general in the sense that era
     * boundary is considered.
     * 
+    * @param continuous When set to true, continuity of days is preferred over the
+    *                   correctiness (i.e. if two calendar systems are
+    *                   not aligned, the returned date might not be
+    *                   the first day of the month).
+    * 
     * TODO: optimize performance so we only need one versin. */
-  def firstDayNextMonth(): ChineseCalendar = {
+  def firstDayNextMonth(continuous: Boolean): ChineseCalendar = {
     val Some(eraSegment) = ChineseCalendar.eraSegmentArray.find(_.contains(this))
     val nextChineseDate = firstDayNextMonthFast()
     val nextDate = ChineseCalendar.toDate(nextChineseDate)
@@ -101,14 +106,19 @@ case class ChineseCalendar(monarchEra: String, year: String,
     val result = ChineseCalendar.parseDate(chineseDate)
     // Handle the case that different calendar systems are used,
     // e.g. the Three Kingdoms.
-    // TODO: make this configurable as the plusDays() may go wrong.
-    ChineseCalendar(result.monarchEra, result.year, result.month, "初一")
+    if (continuous) result
+    else ChineseCalendar(result.monarchEra, result.year, result.month, "初一")
   }
 
   /** Returns the last day of previous month, considering era boundary.
     * 
+    * @param continuous When set to true, continuity of days is preferred over the
+    *                   correctiness (i.e. if two calendar systems are
+    *                   not aligned, the returned date might not be
+    *                   the last day of the month).
+    * 
     * TODO: optimize performance so we only need one versin. */
-  def lastDayPrevMonth(): ChineseCalendar = {
+  def lastDayPrevMonth(continuous: Boolean): ChineseCalendar = {
     // We handle this function different from firstDayNextMonth()
     // since the backtracking of previous month might cause index < 0.
     val Some(eraSegment) = ChineseCalendar.eraSegmentArray.find(_.contains(this))
@@ -124,11 +134,13 @@ case class ChineseCalendar(monarchEra: String, year: String,
       val result = ChineseCalendar.parseDate(chineseDate)
       // Handle the case that different calendar systems are used,
       // e.g. the Three Kingdoms.
-      // TODO: make this configurable as the plusDays() may go wrong.
-      val prevDateAdj = ChineseCalendar.toDate(ChineseCalendar(result.monarchEra, result.year, result.month, "晦"))
-      val datesAdj = ChineseCalendar.fromDate(prevDateAdj)
-      val Some(chineseDateAdj) = dates.find(_.startsWith(prevEra))
-      ChineseCalendar.parseDate(chineseDateAdj)
+      if (continuous) result
+      else {
+        val prevDateAdj = ChineseCalendar.toDate(ChineseCalendar(result.monarchEra, result.year, result.month, "晦"))
+        val datesAdj = ChineseCalendar.fromDate(prevDateAdj)
+        val Some(chineseDateAdj) = dates.find(_.startsWith(prevEra))
+        ChineseCalendar.parseDate(chineseDateAdj)
+      }
     }
   }    
 
