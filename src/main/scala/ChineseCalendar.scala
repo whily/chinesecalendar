@@ -439,10 +439,13 @@ object ChineseCalendar {
   /** Return an array of months by parsing the string S, in the format of
     *   sexageneray1 sexagenary2 ...
     * If there is a leap month, then insert character 閏.
+    * 
+    * @param startMonthIndex the index of the first month in the string, 
+    *                        1 means the first month.
     */
-  def months(s: String): Array[Month] = {
+  def months(s: String, startMonthIndex: Int = 1): Array[Month] = {
     val words = s.trim.split(" ")
-    var monthIndex = 1
+    var monthIndex = startMonthIndex
     var result: List[Month] = Nil
     var prefix = ""
     for (word <- words) {
@@ -454,6 +457,9 @@ object ChineseCalendar {
           if ((prefix == LeapMonth) || (prefix == LaterMonth))
             monthIndex -= 1
 
+          if (monthIndex > 12)
+            monthIndex -= 12
+          
           result = Month(prefix + Numbers(monthIndex) + "月", word) :: result
           prefix = ""
           monthIndex += 1
@@ -491,9 +497,15 @@ object ChineseCalendar {
   private case class Year(var firstDay: JulianGregorianCalendar, months: Array[Month],
     var sexagenary: String)
 
-  /** Return object Year given year, month, dayOfMonth, months. */
+  /** Return object Year given year, month, dayOfMonth, months. Assuming
+    * 1st month is the start of each year. */
   private def y(year: Int, month: Int, dayOfMonth: Int, monthStr: String) =
     Year(date(year, month, dayOfMonth), months(monthStr), "")
+
+  /** Return object Year given year, month, dayOfMonth, months. Assuming
+    * 10th month is the start of each year. */
+  private def z(year: Int, month: Int, dayOfMonth: Int, monthStr: String) =
+    Year(date(year, month, dayOfMonth), months(monthStr, 10), "")  
 
   def date(year: Int, month: Int, dayOfMonth: Int) =
     new JulianGregorianCalendar(year, month, dayOfMonth)
