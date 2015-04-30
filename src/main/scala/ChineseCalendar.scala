@@ -498,6 +498,212 @@ object ChineseCalendar {
   def date(year: Int, month: Int, dayOfMonth: Int) =
     new JulianGregorianCalendar(year, month, dayOfMonth)
 
+
+  // Create a map from the array, with each value mapped to its index.
+  def toMap(a: Array[String]) = {
+    var map = new mutable.HashMap[String, Int]()
+    for (i <- 0 to a.length - 1) {
+      map(a(i)) = i
+    }
+    map
+  }
+
+  /** Return the array of era names. */
+  def eraNames() = {
+    val eraNameList = eraMap.keys.toList sortWith (_ < _)
+    eraNameList.toArray
+  }
+
+  // Check sanity of year tables.
+  private def checkYearTable(table: Array[Year]): Boolean = {
+    // Calculate the first day of next year based on the first day of
+    // current year and the sum of the sexagenary difference of the
+    // months.
+    var calculatedFirstDay = table(0).firstDay
+    // The following value is selected to make the code also work for
+    // the first year in the table.
+    var prevSexagenary = table(0).months(0).sexagenary
+
+    for (year <- table) {
+      val Year(firstDay, months, _) = year
+      if (months.length > 6) { // Ignore placeholders.
+        calculatedFirstDay = calculatedFirstDay.plusDays(
+          sexagenaryDiff(prevSexagenary, months(0).sexagenary))
+ 
+        if (firstDay != calculatedFirstDay) {
+          println("!!!!!!!!! " + firstDay + " CAL " + calculatedFirstDay + " !!!!!!!!!")
+          return false
+        }
+
+        val (dayDiff, sexagenary) = daysFromNewYear(months.last.month, months)
+        calculatedFirstDay = calculatedFirstDay.plusDays(dayDiff)
+        prevSexagenary = sexagenary
+      } else {
+        return true
+      }
+    }
+
+    true
+  }
+
+
+  // Calculate month length for the last month in each year.
+  // Note that for the last month of the last year in a table, we need to call
+  // setMonthLengthLastYear().
+  private def setMonthLength(table: Array[Year]) {
+    for (i <- 0 until table.length - 1) {
+      val months = table(i).months
+      val lastMonth = months(months.length - 1)
+      val monthLength =
+        sexagenaryDiff(lastMonth.sexagenary, table(i + 1).months(0).sexagenary)
+      if ((lastMonth.length > 0) && (lastMonth.length != monthLength)) {
+        // Since some year record is shared by different tables, check
+        // whether there is collision. If yes, then corresponding data
+        // will be copied to different tables instead of beinig shared.
+        throw new RuntimeException("Sharing should be replaced by copying: index "
+          + i + " months: " + months.mkString(":"))
+      }
+      lastMonth.length = monthLength
+    }
+  }
+
+  // Set the month length of the last month of the last year in a
+  // table, with the length from manual calculation.
+  private def setMonthLengthLastYear(table: Array[Year], length: Int) {
+    val lastYear = table(table.length - 1)
+    val lastMonth = lastYear.months(lastYear.months.length - 1)
+    // No more check as in setMonthLength since manual check is done.
+    lastMonth.length = length
+  }
+
+  implicit class RichInt(val value: Int) extends AnyVal {
+    def downto (n: Int) = value to n by -1
+    def downtil (n: Int) = value until n by -1
+  }
+
+  // Set the date of the first day of each year of BCE years.
+  private def setDateFirstDayBCE() {
+    var firstDay = CEYears(0).firstDay
+    var sexagenary = CEYears(0).months(0).sexagenary
+    for (i <- BCEYears.length - 1 downto 0) {
+      val year = BCEYears(i)
+      var daysDiff = 0
+      for (month <- year.months.reverse) {
+        daysDiff += sexagenaryDiff(month.sexagenary, sexagenary)
+        sexagenary = month.sexagenary
+      }
+      firstDay = firstDay.plusDays(-daysDiff)
+      year.firstDay = firstDay
+    }
+  }
+
+  /** Information for era segment, which is defined as a consecutive duration 
+    * of one era.
+    * @param era era name
+    * @param startChinese the first day of the era segment in Chinese calendar
+    * @param end the last day of the era segment 
+    * @param prev the previous era.
+    * @param next the next era.
+    */
+  case class EraSegment(era: String, startChinese: ChineseCalendar,
+    var end: JulianGregorianCalendar,
+    prev: String, next: String) {
+    val start = toDate(startChinese)
+
+    /** Returns true if the era segment contains the `date`. */
+    def contains(date: JulianGregorianCalendar): Boolean =
+      (start <= date) && (date <= end)
+
+    /** Returns true if the era segment contains the `chineseDate`. */
+    def contains(chineseDate: ChineseCalendar): Boolean = 
+      contains(toDate(chineseDate)) && (era == chineseDate.monarchEra)
+  }
+
+  // Calculate the sexagenary in each year.
+  // @param startSexagenary the sexagenary of the first year in the table.
+  private def setSexagenary(startSexagenary: String, table: Array[Year]) {
+    assert((table(0).sexagenary == "") || table(0).sexagenary == startSexagenary)
+
+    for (i <- 0 until table.length) {
+      table(i).sexagenary = sexagenaryAdd(startSexagenary, i)
+    }
+  }
+
+  /* Post process eraArray to generate eraSegmentArray. */
+  private def processEraArray() {
+    for (i <- 0 until eraArray.length) {
+      val (eraName, start, end, prev, next, _) = eraArray(i)
+
+      val eraStartSuffix =
+        if (start == "") "元年"
+        else if (start.contains("年")) start
+        else "元年" + start
+      val startChinese = parseDate(eraName + eraStartSuffix)
+
+      val eraEndSuffix =
+        if (end.contains("年")) {
+          if (end.endsWith("月")) end + "晦"
+          else end
+        }
+        else if (end != "") {
+          if (end.endsWith("月")) "元年" + end + "晦"
+          else "元年" + end          
+        }
+        else ""
+
+      val endDate =
+        // We don't handle default case here as it is simpler to calculate it later.
+        if (end == "") date(0, 1, 1)
+        else toDate(eraName + eraEndSuffix)
+
+      val prevNorm =
+        if ((prev == "") && (i > 0)) eraArray(i - 1)._1
+        else prev
+
+      val nextNorm = 
+        if ((next == "") && (i < eraArray.length - 1))  eraArray(i + 1)._1
+        else next
+
+      eraSegmentArray(i) = EraSegment(eraName, startChinese, endDate, prevNorm, nextNorm)
+    }
+
+    // 2nd pass, to calculate the end date for defualt case.
+    for (i <- 0 until eraSegmentArray.length) {
+      if (eraArray(i)._3 == "") { // Default case for end.
+        assert(i != eraSegmentArray.length - 1)
+        eraSegmentArray(i).end = eraSegmentArray(i + 1).start.plusDays(-1)
+      }
+    }
+
+    eraSegmentArray = eraSegmentArray.sortBy(_.start)
+  }
+
+  def checkEveryDay(): Boolean = {
+    var day = date(1, 1, 1)
+    // TODO: optimize so we can actually check everyday.
+    while (day < date(20, 1, 1)) {
+      val chineseDates = fromDate(day)
+      for (chineseDate <- chineseDates) {
+        if (toDate(chineseDate) != day) {
+          return false
+        }
+      }
+      day = day.plusDays(1)
+    }
+
+    true
+  }
+
+  // Regresssion test to ensure the data tables are correct. Made
+  // public so this can be called as regression test.
+  def sanityCheck: Boolean = {
+    checkYearTable(BCEYears) &&
+    checkYearTable(CEYears) &&
+    checkYearTable(ShuYears) &&
+    checkYearTable(WuYears) &&
+    checkYearTable(BeiWeiYears)
+  }  
+  
   // Information from 中国史历日和中西历日对照表 (方诗铭，方小芬 著)
   // It's possible that different calendars are used in the same time,
   // but they may share the same calendar for some time.
@@ -3749,103 +3955,6 @@ object ChineseCalendar {
     }
   }
 
-  // Create a map from the array, with each value mapped to its index.
-  def toMap(a: Array[String]) = {
-    var map = new mutable.HashMap[String, Int]()
-    for (i <- 0 to a.length - 1) {
-      map(a(i)) = i
-    }
-    map
-  }
-
-  /** Return the array of era names. */
-  def eraNames() = {
-    val eraNameList = eraMap.keys.toList sortWith (_ < _)
-    eraNameList.toArray
-  }
-
-  // Check sanity of year tables.
-  private def checkYearTable(table: Array[Year]): Boolean = {
-    // Calculate the first day of next year based on the first day of
-    // current year and the sum of the sexagenary difference of the
-    // months.
-    var calculatedFirstDay = table(0).firstDay
-    // The following value is selected to make the code also work for
-    // the first year in the table.
-    var prevSexagenary = table(0).months(0).sexagenary
-
-    for (year <- table) {
-      val Year(firstDay, months, _) = year
-      if (months.length > 6) { // Ignore placeholders.
-        calculatedFirstDay = calculatedFirstDay.plusDays(
-          sexagenaryDiff(prevSexagenary, months(0).sexagenary))
- 
-        if (firstDay != calculatedFirstDay) {
-          println("!!!!!!!!! " + firstDay + " CAL " + calculatedFirstDay + " !!!!!!!!!")
-          return false
-        }
-
-        val (dayDiff, sexagenary) = daysFromNewYear(months.last.month, months)
-        calculatedFirstDay = calculatedFirstDay.plusDays(dayDiff)
-        prevSexagenary = sexagenary
-      } else {
-        return true
-      }
-    }
-
-    true
-  }
-
-  // Calculate month length for the last month in each year.
-  // Note that for the last month of the last year in a table, we need to call
-  // setMonthLengthLastYear().
-  private def setMonthLength(table: Array[Year]) {
-    for (i <- 0 until table.length - 1) {
-      val months = table(i).months
-      val lastMonth = months(months.length - 1)
-      val monthLength =
-        sexagenaryDiff(lastMonth.sexagenary, table(i + 1).months(0).sexagenary)
-      if ((lastMonth.length > 0) && (lastMonth.length != monthLength)) {
-        // Since some year record is shared by different tables, check
-        // whether there is collision. If yes, then corresponding data
-        // will be copied to different tables instead of beinig shared.
-        throw new RuntimeException("Sharing should be replaced by copying: index "
-          + i + " months: " + months.mkString(":"))
-      }
-      lastMonth.length = monthLength
-    }
-  }
-
-  // Set the month length of the last month of the last year in a
-  // table, with the length from manual calculation.
-  private def setMonthLengthLastYear(table: Array[Year], length: Int) {
-    val lastYear = table(table.length - 1)
-    val lastMonth = lastYear.months(lastYear.months.length - 1)
-    // No more check as in setMonthLength since manual check is done.
-    lastMonth.length = length
-  }
-
-  implicit class RichInt(val value: Int) extends AnyVal {
-    def downto (n: Int) = value to n by -1
-    def downtil (n: Int) = value until n by -1
-  }
-
-  // Set the date of the first day of each year of BCE years.
-  private def setDateFirstDayBCE() {
-    var firstDay = CEYears(0).firstDay
-    var sexagenary = CEYears(0).months(0).sexagenary
-    for (i <- BCEYears.length - 1 downto 0) {
-      val year = BCEYears(i)
-      var daysDiff = 0
-      for (month <- year.months.reverse) {
-        daysDiff += sexagenaryDiff(month.sexagenary, sexagenary)
-        sexagenary = month.sexagenary
-      }
-      firstDay = firstDay.plusDays(-daysDiff)
-      year.firstDay = firstDay
-    }
-  }
-
   setDateFirstDayBCE()
 
   setMonthLength(BCEYears)
@@ -3861,119 +3970,13 @@ object ChineseCalendar {
   // TODO:
   //setMonthLengthLastYear(BeiWeiYears, 30)
 
-  // Calculate the sexagenary in each year.
-  // @param startSexagenary the sexagenary of the first year in the table.
-  private def setSexagenary(startSexagenary: String, table: Array[Year]) {
-    assert((table(0).sexagenary == "") || table(0).sexagenary == startSexagenary)
-
-    for (i <- 0 until table.length) {
-      table(i).sexagenary = sexagenaryAdd(startSexagenary, i)
-    }
-  }
   setSexagenary("丁丑", BCEYears)
   setSexagenary("辛酉", CEYears)
   setSexagenary("癸卯", ShuYears)
   setSexagenary("壬寅", WuYears)
   setSexagenary("庚辰", BeiWeiYears)  
 
-  /** Information for era segment, which is defined as a consecutive duration 
-    * of one era.
-    * @param era era name
-    * @param startChinese the first day of the era segment in Chinese calendar
-    * @param end the last day of the era segment 
-    * @param prev the previous era.
-    * @param next the next era.
-    */
-  case class EraSegment(era: String, startChinese: ChineseCalendar,
-    var end: JulianGregorianCalendar,
-    prev: String, next: String) {
-    val start = toDate(startChinese)
-
-    /** Returns true if the era segment contains the `date`. */
-    def contains(date: JulianGregorianCalendar): Boolean =
-      (start <= date) && (date <= end)
-
-    /** Returns true if the era segment contains the `chineseDate`. */
-    def contains(chineseDate: ChineseCalendar): Boolean = 
-      contains(toDate(chineseDate)) && (era == chineseDate.monarchEra)
-  }
-
   private var eraSegmentArray = new Array[EraSegment](eraArray.length)
 
-  /* Post process eraArray to generate eraSegmentArray. */
-  private def processEraArray() {
-    for (i <- 0 until eraArray.length) {
-      val (eraName, start, end, prev, next, _) = eraArray(i)
-
-      val eraStartSuffix =
-        if (start == "") "元年"
-        else if (start.contains("年")) start
-        else "元年" + start
-      val startChinese = parseDate(eraName + eraStartSuffix)
-
-      val eraEndSuffix =
-        if (end.contains("年")) {
-          if (end.endsWith("月")) end + "晦"
-          else end
-        }
-        else if (end != "") {
-          if (end.endsWith("月")) "元年" + end + "晦"
-          else "元年" + end          
-        }
-        else ""
-
-      val endDate =
-        // We don't handle default case here as it is simpler to calculate it later.
-        if (end == "") date(0, 1, 1)
-        else toDate(eraName + eraEndSuffix)
-
-      val prevNorm =
-        if ((prev == "") && (i > 0)) eraArray(i - 1)._1
-        else prev
-
-      val nextNorm = 
-        if ((next == "") && (i < eraArray.length - 1))  eraArray(i + 1)._1
-        else next
-
-      eraSegmentArray(i) = EraSegment(eraName, startChinese, endDate, prevNorm, nextNorm)
-    }
-
-    // 2nd pass, to calculate the end date for defualt case.
-    for (i <- 0 until eraSegmentArray.length) {
-      if (eraArray(i)._3 == "") { // Default case for end.
-        assert(i != eraSegmentArray.length - 1)
-        eraSegmentArray(i).end = eraSegmentArray(i + 1).start.plusDays(-1)
-      }
-    }
-
-    eraSegmentArray = eraSegmentArray.sortBy(_.start)
-  }
-
   processEraArray()
-
-  def checkEveryDay(): Boolean = {
-    var day = date(1, 1, 1)
-    // TODO: optimize so we can actually check everyday.
-    while (day < date(20, 1, 1)) {
-      val chineseDates = fromDate(day)
-      for (chineseDate <- chineseDates) {
-        if (toDate(chineseDate) != day) {
-          return false
-        }
-      }
-      day = day.plusDays(1)
-    }
-
-    true
-  }
-
-  // Regresssion test to ensure the data tables are correct. Made
-  // public so this can be called as regression test.
-  def sanityCheck: Boolean = {
-    checkYearTable(BCEYears) &&
-    checkYearTable(CEYears) &&
-    checkYearTable(ShuYears) &&
-    checkYearTable(WuYears) &&
-    checkYearTable(BeiWeiYears)
-  }
 }
