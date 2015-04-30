@@ -235,9 +235,16 @@ object ChineseCalendar {
     val monarchEra = date.monarchEra
 
     val Year(firstDay, months, sexagenary) = eraMap(monarchEra) match {
-      case (table, ad) =>
-        val start = table(0).firstDay.year // Year of the 1st entry in the table.
-        table(ad - start + yearOffset)
+      case (table, eraStartYear) =>
+        val tableStartYear = table(0).firstDay.year // Year of the 1st entry in the table.
+        var index = eraStartYear - tableStartYear + yearOffset
+        // Handle the case that 太初元年 has 15 months, therefore it
+        // starts in BCE 105, while ends in BCE 103. This creats a gap
+        // in table indices.
+        if ((table == BCEYears) && (eraStartYear > -104)) {
+          index -= 1
+        }
+        table(index)
     }
 
     (firstDay, months, sexagenary)
@@ -254,7 +261,9 @@ object ChineseCalendar {
       // One month can only have 29 or 30 days. Value 0 is for the 1st
       // month in the year.
       if ((diff != 0) && (diff != 29) && (diff != 30)) {
-        throw new RuntimeException("Month length is incorrect: " + months.mkString(":"))
+        throw new RuntimeException("Month length is incorrect: " +
+          prevSexagenary + "-" + ms(0).sexagenary + 
+          "\n" + months.mkString(":"))
       }
 
       val updatedDaysDiff =  daysDiff + diff
@@ -1232,9 +1241,18 @@ object ChineseCalendar {
     // y(-108, 2, 28, ""),        
     // y(-107, 2, 28, ""),        
     // y(-106, 2, 28, ""),        
-    // y(-105, 2, 28, ""),        
-    // y(-104, 2, 28, ""),        
-    // y(-103, 2, 28, ""),        
+    // y(-105, 2, 28, ""),
+
+    // There are no suffices for the second 十/十
+    // 一/十二月 in history books (not mentioned in 資治通鑒).
+    // We add them to distinguish with previous months.
+    Year(date(-104, 2, 28), Array(
+      Month("十月", "乙未"), Month("十一月", "甲子"), Month("十二月", "甲午"),      
+      Month("一月", "癸亥"), Month("二月", "壬辰"), Month("三月", "壬戌"),
+      Month("四月", "辛卯"), Month("五月", "辛酉"), Month("六月", "庚寅"),
+      Month("七月", "庚申"), Month("八月", "己丑"), Month("九月", "己未"),
+      Month("後十月", "戊子"), Month("後十一月", "戊午"), Month("後十二月", "丁亥")),
+      ""),    
     y(-102, 2, 28, "丁巳 丙戌 丙辰 丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子 壬午"),        
     y(-101, 2, 28, "辛亥 辛巳 庚戌 庚辰 己酉 己卯 閏 戊申 戊寅 戊申 丁丑 丁未 丙子 丙午"),    
     y(-100, 2, 28, "乙亥 乙巳 甲戌 甲辰 癸酉 癸卯 壬申 壬寅 辛未 辛丑 辛未 庚子"),    
@@ -3505,13 +3523,13 @@ object ChineseCalendar {
   // is convenient to input data for a dynasty consecuritively when
   // there are several competing dynasties.
   private val eraArray = Array(
-    // ("漢武帝建元", (BCEYears, -139)),
-    // ("漢武帝元光", (BCEYears, -133)),
-    // ("漢武帝元朔", (BCEYears, -127)),
-    // ("漢武帝元狩", (BCEYears, -121)),
-    // ("漢武帝元鼎", (BCEYears, -115)),
-    // ("漢武帝元封", (BCEYears, -109)),
-    // ("漢武帝太初", (BCEYears, -103)),
+    // ("漢武帝建元", "", "", "", "",(BCEYears, -139)),
+    // ("漢武帝元光", "", "", "", "", (BCEYears, -133)),
+    // ("漢武帝元朔", "", "", "", "", (BCEYears, -127)),
+    // ("漢武帝元狩", "", "", "", "", (BCEYears, -121)),
+    // ("漢武帝元鼎", "", "", "", "", (BCEYears, -115)),
+    // ("漢武帝元封", "", "", "", "", (BCEYears, -109)),
+    ("漢武帝太初", "", "", "", "", (BCEYears, -104)),
     ("漢武帝天漢", "", "", "", "", (BCEYears, -99)),
     ("漢武帝太始", "", "", "", "", (BCEYears, -95)),
     ("漢武帝征和", "", "", "", "", (BCEYears, -91)),
@@ -3852,7 +3870,7 @@ object ChineseCalendar {
       table(i).sexagenary = sexagenaryAdd(startSexagenary, i)
     }
   }
-  setSexagenary("戊寅", BCEYears)
+  setSexagenary("丁丑", BCEYears)
   setSexagenary("辛酉", CEYears)
   setSexagenary("癸卯", ShuYears)
   setSexagenary("壬寅", WuYears)
@@ -3950,7 +3968,7 @@ object ChineseCalendar {
   }
 
   // Regresssion test to ensure the data tables are correct. Made
-  // public so this can be called from as regression test.
+  // public so this can be called as regression test.
   def sanityCheck: Boolean = {
     checkYearTable(BCEYears) &&
     checkYearTable(CEYears) &&
