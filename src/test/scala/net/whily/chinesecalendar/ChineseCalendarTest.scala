@@ -56,6 +56,12 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
     it("Check toDate().") {
       // Check historical dates from zh.wikipedia.org.
+      // 漢文帝崩
+      toDate("漢文帝後七年六月己亥") should be (date(-156, 7, 6))            
+      // 漢景帝崩
+      toDate("漢景帝後三年正月甲子") should be (date(-140, 3, 9))            
+      // 漢昭帝即位
+      toDate("漢武帝後元二年二月戊辰") should be (date(-86, 3, 30))      
       // 漢昭帝即位
       toDate("漢武帝後元二年二月戊辰") should be (date(-86, 3, 30))
       // 漢昭帝崩
