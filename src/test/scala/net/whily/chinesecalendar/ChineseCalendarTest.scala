@@ -56,14 +56,25 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
     it("Check toDate().") {
       // Check historical dates from zh.wikipedia.org.
+      // TODO: 秦孝文王即位
+      // TODO: toDate("秦孝文王元年十月己亥") should be (date(-250, 11, 12))
+      toDate("秦孝文王元年十一月") should be (date(-250, 12, 19))
+      // 秦王政即位
+      toDate("秦莊襄王三年五月丙午") should be (date(-246, 7, 6))              
+      // 秦始皇崩 (http://blog.sina.com.cn/s/blog_50823c400100iqqw.html)
+      toDate("秦始皇三十七年八月丙寅") should be (date(-209, 9, 10))              
+      // 漢高祖崩
+      toDate("漢高祖十二年四月甲辰") should be (date(-194, 6, 1))        
+      // 漢惠帝崩
+      toDate("漢惠帝七年八月戊寅") should be (date(-187, 9, 26))        
+      // 漢高后崩
+      toDate("漢高后八年七月辛巳") should be (date(-179, 8, 18))        
       // 漢文帝崩
       toDate("漢文帝後七年六月己亥") should be (date(-156, 7, 6))            
       // 漢景帝崩
       toDate("漢景帝後三年正月甲子") should be (date(-140, 3, 9))            
       // 漢昭帝即位
       toDate("漢武帝後元二年二月戊辰") should be (date(-86, 3, 30))      
-      // 漢昭帝即位
-      toDate("漢武帝後元二年二月戊辰") should be (date(-86, 3, 30))
       // 漢昭帝崩
       toDate("漢昭帝元平元年四月癸未") should be (date(-73, 6, 5))
       // 昌邑王即位
