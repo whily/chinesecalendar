@@ -56,7 +56,8 @@ object JulianGregorianCalendar {
   *    accurately model Roman calendar. Propleptic Julian calendar is
   *    widely used in astronomoy to document eclipses
   *    (e.g. http://eclipse.gsfc.nasa.gov/SEhelp/calendar.html), which
-  *    seems to be a more interesting choice.
+  *    seems to be a more interesting choice. Proplepptic Julian calendar is also
+  *    used in 三千五百年历日天象.
   * 
   * class JulianGregorianCalendar is thread-safe and immutable. The equals method should
   * be used for comparison.
