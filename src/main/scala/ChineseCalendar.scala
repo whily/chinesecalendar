@@ -88,7 +88,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
     * boundary is considered.
     * 
     * @param continuous When set to true, continuity of days is preferred over the
-    *                   correctiness (i.e. if two calendar systems are
+    *                   correctness (i.e. if two calendar systems are
     *                   not aligned, the returned date might not be
     *                   the first day of the month).
     * 
@@ -224,8 +224,12 @@ object ChineseCalendar {
   def monthLength(date: String): Int = monthLength(parseDate(date))
 
   /** Return the sexagenary of the 1st day of the month. */
+  def sexagenary1stDayOfMonth(date: ChineseCalendar): String =
+    findMonth(date).sexagenary
+
+  /** Return the sexagenary of the 1st day of the month. */
   def sexagenary1stDayOfMonth(date: String): String =
-    findMonth(parseDate(date)).sexagenary
+    sexagenary1stDayOfMonth(parseDate(date))
 
   // Get table information from date.
   private def lookupDate(date: ChineseCalendar):
