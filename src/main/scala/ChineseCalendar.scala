@@ -526,8 +526,7 @@ object ChineseCalendar {
 
   /** Return the array of era names. */
   def eraNames() = {
-    val eraNameList = eraMap.keys.toList sortWith (_ < _)
-    eraNameList.toArray
+    eraArray.map(_._1).filter(_ != "").distinct
   }
 
   // Check sanity of year tables.
