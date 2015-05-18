@@ -237,12 +237,10 @@ object ChineseCalendar {
   def sexagenary1stDayOfMonth(date: String): String =
     sexagenary1stDayOfMonth(parseDate(date))
 
-  // Get table information from date.  
-  private def lookupDate(date: ChineseCalendar):
+  // Get table information from date.
+  private def lookupDate(era: String, year: String):
       (JulianGregorianCalendar, Array[Month], String) = {
-    val year = date.year.dropRight(1)   // Remove 年
-    val yearOffset = Numbers.indexOf(year) - 1
-    val era = date.era
+    val yearOffset = Numbers.indexOf(year.dropRight(1)) - 1 // Remove 年
 
     val Year(firstDay, months, sexagenary) = eraMap(era) match {
       case (table, eraStartYear) =>
@@ -259,6 +257,11 @@ object ChineseCalendar {
 
     (firstDay, months, sexagenary)
   }
+
+  // Get table information from date.  
+  private def lookupDate(date: ChineseCalendar):
+      (JulianGregorianCalendar, Array[Month], String) =
+    lookupDate(date.era, date.year)
 
   /**
     * Return the number of days in difference between the indicated
@@ -333,6 +336,13 @@ object ChineseCalendar {
     fromDate(JulianGregorianCalendar.fromString(date))
 
   def parseDate(s: String): ChineseCalendar = {
+    // Select the first month
+    if (s.takeRight(1) == "年") {
+      val (era, year) = parseYear(s)
+      val (_, months, _) = lookupDate(era, year)
+      return parseDate(era + year + months(0).month)
+    }
+
     var dayOfMonth = "初一"   // Default day of month.
     var endIndex = s.length
     if (s.takeRight(1) == "朔") {
@@ -377,7 +387,7 @@ object ChineseCalendar {
     parseYear(s.substring(0, endIndex), month, dayOfMonth)
   }
 
-  private def parseYear(s: String, month: String, dayOfMonth: String): ChineseCalendar = {
+  private def parseYear(s: String): (String, String) = {
     if (s.takeRight(1) != "年") {
       throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
     }
@@ -404,7 +414,12 @@ object ChineseCalendar {
       throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
     }
 
-    ChineseCalendar(era, year + "年", month, dayOfMonth)
+    (era, year + "年")
+  }
+
+  private def parseYear(s: String, month: String, dayOfMonth: String): ChineseCalendar = {
+    val (era, year) = parseYear(s)
+    ChineseCalendar(era, year, month, dayOfMonth)
   }
 
   /**
@@ -3767,28 +3782,26 @@ object ChineseCalendar {
   // is convenient to input data for a dynasty consecuritively when
   // there are several competing dynasties.
   private val eraArray = Array(
-    // Due to the limitation of parseDate(), for any year not starting
-    // from 一月, we should add the month explicitly. 
-    ("秦孝文王", "十月", "", "", "", (BCEYears, -250)),
-    ("秦莊襄王", "十月", "", "", "", (BCEYears, -249)),    
-    ("秦王政", "十月", "", "", "", (BCEYears, -246)),
-    ("秦始皇", "二十六年十月", "", "", "", (BCEYears, -246)),
-    ("秦二世", "十月", "", "", "", (BCEYears, -209)),
-    ("漢高祖", "十月", "", "", "", (BCEYears, -206)),
-    ("漢惠帝", "十月", "", "", "", (BCEYears, -194)),
-    ("漢高后", "十月", "", "", "", (BCEYears, -187)),      
-    ("漢文帝", "十月", "", "", "", (BCEYears, -179)),
-    ("漢文帝後", "十月", "", "", "", (BCEYears, -163)),       
-    ("漢景帝", "十月", "", "", "", (BCEYears, -156)),
-    ("漢景帝中", "十月", "", "", "", (BCEYears, -149)),
-    ("漢景帝後", "十月", "", "", "", (BCEYears, -143)),            
-    ("漢武帝建元", "十月", "", "", "", (BCEYears, -140)),
-    ("漢武帝元光", "十月", "", "", "", (BCEYears, -134)),
-    ("漢武帝元朔", "十月", "", "", "", (BCEYears, -128)),
-    ("漢武帝元狩", "十月", "", "", "", (BCEYears, -122)),
-    ("漢武帝元鼎", "十月", "", "", "", (BCEYears, -116)),
-    ("漢武帝元封", "十月", "", "", "", (BCEYears, -110)),
-    ("漢武帝太初", "十月", "", "", "", (BCEYears, -104)),
+    ("秦孝文王", "", "", "", "", (BCEYears, -250)),
+    ("秦莊襄王", "", "", "", "", (BCEYears, -249)),    
+    ("秦王政", "", "", "", "", (BCEYears, -246)),
+    ("秦始皇", "二十六年", "", "", "", (BCEYears, -246)),
+    ("秦二世", "", "", "", "", (BCEYears, -209)),
+    ("漢高祖", "", "", "", "", (BCEYears, -206)),
+    ("漢惠帝", "", "", "", "", (BCEYears, -194)),
+    ("漢高后", "", "", "", "", (BCEYears, -187)),      
+    ("漢文帝", "", "", "", "", (BCEYears, -179)),
+    ("漢文帝後", "", "", "", "", (BCEYears, -163)),       
+    ("漢景帝", "", "", "", "", (BCEYears, -156)),
+    ("漢景帝中", "", "", "", "", (BCEYears, -149)),
+    ("漢景帝後", "", "", "", "", (BCEYears, -143)),            
+    ("漢武帝建元", "", "", "", "", (BCEYears, -140)),
+    ("漢武帝元光", "", "", "", "", (BCEYears, -134)),
+    ("漢武帝元朔", "", "", "", "", (BCEYears, -128)),
+    ("漢武帝元狩", "", "", "", "", (BCEYears, -122)),
+    ("漢武帝元鼎", "", "", "", "", (BCEYears, -116)),
+    ("漢武帝元封", "", "", "", "", (BCEYears, -110)),
+    ("漢武帝太初", "", "", "", "", (BCEYears, -104)),
     ("漢武帝天漢", "", "", "", "", (BCEYears, -99)),
     ("漢武帝太始", "", "", "", "", (BCEYears, -95)),
     ("漢武帝征和", "", "", "", "", (BCEYears, -91)),
