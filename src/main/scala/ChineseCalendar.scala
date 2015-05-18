@@ -13,11 +13,11 @@ package net.whily.chinesecalendar
 
 import scala.collection.mutable    // For toMap()
 
-case class ChineseCalendar(monarchEra: String, year: String,
+case class ChineseCalendar(era: String, year: String,
   month: String, dayOfMonth: String) {
   /** Equals method. */
   override def equals(other: Any): Boolean = other match {
-    case that: ChineseCalendar => monarchEra == that.monarchEra &&
+    case that: ChineseCalendar => era == that.era &&
       year == that.year && month == that.month && dayOfMonth == that.dayOfMonth
     case _ => false
   }
@@ -68,7 +68,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
         else dayOfMonth
       dom = ChineseCalendar.dateAdd(date, daysToAdd)
     }
-    ChineseCalendar(monarchEra, year, month, dom)
+    ChineseCalendar(era, year, month, dom)
   }
 
   /** Returns the first day of next month, fast in the sense that there
@@ -78,9 +78,9 @@ case class ChineseCalendar(monarchEra: String, year: String,
     val i = months.indexWhere(_.month == month)
     if (i == months.length - 1) {
       val yearNumber = ChineseCalendar.Numbers(ChineseCalendar.Numbers.indexOf(year.dropRight(1)) + 1)
-      ChineseCalendar.parseDate(monarchEra + yearNumber + year.takeRight(1))
+      ChineseCalendar.parseDate(era + yearNumber + year.takeRight(1))
     } else {
-      ChineseCalendar(monarchEra, year, months(i + 1).month, "初一")
+      ChineseCalendar(era, year, months(i + 1).month, "初一")
     }
   }
 
@@ -107,7 +107,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
     // Handle the case that different calendar systems are used,
     // e.g. the Three Kingdoms.
     if (continuous) result
-    else ChineseCalendar(result.monarchEra, result.year, result.month, "初一")
+    else ChineseCalendar(result.era, result.year, result.month, "初一")
   }
 
   /** Returns the last day of previous month, considering era boundary.
@@ -122,11 +122,11 @@ case class ChineseCalendar(monarchEra: String, year: String,
     // We handle this function different from firstDayNextMonth()
     // since the backtracking of previous month might cause index < 0.
     val Some(eraSegment) = ChineseCalendar.eraSegmentArray.find(_.contains(this))
-    val firstDay = ChineseCalendar(monarchEra, year, month, "初一")
+    val firstDay = ChineseCalendar(era, year, month, "初一")
     val prevDate = ChineseCalendar.toDate(firstDay, true).plusDays(-1)
     val dates = ChineseCalendar.fromDate(prevDate)    
     if (eraSegment.contains(prevDate)) {
-      val Some(chineseDate) = dates.find(_.startsWith(monarchEra))
+      val Some(chineseDate) = dates.find(_.startsWith(era))
       ChineseCalendar.parseDate(chineseDate)
     } else {
       val prevEra = eraSegment.prev
@@ -136,7 +136,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
       // e.g. the Three Kingdoms.
       if (continuous) result
       else {
-        val prevDateAdj = ChineseCalendar.toDate(ChineseCalendar(result.monarchEra, result.year, result.month, "晦"), true)
+        val prevDateAdj = ChineseCalendar.toDate(ChineseCalendar(result.era, result.year, result.month, "晦"), true)
         val datesAdj = ChineseCalendar.fromDate(prevDateAdj)
         val Some(chineseDateAdj) = dates.find(_.startsWith(prevEra))
         ChineseCalendar.parseDate(chineseDateAdj)
@@ -154,7 +154,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
     val y = if (year == "一年") "元年" else year
     val m = if (month == "一月") "正月" else month
 
-    monarchEra + y + m + dayOfMonth
+    era + y + m + dayOfMonth
   }
 }
 
@@ -210,9 +210,9 @@ object ChineseCalendar {
     val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
     val result = firstDay.plusDays(dayDiff + date.dayDiff())
-    if (check && !dateInRange(result, date.monarchEra))
+    if (check && !dateInRange(result, date.era))
       throw new IllegalArgumentException("toDate(): date " + result +
-        " not in era " + date.monarchEra)
+        " not in era " + date.era)
     result
   }
 
@@ -237,14 +237,14 @@ object ChineseCalendar {
   def sexagenary1stDayOfMonth(date: String): String =
     sexagenary1stDayOfMonth(parseDate(date))
 
-  // Get table information from date.
+  // Get table information from date.  
   private def lookupDate(date: ChineseCalendar):
       (JulianGregorianCalendar, Array[Month], String) = {
     val year = date.year.dropRight(1)   // Remove 年
     val yearOffset = Numbers.indexOf(year) - 1
-    val monarchEra = date.monarchEra
+    val era = date.era
 
-    val Year(firstDay, months, sexagenary) = eraMap(monarchEra) match {
+    val Year(firstDay, months, sexagenary) = eraMap(era) match {
       case (table, eraStartYear) =>
         val tableStartYear = table(0).firstDay.year // Year of the 1st entry in the table.
         var index = eraStartYear - tableStartYear + yearOffset
@@ -260,7 +260,7 @@ object ChineseCalendar {
     (firstDay, months, sexagenary)
   }
 
-  /** 
+  /**
     * Return the number of days in difference between the indicated
     * `month` and the 1st day of that year. Calculation is based on
     * sexagenary of the 1st day of each month. 
@@ -290,14 +290,14 @@ object ChineseCalendar {
   /**
     * The grammar for a Chinese date is as follows:
     * 
-    *   ChineseCalendar = monarchEra [year [month [dayOfMonth]]]
+    *   ChineseCalendar = era [year [month [dayOfMonth]]]
     * 
-    * @param monarchEra This could be either the title of the monarch, 
-    *                   or both the title and the era (年號).
-    *                   For monarchs with era (except for 漢武帝 who
-    *                   firstly used era, but also ruled without era
-    *                   before the first usage), title and era
-    *                   are concatenated together like 漢武帝建元.
+    * @param era This could be either the title of the monarch, 
+    *            or both the title and the era (年號).
+    *            For monarchs with era (except for 漢武帝 who
+    *            firstly used era, but also ruled without era
+    *            before the first usage), title and era
+    *            are concatenated together like 漢武帝建元.
     * @param year 元年|二年|三年|...
     * @param month the grammar is: month = [春|夏|秋|冬] [閏] 正月|一月|二月|三月|...|十月|十一月|十二月
     *        Note that whether the combination of season/month is valid or not is not checked.
@@ -399,12 +399,12 @@ object ChineseCalendar {
       }
     }
 
-    val monarchEra = t.dropRight(year.length)
-    if (!eraMap.contains(monarchEra)) {
+    val era = t.dropRight(year.length)
+    if (!eraMap.contains(era)) {
       throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
     }
 
-    ChineseCalendar(monarchEra, year + "年", month, dayOfMonth)
+    ChineseCalendar(era, year + "年", month, dayOfMonth)
   }
 
   /**
@@ -637,7 +637,7 @@ object ChineseCalendar {
 
     /** Returns true if the era segment contains the `chineseDate`. */
     def contains(chineseDate: ChineseCalendar): Boolean = 
-      contains(toDate(chineseDate, false)) && (era == chineseDate.monarchEra)
+      contains(toDate(chineseDate, false)) && (era == chineseDate.era)
   }
 
   /** Returns true if the `date` belongs to the duration(s) of an era. 
