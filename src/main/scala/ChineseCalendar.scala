@@ -96,7 +96,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
   def firstDayNextMonth(continuous: Boolean): ChineseCalendar = {
     val Some(eraSegment) = ChineseCalendar.eraSegmentArray.find(_.contains(this))
     val nextChineseDate = firstDayNextMonthFast()
-    val nextDate = ChineseCalendar.toDate(nextChineseDate)
+    val nextDate = ChineseCalendar.toDate(nextChineseDate, false)
     if (eraSegment.contains(nextDate))
       return nextChineseDate
 
@@ -123,7 +123,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
     // since the backtracking of previous month might cause index < 0.
     val Some(eraSegment) = ChineseCalendar.eraSegmentArray.find(_.contains(this))
     val firstDay = ChineseCalendar(monarchEra, year, month, "初一")
-    val prevDate = ChineseCalendar.toDate(firstDay).plusDays(-1)
+    val prevDate = ChineseCalendar.toDate(firstDay, true).plusDays(-1)
     val dates = ChineseCalendar.fromDate(prevDate)    
     if (eraSegment.contains(prevDate)) {
       val Some(chineseDate) = dates.find(_.startsWith(monarchEra))
@@ -136,7 +136,7 @@ case class ChineseCalendar(monarchEra: String, year: String,
       // e.g. the Three Kingdoms.
       if (continuous) result
       else {
-        val prevDateAdj = ChineseCalendar.toDate(ChineseCalendar(result.monarchEra, result.year, result.month, "晦"))
+        val prevDateAdj = ChineseCalendar.toDate(ChineseCalendar(result.monarchEra, result.year, result.month, "晦"), true)
         val datesAdj = ChineseCalendar.fromDate(prevDateAdj)
         val Some(chineseDateAdj) = dates.find(_.startsWith(prevEra))
         ChineseCalendar.parseDate(chineseDateAdj)
@@ -203,11 +203,17 @@ object ChineseCalendar {
     result
   }
 
-  def toDate(date: ChineseCalendar): JulianGregorianCalendar = {
+  /** Return Julian/Gregorian date given `date` in Chinese calendar. 
+    * Use `check` for range check of the date. */
+  def toDate(date: ChineseCalendar, check: Boolean): JulianGregorianCalendar = {
     val (firstDay, months, _) = lookupDate(date)
     val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
-    firstDay.plusDays(dayDiff + date.dayDiff())
+    val result = firstDay.plusDays(dayDiff + date.dayDiff())
+    if (check && !dateInRange(result, date.monarchEra))
+      throw new IllegalArgumentException("toDate(): date " + result +
+        " not in era " + date.monarchEra)
+    result
   }
 
   /** Return the month information corresponding to the `date`. */
@@ -298,12 +304,12 @@ object ChineseCalendar {
     * @param dayOfMonth the grammar is:
     *        dayOfMonth = Sexagenary|朔|晦|初一|初二|...|初九|初十|十一|十二|...|十九|二十|廿一|廿二|...|廿九|三十|
     */  
-  def toDate(date: String): JulianGregorianCalendar = {
+  def toDate(date: String, check: Boolean = true): JulianGregorianCalendar = {
     // An example of string with minimum length: 黃初元年
     if (date.length < 4) {
       throw new IllegalArgumentException("toDate(): illegal argument date: " + date)
     }
-    toDate(parseDate(date))
+    toDate(parseDate(date), check)
   }
 
   /** Return a list of Chinese dates corresponding to Julian/Gregorian
@@ -623,7 +629,7 @@ object ChineseCalendar {
   case class EraSegment(era: String, startChinese: ChineseCalendar,
     var end: JulianGregorianCalendar,
     prev: String, next: String) {
-    val start = toDate(startChinese)
+    val start = toDate(startChinese, false)
 
     /** Returns true if the era segment contains the `date`. */
     def contains(date: JulianGregorianCalendar): Boolean =
@@ -631,8 +637,13 @@ object ChineseCalendar {
 
     /** Returns true if the era segment contains the `chineseDate`. */
     def contains(chineseDate: ChineseCalendar): Boolean = 
-      contains(toDate(chineseDate)) && (era == chineseDate.monarchEra)
+      contains(toDate(chineseDate, false)) && (era == chineseDate.monarchEra)
   }
+
+  /** Returns true if the `date` belongs to the duration(s) of an era. 
+    * Note that an era could contain multiple durations. */
+  def dateInRange(date: JulianGregorianCalendar, era: String) = 
+    eraDurationMap(era).exists(_.contains(date))
 
   // Calculate the sexagenary in each year.
   // @param startSexagenary the sexagenary of the first year in the table.
@@ -669,7 +680,7 @@ object ChineseCalendar {
       val endDate =
         // We don't handle default case here as it is simpler to calculate it later.
         if (end == "") date(0, 1, 1)
-        else toDate(eraName + eraEndSuffix)
+        else toDate(eraName + eraEndSuffix, false)
 
       val prevNorm =
         if ((prev == "") && (i > 0)) eraArray(i - 1)._1
@@ -691,6 +702,16 @@ object ChineseCalendar {
     }
 
     eraSegmentArray = eraSegmentArray.sortBy(_.start)
+
+    // 3rd pass, to generate eraDurationMap.
+    for (eraSegment <- eraSegmentArray) {
+      val era = eraSegment.era
+      if (eraDurationMap.contains(era)) {
+        eraDurationMap(era) = eraSegment :: eraDurationMap(eraSegment.era)
+      } else {
+        eraDurationMap(era) = List(eraSegment)        
+      }
+    }
   }
 
   def checkEveryDay(): Boolean = {
@@ -699,7 +720,7 @@ object ChineseCalendar {
     while (day < date(20, 1, 1)) {
       val chineseDates = fromDate(day)
       for (chineseDate <- chineseDates) {
-        if (toDate(chineseDate) != day) {
+        if (toDate(chineseDate, true) != day) {
           return false
         }
       }
@@ -3746,26 +3767,28 @@ object ChineseCalendar {
   // is convenient to input data for a dynasty consecuritively when
   // there are several competing dynasties.
   private val eraArray = Array(
-    ("秦孝文王", "", "", "", "", (BCEYears, -250)),
-    ("秦莊襄王", "", "", "", "", (BCEYears, -249)),    
-    ("秦王政", "", "", "", "", (BCEYears, -246)),
-    ("秦始皇", "二十六年", "", "", "", (BCEYears, -246)),
-    ("秦二世", "", "", "", "", (BCEYears, -209)),
-    ("漢高祖", "", "", "", "", (BCEYears, -206)),
-    ("漢惠帝", "", "", "", "", (BCEYears, -194)),
-    ("漢高后", "", "", "", "", (BCEYears, -187)),      
-    ("漢文帝", "", "", "", "", (BCEYears, -179)),
-    ("漢文帝後", "", "", "", "", (BCEYears, -163)),       
-    ("漢景帝", "", "", "", "", (BCEYears, -156)),
-    ("漢景帝中", "", "", "", "", (BCEYears, -149)),
-    ("漢景帝後", "", "", "", "", (BCEYears, -143)),            
-    ("漢武帝建元", "", "", "", "", (BCEYears, -140)),
-    ("漢武帝元光", "", "", "", "", (BCEYears, -134)),
-    ("漢武帝元朔", "", "", "", "", (BCEYears, -128)),
-    ("漢武帝元狩", "", "", "", "", (BCEYears, -122)),
-    ("漢武帝元鼎", "", "", "", "", (BCEYears, -116)),
-    ("漢武帝元封", "", "", "", "", (BCEYears, -110)),
-    ("漢武帝太初", "", "", "", "", (BCEYears, -104)),
+    // Due to the limitation of parseDate(), for any year not starting
+    // from 一月, we should add the month explicitly. 
+    ("秦孝文王", "十月", "", "", "", (BCEYears, -250)),
+    ("秦莊襄王", "十月", "", "", "", (BCEYears, -249)),    
+    ("秦王政", "十月", "", "", "", (BCEYears, -246)),
+    ("秦始皇", "二十六年十月", "", "", "", (BCEYears, -246)),
+    ("秦二世", "十月", "", "", "", (BCEYears, -209)),
+    ("漢高祖", "十月", "", "", "", (BCEYears, -206)),
+    ("漢惠帝", "十月", "", "", "", (BCEYears, -194)),
+    ("漢高后", "十月", "", "", "", (BCEYears, -187)),      
+    ("漢文帝", "十月", "", "", "", (BCEYears, -179)),
+    ("漢文帝後", "十月", "", "", "", (BCEYears, -163)),       
+    ("漢景帝", "十月", "", "", "", (BCEYears, -156)),
+    ("漢景帝中", "十月", "", "", "", (BCEYears, -149)),
+    ("漢景帝後", "十月", "", "", "", (BCEYears, -143)),            
+    ("漢武帝建元", "十月", "", "", "", (BCEYears, -140)),
+    ("漢武帝元光", "十月", "", "", "", (BCEYears, -134)),
+    ("漢武帝元朔", "十月", "", "", "", (BCEYears, -128)),
+    ("漢武帝元狩", "十月", "", "", "", (BCEYears, -122)),
+    ("漢武帝元鼎", "十月", "", "", "", (BCEYears, -116)),
+    ("漢武帝元封", "十月", "", "", "", (BCEYears, -110)),
+    ("漢武帝太初", "十月", "", "", "", (BCEYears, -104)),
     ("漢武帝天漢", "", "", "", "", (BCEYears, -99)),
     ("漢武帝太始", "", "", "", "", (BCEYears, -95)),
     ("漢武帝征和", "", "", "", "", (BCEYears, -91)),
@@ -4007,6 +4030,7 @@ object ChineseCalendar {
   setSexagenary("庚辰", BeiWeiYears)  
 
   private var eraSegmentArray = new Array[EraSegment](eraArray.length)
+  private var eraDurationMap = new mutable.HashMap[String, List[EraSegment]]()  
 
   processEraArray()
 }
