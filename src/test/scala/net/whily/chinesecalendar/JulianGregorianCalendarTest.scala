@@ -27,6 +27,7 @@ class JulianGregorianCalendarTest extends FunSpec with Matchers {
 
     it("Checking fromString()") {
       fromString("1年2月3日") should be (date(1, 2, 3))
+      fromString("公元前1年2月3日") should be (date(0, 2, 3))      
     }
 
     it("Check plusDays()") {

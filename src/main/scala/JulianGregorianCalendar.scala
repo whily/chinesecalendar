@@ -21,12 +21,15 @@ object JulianGregorianCalendar {
   }
 
   def fromString(s: String) = {
-    val JGDate(year, month, dayOfMonth) = s
-    JulianGregorianCalendar(Integer.parseInt(year),
-      Integer.parseInt(month), Integer.parseInt(dayOfMonth))
+    val JGDate(bce, year, month, dayOfMonth) = s
+    val y = Integer.parseInt(year)
+    val m = Integer.parseInt(month)
+    val d = Integer.parseInt(dayOfMonth)
+    if (bce == null) JulianGregorianCalendar(y, m, d)
+    else JulianGregorianCalendar(1 - y, m, d)
   }
 
-  private val JGDate = new Regex("(\\d+)年(\\d+)月(\\d+)日")
+  private val JGDate = new Regex("^(公元前)?(\\d+)年(\\d+)月(\\d+)日$")
   private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
   private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)     
 }
