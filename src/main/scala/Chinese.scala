@@ -327,7 +327,7 @@ object Chinese {
     "周週", "注註",
 
     // Following characters are not covered by 简化字总表.
-    "黄黃", "吴吳", "晋晉"
+    "黄黃", "吴吳", "晋晉", "岁歲"
   )
 
   /* 简化字总表（1986年新版）. 
