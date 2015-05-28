@@ -25,7 +25,7 @@ class JulianGregorianCalendarTest extends FunSpec with Matchers {
       date(1700, 2, 3) should not be 'LeapYear
     }
 
-    it("Checking fromString()") {
+    it("Check fromString()") {
       fromString("1年2月3日") should be (date(1, 2, 3))
       fromString("公元前1年2月3日") should be (date(0, 2, 3))      
     }
