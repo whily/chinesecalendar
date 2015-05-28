@@ -151,8 +151,10 @@ class ChineseCalendarTest extends FunSpec with Matchers {
     }
 
     it("Check firstDayNextMonth().") {
+      parseDate("漢惠帝七年九月初八").firstDayNextMonth(false) should be (parseDate("漢高后元年十月初一"))
       parseDate("漢武帝元朔五年後九月十二").firstDayNextMonth(false) should be (parseDate("漢武帝元朔六年十月初一"))            
-      parseDate("漢武帝元朔六年九月十四").firstDayNextMonth(false) should be (parseDate("漢武帝元狩元年十月初一"))      
+      parseDate("漢武帝元朔六年九月十四").firstDayNextMonth(false) should be (parseDate("漢武帝元狩元年十月初一"))
+      parseDate("漢武帝元封六年後九月十七").firstDayNextMonth(false) should be (parseDate("漢武帝太初元年十月初一"))                  
       parseDate("漢平帝元始元年二月己丑").firstDayNextMonth(false) should be (parseDate("漢平帝元始元年三月初一"))
       parseDate("蜀昭烈帝章武三年四月初二").firstDayNextMonth(false) should be (parseDate("蜀後主建興元年五月初一"))      
       parseDate("蜀後主炎興元年十一月十一").firstDayNextMonth(false) should be (parseDate("魏陳留王景元四年十二月初一"))            
