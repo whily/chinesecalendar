@@ -150,11 +150,12 @@ case class ChineseCalendar(era: String, year: String,
     sexagenary
   }
 
-  override def toString = {
-    val y = if (year == "一年") "元年" else year
-    val m = if (month == "一月") "正月" else month
+  def normalizedYear() = if (year == "一年") "元年" else year
 
-    era + y + m + dayOfMonth
+  def normalizedMonth() = if (month == "一月") "正月" else month
+
+  override def toString = {
+    era + normalizedYear() + normalizedMonth() + dayOfMonth
   }
 }
 
@@ -207,6 +208,7 @@ object ChineseCalendar {
     * Use `check` for range check of the date. */
   def toDate(date: ChineseCalendar, check: Boolean): JulianGregorianCalendar = {
     val (firstDay, months, _) = lookupDate(date)
+    assert(months.indexWhere(_.month == date.month) >= 0)
     val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
     val result = firstDay.plusDays(dayDiff + date.dayDiff())
