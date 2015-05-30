@@ -24,7 +24,11 @@ class ChineseTest extends FunSpec with Matchers {
       simplified2Traditional("乾隆") shouldBe "乾隆"
       traditional2Simplified("乾隆") shouldBe "乾隆"      
       simplified2Traditional("宫商角徵羽") shouldBe "宫商角徵羽"
-      traditional2Simplified("宫商角徵羽") shouldBe "宫商角徵羽"                 
+      traditional2Simplified("宫商角徵羽") shouldBe "宫商角徵羽"
+      simplified2Traditional("汉高后") shouldBe "漢高后"
+      simplified2Traditional("漢高后") shouldBe "漢高后"      
+      traditional2Simplified("漢高后") shouldBe "汉高后"
+      traditional2Simplified("汉高后") shouldBe "汉高后"             
     }
   }
 }

@@ -390,6 +390,11 @@ object Chinese {
     assert(simplified.length == traditional.length)
     simplified2TraditionalWordMap(simplified) = traditional
     traditional2SimplifiedWordMap(traditional) = simplified
+
+    // Keep the identity relationship.
+    simplified2TraditionalWordMap(traditional) = traditional
+    traditional2SimplifiedWordMap(simplified) = simplified
+    
     if (simplified.length > maxWordLength) {
       maxWordLength = simplified.length
     }
