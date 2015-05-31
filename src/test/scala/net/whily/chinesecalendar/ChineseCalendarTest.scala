@@ -164,6 +164,16 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("漢平帝元始元年三月初一").lastDayPrevMonth(false) should be (parseDate("漢平帝元始元年二月廿九"))
       parseDate("蜀昭烈帝章武元年四月").lastDayPrevMonth(false) should be (parseDate("魏文帝黃初二年三月三十"))                  
       parseDate("蜀後主建興元年五月初一").lastDayPrevMonth(false) should be (parseDate("蜀昭烈帝章武三年四月廿九"))      
+    }
+
+    it("Check sameDayNextMonth().") {
+      parseDate("漢惠帝七年九月初八").sameDayNextMonth() should be (parseDate("漢高后元年十月初八"))
+      parseDate("漢惠帝七年九月三十").sameDayNextMonth() should be (parseDate("漢高后元年十月晦"))      
+    }
+
+    it("Check sameDayPrevMonth().") {
+      parseDate("漢惠帝七年九月初八").sameDayPrevMonth() should be (parseDate("漢惠帝七年八月初八"))
+      parseDate("漢惠帝七年九月三十").sameDayPrevMonth() should be (parseDate("漢惠帝七年八月晦"))      
     }    
 
     it("Check yearSexagenary().") {

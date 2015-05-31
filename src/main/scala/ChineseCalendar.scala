@@ -142,7 +142,32 @@ case class ChineseCalendar(era: String, year: String,
         ChineseCalendar.parseDate(chineseDateAdj)
       }
     }
-  }    
+  }
+
+  /** Return the date with day of month as `that`, but everything else
+    * as current date.  If day of month of `that` does not exist in
+    * current month, return the closest date.
+    */
+  private def sameDayAs(that: ChineseCalendar) = {
+    val monthDays = ChineseCalendar.monthLength(this)
+    if (that.dayDiff() >= monthDays - 1) {
+      ChineseCalendar(era, year, month, "晦")
+    } else {
+      ChineseCalendar(era, year, month, that.dayOfMonth)
+    }
+  }
+
+  /** Return the date of next month with same day of month as current date. 
+      If this is impossible, return the closest date in next month. */
+  def sameDayNextMonth() = {
+    firstDayNextMonth(false).sameDayAs(this)
+  }
+
+  /** Return the date of previous month with same day of month as current date. 
+      If this is impossible, return the closest date in next month. */
+  def sameDayPrevMonth() = {
+    lastDayPrevMonth(false).sameDayAs(this)
+  }
 
   /** Return the sexagenary of the year. */
   def yearSexagenary() = {
