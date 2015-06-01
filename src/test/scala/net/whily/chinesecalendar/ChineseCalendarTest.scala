@@ -74,7 +74,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       // 漢文帝崩
       toDate("漢文帝後七年六月己亥") should be (date(-156, 7, 6))            
       // 漢景帝崩
-      toDate("漢景帝後三年正月甲子") should be (date(-140, 3, 9))            
+      toDate("漢景帝後三年正月甲子") should be (date(-140, 3, 9))       
       // 漢昭帝即位
       toDate("漢武帝後元二年二月戊辰") should be (date(-86, 3, 30))      
       // 漢昭帝崩
@@ -89,6 +89,10 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("漢宣帝黃龍元年十二月甲戌") should be (date(-47, 1, 10))
       // 漢平帝即位
       toDate("漢哀帝元壽二年九月辛酉") should be (date(0, 10, 17))
+
+      // Test for calendar system change.
+      toDate("漢武帝太初元年十月朔") should be (date(-104, 11, 26))
+      toDate("漢武帝太初元年十月初二") should be (date(-104, 11, 27))      
 
       // Check based on book tables.
       toDate("漢平帝元始元年") should be (date(1, 2, 12))
@@ -119,6 +123,9 @@ class ChineseCalendarTest extends FunSpec with Matchers {
     }
 
     it("Check monthLength().") {
+      monthLength("漢武帝太初元年十月") should be (29)
+      monthLength("漢武帝太初元年九月") should be (29)
+      monthLength("漢武帝太初二年九月") should be (30)                  
       monthLength("漢平帝元始元年正月") should be (30)
       monthLength("漢平帝元始元年二月") should be (29)
       monthLength("漢平帝元始元年十二月") should be (30)

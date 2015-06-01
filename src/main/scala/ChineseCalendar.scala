@@ -233,7 +233,8 @@ object ChineseCalendar {
     * Use `check` for range check of the date. */
   def toDate(date: ChineseCalendar, check: Boolean): JulianGregorianCalendar = {
     val (firstDay, months, _) = lookupDate(date)
-    assert(months.indexWhere(_.month == date.month) >= 0)
+    if (months.indexWhere(_.month == date.month) < 0)
+      throw new IllegalArgumentException("toDate(): illegal month " + date.month) 
     val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
     val result = firstDay.plusDays(dayDiff + date.dayDiff())
@@ -483,6 +484,8 @@ object ChineseCalendar {
   private val LeapMonth = "閏"
   private val ForwardMonth = "進"
   private val LaterMonth = "後"
+  // Only used for the last three months in 漢武帝太初.
+  private val SpecialLaterMonth = "後後"  
 
   /** Return a new date by adding `add` to the original `date`.*/
   def dateAdd(date: String, add: Int) =
@@ -500,13 +503,17 @@ object ChineseCalendar {
     var monthIndex = startMonthIndex
     var result: List[Month] = Nil
     var prefix = ""
+    var specialFlag = false
     for (word <- words) {
       word match {
         case LeapMonth => prefix = LeapMonth
         case LaterMonth => prefix = LaterMonth
+        case SpecialLaterMonth =>
+          prefix = LaterMonth
+          specialFlag = true
         case ForwardMonth => monthIndex += 1
         case _ =>
-          if ((prefix == LeapMonth) || (prefix == LaterMonth))
+          if ((prefix == LeapMonth) || ((prefix == LaterMonth) && !specialFlag))
             monthIndex -= 1
 
           if (monthIndex > 12)
@@ -514,6 +521,7 @@ object ChineseCalendar {
           
           result = Month(prefix + Numbers(monthIndex) + "月", word) :: result
           prefix = ""
+          specialFlag = false
           monthIndex += 1
       }
     }
@@ -1532,13 +1540,7 @@ object ChineseCalendar {
     // There are no suffices for the second 十/十
     // 一/十二月 in history books (not mentioned in 資治通鑒).
     // We add them to distinguish with previous months.
-    Year(date(-104, 2, 28), Array(
-      Month("十月", "乙未"), Month("十一月", "甲子"), Month("十二月", "甲午"),      
-      Month("一月", "癸亥"), Month("二月", "壬辰"), Month("三月", "壬戌"),
-      Month("四月", "辛卯"), Month("五月", "辛酉"), Month("六月", "庚寅"),
-      Month("七月", "庚申"), Month("八月", "己丑"), Month("九月", "己未"),
-      Month("後十月", "戊子"), Month("後十一月", "戊午"), Month("後十二月", "丁亥")),
-      ""),    
+    z(-104, 2, 28, "乙未 甲子 甲午 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅 庚申 己丑 己未 後後 戊子 後後 戊午 後後 丁亥"),
     y(-102, 2, 28, "丁巳 丙戌 丙辰 丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子 壬午"),        
     y(-101, 2, 28, "辛亥 辛巳 庚戌 庚辰 己酉 己卯 閏 戊申 戊寅 戊申 丁丑 丁未 丙子 丙午"),    
     y(-100, 2, 28, "乙亥 乙巳 甲戌 甲辰 癸酉 癸卯 壬申 壬寅 辛未 辛丑 辛未 庚子"),    
