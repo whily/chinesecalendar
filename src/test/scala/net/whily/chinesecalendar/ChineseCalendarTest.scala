@@ -179,7 +179,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       // TODO: cover the whole range.
       var d = parseDate("秦孝文王元年")
-      while (toDate(d, true) < date(200, 1, 1)) {
+      while (toDate(d, true) < date(490, 1, 1)) {
         d = d.sameDayNextMonth()
       }
     }
@@ -190,7 +190,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       // TODO: cover the whole range.
       var d = parseDate("齊東昏侯永元元年")
-      while (toDate(d, true) > date(100, 1, 1)) {
+      while (toDate(d, true) > date(-200, 1, 1)) {
         d = d.sameDayPrevMonth()
       }      
     }    

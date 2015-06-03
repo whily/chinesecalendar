@@ -102,12 +102,19 @@ case class ChineseCalendar(era: String, year: String,
 
     val nextEra = eraSegment.next
     val dates = ChineseCalendar.fromDate(nextDate)
-    val Some(chineseDate) = dates.find(_.startsWith(nextEra))
-    val result = ChineseCalendar.parseDate(chineseDate)
-    // Handle the case that different calendar systems are used,
-    // e.g. the Three Kingdoms.
-    if (continuous) result
-    else ChineseCalendar(result.era, result.year, result.month, "初一")
+    // TODO: remove the try/catch debug facilities once all table data is tested.
+    try { 
+      val Some(chineseDate) = dates.find(_.startsWith(nextEra))
+      val result = ChineseCalendar.parseDate(chineseDate)
+      // Handle the case that different calendar systems are used,
+      // e.g. the Three Kingdoms.
+      if (continuous) result
+      else ChineseCalendar(result.era, result.year, result.month, "初一")
+    } catch {
+      case ex: Exception =>
+        println("firstDayNextMonth(): " + era + year + month)
+        null
+    }
   }
 
   /** Returns the last day of previous month, considering era boundary.
@@ -130,16 +137,23 @@ case class ChineseCalendar(era: String, year: String,
       ChineseCalendar.parseDate(chineseDate)
     } else {
       val prevEra = eraSegment.prev
-      val Some(chineseDate) = dates.find(_.startsWith(prevEra))
-      val result = ChineseCalendar.parseDate(chineseDate)
-      // Handle the case that different calendar systems are used,
-      // e.g. the Three Kingdoms.
-      if (continuous) result
-      else {
-        val prevDateAdj = ChineseCalendar.toDate(ChineseCalendar(result.era, result.year, result.month, "晦"), true)
-        val datesAdj = ChineseCalendar.fromDate(prevDateAdj)
-        val Some(chineseDateAdj) = dates.find(_.startsWith(prevEra))
-        ChineseCalendar.parseDate(chineseDateAdj)
+      // TODO: remove the try/catch debug facilities once all table data is tested.
+      try {
+        val Some(chineseDate) = dates.find(_.startsWith(prevEra))
+        val result = ChineseCalendar.parseDate(chineseDate)
+        // Handle the case that different calendar systems are used,
+        // e.g. the Three Kingdoms.
+        if (continuous) result
+        else {
+          val prevDateAdj = ChineseCalendar.toDate(ChineseCalendar(result.era, result.year, result.month, "晦"), true)
+          val datesAdj = ChineseCalendar.fromDate(prevDateAdj)
+          val Some(chineseDateAdj) = dates.find(_.startsWith(prevEra))
+          ChineseCalendar.parseDate(chineseDateAdj)
+        }
+      } catch {
+        case ex: Exception =>
+          println("lastDayPrevMonth(): " + era + year + month)
+          null
       }
     }
   }
@@ -268,6 +282,14 @@ object ChineseCalendar {
   // Get table information from date.
   private def lookupDate(era: String, year: String):
       (JulianGregorianCalendar, Array[Month], String) = {
+    // Handling the special cases for going from BCE to CE.
+    // Note that there is no 漢哀帝元壽三年, however this can happen when called
+    // by sameDayNextMonth().
+    // Similar handling is used for other cases.
+    if ((era == "漢哀帝元壽") && (year == "三年")) {
+      return lookupDate("漢平帝元始", "一年")
+    }
+
     val yearOffset = Numbers.indexOf(year.dropRight(1)) - 1 // Remove 年
 
     val Year(firstDay, months, sexagenary) = eraMap(era) match {
@@ -280,7 +302,12 @@ object ChineseCalendar {
         if ((table == BCEYears) && (eraStartYear > -104)) {
           index -= 1
         }
-        table(index)
+        // TODO: after all data is inputed, remove the following try.
+        try {
+          table(index)
+        } catch {
+          case ex: Exception => println("lookupDate(): " + era + year)
+        }
     }
 
     (firstDay, months, sexagenary)
@@ -3902,7 +3929,7 @@ object ChineseCalendar {
     ("漢少帝光熹", "四月", "", "", "", (CEYears, 189)),
     ("漢少帝昭寧", "八月", "", "", "", (CEYears, 189)),
     ("漢獻帝永漢", "九月", "", "", "", (CEYears, 189)),
-    ("漢獻帝中平", "十二月", "", "", "", (CEYears, 184)),      
+    ("漢獻帝中平", "六年十二月", "", "", "", (CEYears, 184)),      
     ("漢獻帝初平", "", "", "", "", (CEYears, 190)),
     ("漢獻帝興平", "", "", "", "", (CEYears, 194)),
     ("漢獻帝建安", "", "", "", "", (CEYears, 196)),
