@@ -774,7 +774,12 @@ object ChineseCalendar {
     for (i <- 0 until eraSegmentArray.length) {
       if (eraArray(i)._3 == "") { // Default case for end.
         assert(i != eraSegmentArray.length - 1)
-        eraSegmentArray(i).end = eraSegmentArray(i + 1).start.plusDays(-1)
+        if (eraArray(i)._5 == "") { // The next entry is the next era segment in time.
+          eraSegmentArray(i).end = eraSegmentArray(i + 1).start.plusDays(-1)
+        } else { // The next entry is NOT the next era segment in time.
+          val Some(nextEraSegment) = eraSegmentArray.find(_.era == eraArray(i)._5)
+          eraSegmentArray(i).end = nextEraSegment.start.plusDays(-1)
+        }
       }
     }
 

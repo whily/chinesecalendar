@@ -92,7 +92,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       // Test for calendar system change.
       toDate("漢武帝太初元年十月朔") should be (date(-104, 11, 26))
-      toDate("漢武帝太初元年十月初二") should be (date(-104, 11, 27))      
+      toDate("漢武帝太初元年十月初二") should be (date(-104, 11, 27))
 
       // Check based on book tables.
       toDate("漢平帝元始元年") should be (date(1, 2, 12))
@@ -113,7 +113,10 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("漢平帝元始四年二月十一") should be (date(4, 3, 20))
       toDate("魏明帝景初元年四月初一") should be (date(237, 4, 13))
       toDate("魏明帝景初三年後十二月初一") should be (date(240, 1, 12))
-      toDate("晉武帝咸寧元年") should be (date(275, 2, 13))      
+      toDate("晉武帝咸寧元年") should be (date(275, 2, 13))
+
+      // Additional tests based on bug fixes.
+      toDate("魏陳留王咸熙元年五月") should be (date(264, 6, 12))
     }
 
     it("Check fromDate().") {
