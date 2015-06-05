@@ -160,6 +160,21 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("漢平帝元始元年").plusDays(-1) should be (parseDate("漢哀帝元壽二年十二月廿九"))            
     }
 
+    it("Check containingSegments().") {
+      val eraSegment1 = EraSegment("漢哀帝元壽", parseDate("漢哀帝元壽元年正月初一"),
+        date(1, 2, 11), "漢哀帝建平", "漢平帝元始")
+      containingSegments(date(1, 2, 3)) should be (List(eraSegment1))
+      containingSegment(parseDate("漢哀帝元壽元年正月初一")) should be (Some(eraSegment1))
+
+      val eraSegment2 = EraSegment("魏明帝青龍", parseDate("魏明帝青龍元年二月初一"),
+        date(237, 4, 12), "魏明帝太和", "魏明帝景初")
+      val eraSegment3 = EraSegment("蜀後主建興", parseDate("蜀後主建興元年五月初一"),
+        date(238, 2, 1), "蜀昭烈帝章武", "蜀後主延熙")
+      val eraSegment4 = EraSegment("吳大帝嘉禾", parseDate("吳大帝嘉禾元年正月初一"),
+        date(238, 8, 27), "吳大帝黃龍", "吳大帝赤烏")
+      containingSegments(date(234, 5, 6)) should be (List(eraSegment2, eraSegment3, eraSegment4))      
+    }
+
     it("Check firstDayNextMonth().") {
       parseDate("漢惠帝七年九月初八").firstDayNextMonth(false) should be (parseDate("漢高后元年十月初一"))
       parseDate("漢武帝元朔五年後九月十二").firstDayNextMonth(false) should be (parseDate("漢武帝元朔六年十月初一"))            

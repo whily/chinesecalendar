@@ -6,7 +6,7 @@
  * License: 
  *   GNU General Public License v2
  *   http://www.gnu.org/licenses/gpl-2.0.html
- * Copyright (C) 2014 Yujian Zhang
+ * Copyright (C) 2014-2015 Yujian Zhang
  */
 
 package net.whily.chinesecalendar
@@ -94,7 +94,7 @@ case class ChineseCalendar(era: String, year: String,
     * 
     * TODO: optimize performance so we only need one versin. */
   def firstDayNextMonth(continuous: Boolean): ChineseCalendar = {
-    val Some(eraSegment) = ChineseCalendar.eraSegmentArray.find(_.contains(this))
+    val Some(eraSegment) = ChineseCalendar.containingSegment(this)
     val nextChineseDate = firstDayNextMonthFast()
     val nextDate = ChineseCalendar.toDate(nextChineseDate, false)
     if (eraSegment.contains(nextDate))
@@ -128,7 +128,7 @@ case class ChineseCalendar(era: String, year: String,
   def lastDayPrevMonth(continuous: Boolean): ChineseCalendar = {
     // We handle this function different from firstDayNextMonth()
     // since the backtracking of previous month might cause index < 0.
-    val Some(eraSegment) = ChineseCalendar.eraSegmentArray.find(_.contains(this))
+    val Some(eraSegment) = ChineseCalendar.containingSegment(this)
     val firstDay = ChineseCalendar(era, year, month, "初一")
     val prevDate = ChineseCalendar.toDate(firstDay, true).plusDays(-1)
     val dates = ChineseCalendar.fromDate(prevDate)    
@@ -377,7 +377,7 @@ object ChineseCalendar {
   def fromDate(date: JulianGregorianCalendar): List[String] = {
     var result: List[String] = Nil
 
-    for (era <- eraSegmentArray) {
+    for (era <- containingSegments(date)) {
       if (era.contains(date)) {
         val chineseDate = era.startChinese.plusDays(date - era.start)
         result = chineseDate.toString() :: result
@@ -708,6 +708,14 @@ object ChineseCalendar {
     prev: String, next: String) {
     val start = toDate(startChinese, false)
 
+    /** Equals method. */
+    override def equals(other: Any): Boolean = other match {
+      case that: EraSegment => era == that.era &&
+        startChinese == that.startChinese && end == that.end &&
+        prev == that.prev && next == that.next
+      case _ => false
+    }
+
     /** Returns true if the era segment contains the `date`. */
     def contains(date: JulianGregorianCalendar): Boolean =
       (start <= date) && (date <= end)
@@ -721,6 +729,39 @@ object ChineseCalendar {
     * Note that an era could contain multiple durations. */
   def dateInRange(date: JulianGregorianCalendar, era: String) = 
     eraDurationMap(era).exists(_.contains(date))
+
+  /** Return the list of segments containing `date`. */
+  def containingSegments(date: JulianGregorianCalendar): List[EraSegment] = {
+    /* startIndex, endIndex are indices to eraSegmentArray, denoting a subarray
+     * of [startIndex, endIndex). */
+    def rec(startIndex: Int, endIndex: Int, acc: List[EraSegment]): List[EraSegment] = {
+      if (startIndex >= endIndex) { // Zero element
+        acc
+      } else {
+        val mid = (startIndex + endIndex) / 2
+        val eraSegment = eraSegmentArray(mid)
+        if (date < eraSegment.start) {
+          rec(startIndex, mid, acc)
+        } else {
+          val result = rec(startIndex, mid, Nil) ::: rec(mid + 1, endIndex, acc)
+          if (date <= eraSegment.end) eraSegment :: result
+          else result
+        }
+      }
+    }
+    rec(0, eraSegmentArray.length, Nil)
+  }
+
+  /** Return the segment containing `chineseDate`. */
+  def containingSegment(chineseDate: ChineseCalendar): Option[EraSegment] = {
+    // By history, there is at most one segment as the result.
+    val atMostOne = containingSegments(toDate(chineseDate, false)).filter(_.era == chineseDate.era)
+    atMostOne match {
+      case Nil => None
+      case List(x) => Some(x)
+      case _ => throw new IllegalArgumentException("containingSegment(): illegal input " + chineseDate)       
+    }
+  }
 
   // Calculate the sexagenary in each year.
   // @param startSexagenary the sexagenary of the first year in the table.
