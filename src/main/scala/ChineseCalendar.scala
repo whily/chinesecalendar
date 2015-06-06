@@ -723,6 +723,10 @@ object ChineseCalendar {
     /** Returns true if the era segment contains the `chineseDate`. */
     def contains(chineseDate: ChineseCalendar): Boolean = 
       contains(toDate(chineseDate, false)) && (era == chineseDate.era)
+
+    /** Retruns true if this segments intersects``that` segment`. */
+    def intersects(that: EraSegment) =
+      contains(that.start) || contains(that.end)
   }
 
   /** Returns true if the `date` belongs to the duration(s) of an era. 
@@ -771,6 +775,30 @@ object ChineseCalendar {
     for (i <- 0 until table.length) {
       table(i).sexagenary = sexagenaryAdd(startSexagenary, i)
     }
+  }
+
+  /**
+    * To optimize performance of containingSegments(), segment
+    * eraSegmentArray into partitions where overlaping era segments
+    * are contained in one partition.
+    * 
+    * This is a helper function which will be called by
+    * processEraArray() to actually finish the partition work, which
+    * contains a list of start indices for binary search in
+    * containingSegments().
+    */
+  private def partitionEraSegments(initialIndex: Int, endIndex: Int): Option[Int] = {
+    var i = initialIndex + 1
+    while (i < endIndex) {
+      // It is more likely to overlap with a nearby era segment, so test them first.
+      val prevIndices = (initialIndex until i).reverse
+      if (prevIndices.exists(eraSegmentArray(_) intersects eraSegmentArray(i))) {
+        i += 1
+      } else {
+        return Some(i)
+      }
+    }
+    None
   }
 
   /* Post process eraArray to generate eraSegmentArray. */
@@ -835,6 +863,21 @@ object ChineseCalendar {
         eraDurationMap(era) = List(eraSegment)        
       }
     }
+
+    // 4th pass, to generate eraParitionArray.
+    var initialIndex = 0
+    val endIndex = eraSegmentArray.length
+    var eraPartitionList = List(0)
+    var continue = true
+    do {
+      partitionEraSegments(initialIndex, endIndex) match {
+        case Some(index) =>
+          eraPartitionList = index :: eraPartitionList
+          initialIndex = index
+        case None => continue = false
+      }
+    } while (continue)
+    eraPartitionArray = eraPartitionList.reverse.toArray
   }
 
   def checkEveryDay(): Boolean = {
@@ -4091,10 +4134,10 @@ object ChineseCalendar {
     ("北魏獻文帝天安", "", "", "", "", (BeiWeiYears, 466)),
     ("北魏獻文帝皇興", "八月", "", "", "", (BeiWeiYears, 467)),
     ("北魏孝文帝延興", "八月", "五年", "", "", (BeiWeiYears, 471)),
-    ("北魏孝文帝承明", "六月", "", "", "", (CEYears, 476)),
-    ("北魏孝文帝太和", "", "", "", "", (CEYears, 477)),
+    ("北魏孝文帝承明", "六月", "", "", "", (BeiWeiYears, 476)),
+    ("北魏孝文帝太和", "", "", "", "", (BeiWeiYears, 477)),
     // TODO: remove "end"    
-    ("北魏宣武帝景明", "", "八月", "", "", (CEYears, 500))
+    ("北魏宣武帝景明", "", "八月", "", "", (BeiWeiYears, 500))
     // ("北魏宣武帝正始", "", "", "", "", (CEYears, 504)),
     // ("北魏宣武帝永平", "八月", "", "", "", (CEYears, 508)),
     // ("北魏宣武帝延昌", "四月", "", "", "", (CEYears, 512)),
@@ -4145,7 +4188,8 @@ object ChineseCalendar {
   setSexagenary("庚辰", BeiWeiYears)  
 
   private var eraSegmentArray = new Array[EraSegment](eraArray.length)
-  private var eraDurationMap = new mutable.HashMap[String, List[EraSegment]]()  
+  private val eraDurationMap = new mutable.HashMap[String, List[EraSegment]]()
+  private var eraPartitionArray: Array[Int] = null
 
   processEraArray()
 }
