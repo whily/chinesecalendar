@@ -784,8 +784,10 @@ object ChineseCalendar {
     }
 
     val partitionIndex = binarySearch(0, eraPartitionArray.length)
-    rec(eraPartitionArray(partitionIndex),
-      eraPartitionArray(partitionIndex + 1), Nil)
+    val endIndex =
+      if (partitionIndex == eraPartitionArray.length - 1) eraSegmentArray.length
+      else eraPartitionArray(partitionIndex + 1)
+    rec(eraPartitionArray(partitionIndex), endIndex, Nil)
   }
 
   /** Return the segment containing `chineseDate`. */
@@ -914,9 +916,10 @@ object ChineseCalendar {
   }
 
   def checkEveryDay(): Boolean = {
-    var day = date(1, 1, 1)
-    // TODO: optimize so we can actually check everyday.
-    while (day < date(20, 1, 1)) {
+    val start = eraSegmentArray(0).start
+    val end = eraSegmentArray(eraSegmentArray.length - 1).end
+    var day = start
+    while (day < end) {
       val chineseDates = fromDate(day)
       for (chineseDate <- chineseDates) {
         if (toDate(chineseDate, true) != day) {
