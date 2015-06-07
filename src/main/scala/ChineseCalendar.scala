@@ -736,24 +736,56 @@ object ChineseCalendar {
 
   /** Return the list of segments containing `date`. */
   def containingSegments(date: JulianGregorianCalendar): List[EraSegment] = {
-    /* startIndex, endIndex are indices to eraSegmentArray, denoting a subarray
-     * of [startIndex, endIndex). */
-    def rec(startIndex: Int, endIndex: Int, acc: List[EraSegment]): List[EraSegment] = {
-      if (startIndex >= endIndex) { // Zero element
+    /* start, end are indices to eraSegmentArray, denoting a subarray
+     * of [start, end). */
+    def rec(start: Int, end: Int, acc: List[EraSegment]): List[EraSegment] = {
+      if (start >= end) { // Zero element
         acc
       } else {
-        val mid = (startIndex + endIndex) / 2
+        val mid = (start + end) / 2
         val eraSegment = eraSegmentArray(mid)
         if (date < eraSegment.start) {
-          rec(startIndex, mid, acc)
+          rec(start, mid, acc)
         } else {
-          val result = rec(startIndex, mid, Nil) ::: rec(mid + 1, endIndex, acc)
+          val result = rec(start, mid, Nil) ::: rec(mid + 1, end, acc)
           if (date <= eraSegment.end) eraSegment :: result
           else result
         }
       }
     }
-    rec(0, eraSegmentArray.length, Nil)
+
+    def binarySearch(start: Int, end: Int): Int = {
+      if (start >= end) {
+        throw new RuntimeException("containingSegments|binarySearch(): null search result.")
+      }
+
+      // We don't care overflow here as the size of eraPartitionArray is very small.
+      val mid = (start + end) / 2
+
+      // Three way comparison.
+      val midSegment = eraSegmentArray(eraPartitionArray(mid))
+      if (date < midSegment.start) {
+        binarySearch(start, mid)
+      } else {
+        // Handle the case that eraSegment is the last one.  The
+        // reason we do such special handling here is that we don't
+        // want to book keep th end time of each duration.
+        if (mid == eraPartitionArray.length - 1) {
+          return mid
+        }
+
+        val nextSegment = eraSegmentArray(eraPartitionArray(mid + 1))
+        if (date >= nextSegment.start) {
+          binarySearch(mid + 1, end)
+        } else {
+          mid
+        }
+      }
+    }
+
+    val partitionIndex = binarySearch(0, eraPartitionArray.length)
+    rec(eraPartitionArray(partitionIndex),
+      eraPartitionArray(partitionIndex + 1), Nil)
   }
 
   /** Return the segment containing `chineseDate`. */
@@ -874,7 +906,8 @@ object ChineseCalendar {
         case Some(index) =>
           eraPartitionList = index :: eraPartitionList
           initialIndex = index
-        case None => continue = false
+        case None =>
+          continue = false
       }
     } while (continue)
     eraPartitionArray = eraPartitionList.reverse.toArray
