@@ -916,10 +916,8 @@ object ChineseCalendar {
   }
 
   def checkEveryDay(): Boolean = {
-    val start = eraSegmentArray(0).start
-    val end = eraSegmentArray(eraSegmentArray.length - 1).end
-    var day = start
-    while (day < end) {
+    var day = FirstDay
+    while (day < LastDay) {
       val chineseDates = fromDate(day)
       for (chineseDate <- chineseDates) {
         if (toDate(chineseDate, true) != day) {
@@ -940,7 +938,63 @@ object ChineseCalendar {
     checkYearTable(ShuYears) &&
     checkYearTable(WuYears) &&
     checkYearTable(BeiWeiYears)
-  }  
+  }
+
+  private val predictionMap = new mutable.HashMap[String, Array[String]]()
+  predictionMap("") = Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "公")
+  predictionMap("公") = Array("元前")
+  predictionMap("公元") = Array("前")
+  predictionMap("公元前") = Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
+
+  def buildJGPrediction(lastYear: Int, prefix: String) {
+    val lastYearLength = ("" + lastYear).length
+    for (i <- 1 to lastYear) {
+      val year = "" + i
+      if (year.length < lastYearLength) {
+        var list: List[String] = Nil
+        for (j <- 1 to 9) {
+          if (i * 10 + j <= lastYear) {
+            list = ("" + j) :: list
+          }
+        }
+
+        val len = list.length
+        if (len < 9) {
+          list = "年" :: list
+        }
+        // We want to place 0 at the end of candicates.          
+        if (len > 0) {
+          list = ("" + 0) :: list
+        }
+
+        predictionMap(prefix + year) = list.reverse.toArray
+      } else {
+        predictionMap(prefix + year) = Array("年")
+      }
+    }    
+  }
+
+  def buildPrediction() {
+    buildJGPrediction(LastDay.year, "")
+    buildJGPrediction(1 - FirstDay.year, "公元前")
+  }
+
+  /**
+    * Return an array of characters, which is the prediction result
+    * based on input `query`, suitable as input for calendar
+    * conversion in app `calendarlookup`.
+    * 
+    * Both input and output strings are in traiditional Chinese.
+    * 
+    * See calendarlookup/SearchActivity:checkInput() for how to handle
+    * different output from `nextCharacter`.
+    */
+  def nextCharacter(query: String): Array[String] = {
+    predictionMap.get(query) match {
+      case None => null
+      case Some(a) => a
+    }
+  }
   
   // Information from
   //   * 三千五百年历日天象 (张培瑜 著)  
@@ -4228,4 +4282,9 @@ object ChineseCalendar {
   private var eraPartitionArray: Array[Int] = null
 
   processEraArray()
+
+  private val FirstDay = eraSegmentArray(0).start
+  private val LastDay = eraSegmentArray(eraSegmentArray.length - 1).end
+
+  buildPrediction()
 }
