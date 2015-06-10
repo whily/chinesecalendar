@@ -234,6 +234,29 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       sexagenaries("辛酉", 5).mkString(" ") should be ("辛酉 壬戌 癸亥 甲子 乙丑")      
     }
 
+    it("Check nextCharacter().") {
+      nextCharacter("公元前5") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "年"))
+      nextCharacter("公元前5年") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9"))
+      nextCharacter("公元前5年1") should === (Array("1", "2", "0", "月"))
+      nextCharacter("公元前5年2") should === (Array("月"))
+      nextCharacter("公元前5年10") should === (Array("月"))
+      nextCharacter("公元前5年2月") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9"))
+      nextCharacter("公元前5年2月1") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "日"))
+      nextCharacter("公元前5年2月12") should === (Array("日"))
+      nextCharacter("公元前5年2月2") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "日"))      
+      nextCharacter("353年") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9"))
+      nextCharacter("353年1") should === (Array("1", "2", "0", "月"))
+      nextCharacter("353年2") should === (Array("月"))
+      nextCharacter("353年10") should === (Array("月"))
+      nextCharacter("353年2月") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9"))
+      nextCharacter("353年2月1") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "日"))
+      nextCharacter("353年2月12") should === (Array("日"))
+      nextCharacter("353年2月2") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "0", "日"))
+      nextCharacter("353年2月3") should === (Array("日"))      
+      nextCharacter("353年3月3") should === (Array("1", "0", "日"))
+      nextCharacter("353年4月3") should === (Array("0", "日"))            
+    }
+
     it("Check data sanity.") {
       sanityCheck should be (true)
     }

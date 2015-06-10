@@ -12,6 +12,7 @@
 package net.whily.chinesecalendar
 
 import scala.collection.mutable    // For toMap()
+import scala.util.matching.Regex
 
 case class ChineseCalendar(era: String, year: String,
   month: String, dayOfMonth: String) {
@@ -940,6 +941,11 @@ object ChineseCalendar {
     checkYearTable(BeiWeiYears)
   }
 
+  /** Returns true if `s` in form of Julian/Gregorian Calendar. */
+  def jgQuery(s: String) = {
+    Character.isDigit(s(0)) || s.startsWith("公元前")
+  }
+
   private val predictionMap = new mutable.HashMap[String, Array[String]]()
   predictionMap("") = Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "公")
   predictionMap("公") = Array("元前")
@@ -950,27 +956,20 @@ object ChineseCalendar {
     val lastYearLength = ("" + lastYear).length
     for (i <- 1 to lastYear) {
       val year = "" + i
+      var list: List[String] = Nil
       if (year.length < lastYearLength) {
-        var list: List[String] = Nil
         for (j <- 1 to 9) {
           if (i * 10 + j <= lastYear) {
             list = ("" + j) :: list
           }
         }
 
-        val len = list.length
-        if (len < 9) {
-          list = "年" :: list
-        }
         // We want to place 0 at the end of candicates.          
-        if (len > 0) {
+        if (list.length > 0) {
           list = ("" + 0) :: list
         }
-
-        predictionMap(prefix + year) = list.reverse.toArray
-      } else {
-        predictionMap(prefix + year) = Array("年")
       }
+      predictionMap(prefix + year) = ("年" :: list).reverse.toArray
     }    
   }
 
@@ -978,6 +977,10 @@ object ChineseCalendar {
     buildJGPrediction(LastDay.year, "")
     buildJGPrediction(1 - FirstDay.year, "公元前")
   }
+
+  // Regex used for nextCharacter().
+  private val JGYearD = new Regex("^(公元前)?(\\d+)年(\\d{0,2})")
+  private val JGMonthD = new Regex("^(公元前)?(\\d+)年(\\d{1,2})月(\\d{0,2})")  
 
   /**
     * Return an array of characters, which is the prediction result
@@ -991,7 +994,81 @@ object ChineseCalendar {
     */
   def nextCharacter(query: String): Array[String] = {
     predictionMap.get(query) match {
-      case None => null
+      case None =>
+        if (query.endsWith("日"))
+          return Array("")
+
+        if (jgQuery(query)) {
+          val firstDay = JulianGregorianCalendar.fromStringFrag(query)
+
+          if (JGMonthD.findFirstIn(query) != None) {
+            // TODO: perform optimization to only show the
+            // available months for the first year and last year, or
+            // Julian / Gregorian cutoff.
+
+            val JGMonthD(bce, year, month, day) = query
+
+            if ((day == null) || (day.length == 0)) {
+              return Array("1", "2", "3", "4", "5", "6", "7", "8", "9")
+            }
+
+            if (day.length == 2) {
+              return Array("日")
+            }
+
+            val m = Integer.parseInt(month)
+            val d = Integer.parseInt(day)
+            val monthFirstDay = date(firstDay.year, m, 1)
+
+            d match {
+              case 1 =>
+                return Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "日")
+
+              case 2 =>
+                if (monthFirstDay.isLeapYear()) {
+                  return Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "日")
+                } else {
+                  return Array("1", "2", "3", "4", "5", "6", "7", "8", "0", "日")                  
+                }
+
+              case 3 =>
+                monthFirstDay.monthDays() match {
+                  case 30 =>
+                    return Array("0", "日")
+                  case 31 =>
+                    return Array("1", "0", "日")                    
+                  case _ =>
+                    return Array("日")                                        
+                }
+
+              case _ =>
+                return Array("日")
+            }
+          }
+
+          if (JGYearD.findFirstIn(query) != None) {
+            // TODO: perform optimization to only show the
+            // available months for the first year and last year.
+            val JGYearD(bce, year, month) = query
+            if ((month == null) || (month.length == 0)) {
+              return Array("1", "2", "3", "4", "5", "6", "7", "8", "9")
+            }
+
+            if (month.length == 2) {
+              return Array("月")
+            }
+
+            if (Integer.parseInt(month) == 1) {
+              return Array("1", "2", "0", "月")
+            } else {
+              return Array("月")
+            }
+          }          
+        } else {
+        }
+
+        null
+
       case Some(a) => a
     }
   }
