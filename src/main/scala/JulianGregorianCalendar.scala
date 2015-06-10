@@ -29,7 +29,19 @@ object JulianGregorianCalendar {
     else JulianGregorianCalendar(1 - y, m, d)
   }
 
-  private val JGDate = new Regex("^(公元前)?(\\d+)年(\\d+)月(\\d+)日$")
+  /** Return the first day of the year given a fragmented string which
+    * contains valid year information. 
+    * 
+    * Useful to call isLeapYear() or monthDays(). */
+  def fromStringFrag(s: String) = {
+    if (JGFrag.findFirstIn(s) == None)
+      throw new IllegalArgumentException("fromStringFra(): illegal argument " + s)
+
+    fromString(s.substring(0, s.indexOf("年") + 1) + "1月1日")
+  }
+
+  private val JGDate = new Regex("^(公元前)?(\\d+)年(\\d{1,2})月(\\d{1,2})日$")
+  private val JGFrag = new Regex("^(公元前)?(\\d+)年")  
   private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
   private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)     
 }
