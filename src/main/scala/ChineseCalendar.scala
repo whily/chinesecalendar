@@ -200,12 +200,9 @@ case class ChineseCalendar(era: String, year: String,
     sexagenary
   }
 
-  def normalizedYear() = if (year == "一年") "元年" else year
-
-  def normalizedMonth() = if (month == "一月") "正月" else month
-
   override def toString = {
-    era + normalizedYear() + normalizedMonth() + dayOfMonth
+    era + ChineseCalendar.normalizeYear(year) +
+    ChineseCalendar.normalizeMonth(month) + dayOfMonth
   }
 }
 
@@ -914,7 +911,9 @@ object ChineseCalendar {
     for (eraSegment <- eraSegmentArray) {
       val era = eraSegment.era
       if (eraDurationMap.contains(era)) {
-        eraDurationMap(era) = eraSegment :: eraDurationMap(eraSegment.era)
+        // Since there won't be many era semgments with same era name,
+        // an inefficient approach is used to keep the order.
+        eraDurationMap(era) = eraDurationMap(eraSegment.era) ++ List(eraSegment)
       } else {
         eraDurationMap(era) = List(eraSegment)
       }
@@ -952,14 +951,28 @@ object ChineseCalendar {
     true
   }
 
+  def checkEraNames(): Boolean = {
+    for (era <- eraNames()) {
+      // Prediction in nextCharacter() based on the assumption that
+      // era name does not contain certain characters.
+      if ((era.indexOf("年") >= 0) || (era.indexOf("月") >= 0)) {
+        println("checkEraNames() " + era + " contains characters 年/月.")
+        return false
+      }
+    }
+
+    true
+  }
+
   // Regresssion test to ensure the data tables are correct. Made
   // public so this can be called as regression test.
   def sanityCheck: Boolean = {
     checkYearTable(BCEYears) &&
-      checkYearTable(CEYears) &&
-      checkYearTable(ShuYears) &&
-      checkYearTable(WuYears) &&
-      checkYearTable(BeiWeiYears)
+    checkYearTable(CEYears) &&
+    checkYearTable(ShuYears) &&
+    checkYearTable(WuYears) &&
+    checkYearTable(BeiWeiYears) &&
+    checkEraNames()
   }
 
   /** Returns true if `s` in form of Julian/Gregorian Calendar. */
@@ -1053,6 +1066,7 @@ object ChineseCalendar {
         if (jgQuery(query)) {
           return jgNextCharacter(query)
         } else {
+          return cnNextCharacter(query)
         }
 
         null
@@ -1061,6 +1075,13 @@ object ChineseCalendar {
     }
   }
 
+  /** Return next character based on string `a`. */
+  private def nextCharacterFromArray(query: String, a: Array[String]) = {
+    val len = query.length
+    a.filter(_.startsWith(query)).map(_.substring(len, len + 1)).distinct
+  }
+
+  /** Next charactdr for Julian/Gregorian calendar. */
   private def jgNextCharacter(query: String): Array[String] = {
     if (query.endsWith("日"))
       return Array("")
@@ -1069,70 +1090,123 @@ object ChineseCalendar {
 
     if (JGMonthD.findFirstIn(query) != None) {
       // TODO: perform optimization to only show the
-      // available months for the first year and last year, or
-      // Julian / Gregorian cutoff.
+      // available months for the first year and last year.
 
       val JGMonthD(bce, year, month, day) = query
 
-      if ((day == null) || (day.length == 0)) {
-        return Array("1", "2", "3", "4", "5", "6", "7", "8", "9")
-      }
-
-      if (day.length == 2) {
-        return Array("日")
-      }
-
       val m = Integer.parseInt(month)
-      val d = Integer.parseInt(day)
-      val monthFirstDay = date(firstDay.year, m, 1)
+      val daysInMonth = date(firstDay.year, m, 1).monthDays()
 
-      d match {
-        case 1 =>
-          return Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "日")
+      /* Specially ordered numbers to give correct order when used with
+       * nextCharacterFromArray, for example, 日 should applear later than
+       * numbers 1, 2, ...*/      
+      var days = Array(11, 12, 13, 14, 15, 16, 17, 18, 19, 10,
+        21, 22, 23, 24, 25, 26, 27, 28, 29, 20,
+        31, 30, 1, 2, 3, 4, 5, 6, 7, 8, 9).filter(_ <= daysInMonth)
 
-        case 2 =>
-          if (monthFirstDay.isLeapYear()) {
-            return Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "日")
-          } else {
-            return Array("1", "2", "3", "4", "5", "6", "7", "8", "0", "日")
-          }
-
-        case 3 =>
-          monthFirstDay.monthDays() match {
-            case 30 =>
-              return Array("0", "日")
-            case 31 =>
-              return Array("1", "0", "日")
-            case _ =>
-              return Array("日")
-          }
-
-        case _ =>
-          return Array("日")
+      // Handle Julian / Gregorian cutoff.
+      if ((firstDay.year == 1582) && (m == 10)) {
+        days = days.filter(d => (d <= 4) || (d >= 15))
       }
+
+      return nextCharacterFromArray(day, days.map(_.toString + "日"))
     }
 
     if (JGYearD.findFirstIn(query) != None) {
       // TODO: perform optimization to only show the
       // available months for the first year and last year.
       val JGYearD(bce, year, month) = query
-      if ((month == null) || (month.length == 0)) {
-        return Array("1", "2", "3", "4", "5", "6", "7", "8", "9")
-      }
-
-      if (month.length == 2) {
-        return Array("月")
-      }
-
-      if (Integer.parseInt(month) == 1) {
-        return Array("1", "2", "0", "月")
-      } else {
-        return Array("月")
-      }
+      return nextCharacterFromArray(month,
+        Array("11月", "12月", "10月", "1月", "2月", "3月", "4月", "5月", "6月",
+          "7月", "8月", "9月"))
     }
 
     null
   }
+
+  /** Return a pair of strings by split `s` into era name and remaining part. */
+  private def findEra(s: String): (String, String) = {
+    if (s.length < 3)
+      throw new IllegalArgumentException("findEra(): too short string " + s)
+
+    for (i <- 3 to s.length) {
+      val (era, r) = s.splitAt(i)
+      if (eraDurationMap.contains(era)) {
+        return (era, r)
+      }
+    }
+
+    throw new IllegalArgumentException("findEra(): no era name contained in " + s)
+  }
+
+  /** Next character for Chinese calendar. */
+  private def cnNextCharacter(query: String): Array[String] = {
+    /* Specially ordered numbers to give correct order when used with
+     * nextCharacterFromArray, for example, 年 should applear later than
+     * numbers 一, 二, ...*/
+    val yearNumbers = Array(
+      "一",  
+      "二十一", "二十二", "二十三", "二十四", "二十五", "二十六", "二十七", "二十八", "二十九", "二十", "二",
+      "三十一", "三十二", "三十三", "三十四", "三十五", "三十六", "三十七", "三十八", "三十九", "三十", "三",
+      "四十一", "四十二", "四十三", "四十四", "四十五", "四十六", "四十七", "四十八", "四十九", "四十", "四",
+      "五十一", "五十二", "五十三", "五十四", "五十五", "五十六", "五十七", "五十八", "五十九", "五十", "五",
+      "六十一", "六十二", "六十三", "六十四", "六十五", "六十六", "六十七", "六十八", "六十九", "六十", "六",
+      "七", "八", "九", "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "十"
+    )
+
+    def nextCharacterFromYear(era: String, y: String) = {
+      val years = yearNumbers.intersect(eraYears(era)).map(_ + "年").
+        map(normalizeYear(_))
+      nextCharacterFromArray(y, years)      
+    }
+
+    if (((query.endsWith("朔")) || (query.endsWith("朔"))) &&
+      (query.indexOf("年") > 0) && (query.indexOf("月") > 0)) {
+      return Array("")
+    }
+
+    if ((query.indexOf("年") > 0) && (query.indexOf("月") > 0)) {
+      // TODO
+      null
+    }
+
+    // TODO: remove below when month/day is handled
+    if (query.endsWith("年"))
+      return Array("")    
+
+    val (era, r) = findEra(query)
+    return nextCharacterFromYear(era, r)
+
+    null
+  }
+
+  /** Return the index of the year of `d`. */
+  private def yearIndex(d: ChineseCalendar) = {
+    Numbers.indexOf(d.year.dropRight(1))
+  }
+
+  /** Return the array of years for the `era`. */
+  private def eraSegmentYears(eraSegment: EraSegment) = {
+    val startIndex = yearIndex(eraSegment.startChinese)
+
+    val Some(end) = fromDate(eraSegment.end).find(_.startsWith(eraSegment.era))
+    val endIndex = yearIndex(parseDate(end))
+
+    Numbers.slice(startIndex, endIndex + 1)
+  }
+
+  /** Return the array of years for the `era`. */
+  private def eraYears(era: String) = {
+    val emptyArray: Array[String] = Array()
+    (emptyArray /: eraDurationMap(era).map(eraSegmentYears(_)))(_ ++ _)
+  }
+
+
+  def normalizeYear(year: String) =
+    if (year == "一年") "元年" else year
+
+  def normalizeMonth(month: String) =
+    if (month == "一月") "正月" else month
 
   // Information from
   //   * 三千五百年历日天象 (张培瑜 著)  

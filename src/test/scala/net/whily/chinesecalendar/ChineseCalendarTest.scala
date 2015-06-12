@@ -254,7 +254,18 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       nextCharacter("353年2月2") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "0", "日"))
       nextCharacter("353年2月3") should === (Array("日"))      
       nextCharacter("353年3月3") should === (Array("1", "0", "日"))
-      nextCharacter("353年4月3") should === (Array("0", "日"))            
+      nextCharacter("353年4月3") should === (Array("0", "日"))
+      nextCharacter("1582年10月") should === (Array("1", "2", "3", "4"))
+      nextCharacter("1582年10月1") should === (Array("5", "6", "7", "8", "9", "日"))
+
+      nextCharacter("秦王政") should === (Array("元", "二", "三", "四", "五", "六", "七", "八", "九", "十"))
+      nextCharacter("秦王政元") should === (Array("年"))
+      nextCharacter("秦王政十") should === (Array("一", "二", "三", "四", "五", "六", "七", "八", "九", "年"))
+      nextCharacter("秦王政二") should === (Array("十", "年"))
+      nextCharacter("秦王政二十") should === (Array("一", "二", "三", "四", "五", "年"))                        
+      nextCharacter("秦始皇") should === (Array("二", "三"))
+      nextCharacter("秦始皇二十") should === (Array("六", "七", "八", "九"))
+      nextCharacter("秦始皇三十") should === (Array("一", "二", "三", "四", "五", "六", "七", "年"))                  
     }
 
     it("Check data sanity.") {
