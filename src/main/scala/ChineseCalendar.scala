@@ -446,8 +446,11 @@ object ChineseCalendar {
       } else {
         month = s.substring(k + 1)
       }
-      if (month == "正月")
+      if (month == "正月") {
         month = "一月"
+      } else if (month == "閏正月") {
+        month = "閏一月"
+      }
     }
 
     parseYear(s.substring(0, endIndex), month, dayOfMonth)
@@ -1063,10 +1066,14 @@ object ChineseCalendar {
   def nextCharacter(query: String): Array[String] = {
     predictionMap.get(query) match {
       case None =>
-        if (jgQuery(query)) {
-          return jgNextCharacter(query)
-        } else {
-          return cnNextCharacter(query)
+        try {
+          if (jgQuery(query)) {
+            return jgNextCharacter(query)
+          } else {
+            return cnNextCharacter(query)
+          }
+        } catch {
+          case ex: Exception =>
         }
 
         null
@@ -1158,16 +1165,64 @@ object ChineseCalendar {
       val years = yearNumbers.intersect(eraYears(era)).map(_ + "年").
         map(normalizeYear(_))
       nextCharacterFromArray(y, years)      
-    }
+    }    
 
-    if (((query.endsWith("朔")) || (query.endsWith("朔"))) &&
-      (query.indexOf("年") > 0) && (query.indexOf("月") > 0)) {
-      return Array("")
-    }
+    /* Specially ordered numbers to give correct order when used with
+     * nextCharacterFromArray, for example, 月 should applear later than
+     * numbers 一, 二, ...*/
+    val orderedMonths = Array(
+      "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月",
+      "十一月", "十二月", "十月", 
+      "閏一月", "閏二月", "閏三月", "閏四月", "閏五月", "閏六月", "閏七月", "閏八月", "閏九月",
+      "閏十一月", "閏十二月", "閏十月", 
+      "後九月", "後十一月", "後十二月", "後十月"
+    )
+
+    def nextCharacterFromMonth(availableMonths: Array[String], y: String) = {
+      val m = orderedMonths.intersect(availableMonths).map(normalizeMonth(_))
+      nextCharacterFromArray(y, m)
+    }        
 
     if ((query.indexOf("年") > 0) && (query.indexOf("月") > 0)) {
       // TODO
+
+      if (query.length > query.indexOf("月") + 1) {
+        // Check whther this is already a valid date.
+        try {
+          val convertedDate = toDate(query, true)
+          return Array("")
+        } catch {
+          case ex: IllegalArgumentException =>
+        }
+      }
+
+      // Now candicates are provided as `query` is not a valid date.
+      // TODO
       null
+    }
+
+    if (query.indexOf("年") > 0) {
+      // TODO: it is assuemd that 月 does not appear in era name.
+      val (eraYear, r) = query.splitAt(query.indexOf("年") + 1)
+      // TODO: make sure 六月 (or alternative) exists in every year.
+      val date = parseDate(eraYear + "六月")
+      val (_, months, _) = lookupDate(date)
+      var monthList: List[String] = Nil
+
+      for (m <- months) {
+        // TODO: it is assumed that era change only happens at the beginning of the month.
+        val month = m.month
+
+        try {
+          val tentativeDate = eraYear + month
+          val convertedDate = toDate(tentativeDate, true)
+          monthList = month :: monthList
+        } catch {
+          case ex: IllegalArgumentException =>
+        }
+      }
+
+      return nextCharacterFromMonth(monthList.reverse.toArray, r)
     }
 
     // TODO: remove below when month/day is handled
@@ -1206,7 +1261,9 @@ object ChineseCalendar {
     if (year == "一年") "元年" else year
 
   def normalizeMonth(month: String) =
-    if (month == "一月") "正月" else month
+    if (month == "一月") "正月"
+    else if (month == "閏一月") "閏正月"
+    else month
 
   // Information from
   //   * 三千五百年历日天象 (张培瑜 著)  

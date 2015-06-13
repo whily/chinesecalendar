@@ -265,7 +265,11 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       nextCharacter("秦王政二十") should === (Array("一", "二", "三", "四", "五", "年"))                        
       nextCharacter("秦始皇") should === (Array("二", "三"))
       nextCharacter("秦始皇二十") should === (Array("六", "七", "八", "九"))
-      nextCharacter("秦始皇三十") should === (Array("一", "二", "三", "四", "五", "六", "七", "年"))                  
+      nextCharacter("秦始皇三十") should === (Array("一", "二", "三", "四", "五", "六", "七", "年"))
+      nextCharacter("秦始皇三十六年") should === (Array("正", "二", "三", "四", "五", "六", "七", "八", "九", "十"))
+      nextCharacter("秦始皇三十六年十") should === (Array("一", "二", "月"))
+      nextCharacter("漢獻帝中平六年") should === (Array("十", "閏"))
+      nextCharacter("漢獻帝中平六年十") should === (Array("二"))                  
     }
 
     it("Check data sanity.") {
