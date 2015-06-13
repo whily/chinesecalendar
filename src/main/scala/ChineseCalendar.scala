@@ -1184,8 +1184,6 @@ object ChineseCalendar {
     }        
 
     if ((query.indexOf("年") > 0) && (query.indexOf("月") > 0)) {
-      // TODO
-
       if (query.length > query.indexOf("月") + 1) {
         // Check whther this is already a valid date.
         try {
@@ -1196,9 +1194,15 @@ object ChineseCalendar {
         }
       }
 
-      // Now candicates are provided as `query` is not a valid date.
-      // TODO
-      null
+      // Now candicates are provided for the case that `query` is not
+      // a valid date.
+      val (eraYearMonth, r) = query.splitAt(query.indexOf("月") + 1)
+      val sexagenary1stDay = sexagenary1stDayOfMonth(eraYearMonth)
+      val daysPerMonth = monthLength(eraYearMonth)
+      val sexagenaryTexts = sexagenaries(sexagenary1stDay, daysPerMonth)
+      val dateTexts = Dates.slice(0, daysPerMonth)
+      val d = Sexagenary.intersect(sexagenaryTexts) ++ dateTexts ++ Array("朔", "晦")
+      return nextCharacterFromArray(r, d)      
     }
 
     if (query.indexOf("年") > 0) {
@@ -1224,10 +1228,6 @@ object ChineseCalendar {
 
       return nextCharacterFromMonth(monthList.reverse.toArray, r)
     }
-
-    // TODO: remove below when month/day is handled
-    if (query.endsWith("年"))
-      return Array("")    
 
     val (era, r) = findEra(query)
     return nextCharacterFromYear(era, r)
