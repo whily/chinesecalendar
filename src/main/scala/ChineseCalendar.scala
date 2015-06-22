@@ -2277,6 +2277,7 @@ object ChineseCalendar {
   private val ce598 = y(598, 2, 12, "癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳 戊戌 戊辰 丁酉")
   private val ce599 = y(599, 2, 1,  "丁卯 丙申 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳 壬戌 壬辰")
   private val ce600 = y(600, 1, 21, "辛酉 閏 辛卯 庚申 庚寅 己未 己丑 戊午 戊子 戊午 丁亥 丁巳 丙戌 丙辰")
+  private val ce601 = y(601, 2, 8,  "乙酉 乙卯 甲申 甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥 辛巳 庚戌")
   
   private val CEYears = Array(
     // Since we use propletic Julian calendar, add one day for years CE 1,2,3,4.
@@ -2784,8 +2785,7 @@ object ChineseCalendar {
     y(586, 1, 25, "壬子 壬午 壬子 辛巳 辛亥 庚辰 庚戌 閏 己卯 己酉 戊寅 戊申 丁丑 丁未"),
     y(587, 2, 13, "丙子 丙午 乙亥 乙巳 甲戌 甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑"),
     y(588, 2, 3,  "辛未 庚子 庚午 己亥 己巳 戊戌 戊辰 丁酉 丁卯 丁酉 丙寅 丙申"),
-    ce589, ce590, ce591, ce592, ce593, ce594, ce595, ce596, ce597, ce598, ce599, ce600, 
-    y(601, 2, 8,  "乙酉 乙卯 甲申 甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥 辛巳 庚戌"),
+    ce589, ce590, ce591, ce592, ce593, ce594, ce595, ce596, ce597, ce598, ce599, ce600, ce601,
     y(602, 1, 29, "庚辰 己酉 己卯 戊申 戊寅 丁未 丁丑 丙午 丙子 乙巳 閏 乙亥 甲辰 甲戌"),
     y(603, 2, 16, "癸卯 癸酉 癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子 己巳 己亥 戊辰"),
     y(604, 2, 6,  "戊戌 丁卯 丁酉 丙寅 丙申 乙丑 乙未 乙丑 甲午 甲子 癸巳 癸亥"),
@@ -4278,7 +4278,9 @@ object ChineseCalendar {
     y(586, 1, 26, "癸丑 壬午 壬子 辛巳 辛亥 庚辰 庚戌 己卯 閏 己酉 戊寅 戊申 戊寅 丁未"),
     y(587, 2, 14, "丁丑 丙午 丙子 乙巳 乙亥 甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑"),
     y(588, 2, 3,  "辛未 庚子 庚午 庚子 己巳 己亥 戊辰 戊戌 丁卯 丁酉 丙寅 丙申"),
-    ce589, ce590, ce591, ce592, ce593, ce594, ce595, ce596, ce597, ce598, ce599, ce600
+    ce589, ce590, ce591, ce592, ce593, ce594, ce595, ce596, ce597, ce598, ce599, ce600,
+    // The following year is only added to make firstDayNextMonth() work for argument 隋文帝開皇二十年十二月
+    ce601
   )
 
   private val BeiQiYears = Array(
@@ -4643,13 +4645,12 @@ object ChineseCalendar {
   setMonthLength(BeiWeiYears)
   setMonthLength(BeiQiYears)
 
+  // TODO: set once everything is ready.
   setMonthLengthLastYear(BCEYears, 29)
-  // Value 30 is tentatively set.
-  setMonthLengthLastYear(ShuYears, 30)
+  setMonthLengthLastYear(ShuYears, 29)
   // No need for WuYears as the last year is shared with Wei.
-  // TODO:
-  //setMonthLengthLastYear(BeiWeiYears, 30)
-  //setMonthLengthLastYear(BeiQiYears, 30)
+  // No nedd for BeiWeiYears as the last year is shared with CEYears.
+  // No need for BeiQiYears as the last year is shared with BeiWeiYears.
 
   setSexagenary("辛亥", BCEYears)
   setSexagenary("辛酉", CEYears)
