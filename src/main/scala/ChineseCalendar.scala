@@ -182,7 +182,7 @@ case class ChineseCalendar(era: String, year: String,
    * Return the date of next month with same day of month as current date.
    * If this is impossible, return the closest date in next month.
    */
-  def sameDayNextMonth() = {
+  def sameDayNextMonth(): ChineseCalendar = {
     firstDayNextMonth(false).sameDayAs(this)
   }
 
@@ -190,9 +190,46 @@ case class ChineseCalendar(era: String, year: String,
    * Return the date of previous month with same day of month as current date.
    * If this is impossible, return the closest date in next month.
    */
-  def sameDayPrevMonth() = {
+  def sameDayPrevMonth(): ChineseCalendar = {
     lastDayPrevMonth(false).sameDayAs(this)
   }
+
+  private def sameDayYearCore(fn: ChineseCalendar => ChineseCalendar): ChineseCalendar = {
+    val targetMonth =
+      if ((month.startsWith("閏")) || (month.startsWith("後"))) month.substring(1)
+      else month
+    var iterateDate: ChineseCalendar = this
+    var candidateDate: ChineseCalendar = null
+    // Magic number to handle various inconsistencies of calendar change.
+    val magicIteration = 13
+    for (i <- 0 until magicIteration) {
+      iterateDate = fn(iterateDate)
+      if ((iterateDate.month == targetMonth) &&
+        ((iterateDate.era != era) || (iterateDate.year != year))) {
+        return iterateDate.sameDayAs(this)
+      }
+      if (i == 11) {
+        candidateDate = iterateDate.sameDayAs(this)
+      }
+    }
+    candidateDate
+  }    
+
+  /**
+   * Return the date of next year with same day of month as current date.
+   * If this is impossible, return the closest date 12 months later.
+   */
+  def sameDayNextYear(): ChineseCalendar = {
+    sameDayYearCore(_.firstDayNextMonth(false))
+  }
+
+  /**
+   * Return the date of previous month with same day of month as current date.
+   * If this is impossible, return the closest date 12 months ago.
+   */
+  def sameDayPrevYear(): ChineseCalendar = {
+    sameDayYearCore(_.lastDayPrevMonth(false))
+  }  
 
   /** Return the sexagenary of the year. */
   def yearSexagenary() = {
