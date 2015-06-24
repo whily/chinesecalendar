@@ -4,7 +4,7 @@ name := "chinesecalendar"
 
 version := "0.0.1-SNAPSHOT"
 
-scalaVersion := "2.11.0"
+scalaVersion := "2.11.6"
 
 scalacOptions ++= Seq("-optimize", "-deprecation")
 
