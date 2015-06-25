@@ -621,12 +621,20 @@ object ChineseCalendar {
   // the higher the priority, i.e. appears first in
   // ChineseCalendar::fromDate().
   private val DynastyOrderMap = Map(
-    "魏" -> 1, "蜀" -> 2, "吳" -> 3
+    "魏" -> 100, "蜀" -> 102, "吳" -> 103,
+    // TODO: handle the dynasties with same name.
+    "晉" -> 101, "宋" -> 104, "齊" -> 105, "梁" -> 106, "陳" -> 107,
+    "北魏" -> 110, "西魏" -> 111, "北周" -> 112, "東魏" -> 113, "北齊" -> 114,
+    "隋" -> 120, "唐" -> 121
   )
 
   def dynastyOrder(era: String) = {
-    val c = era.substring(0, 1)
-    if (DynastyOrderMap.contains(c)) DynastyOrderMap(c) else 0
+    assert(era.length >= 2)
+    val s2 = era.substring(0, 2)
+    val s1 = era.substring(0, 1)
+    if (DynastyOrderMap.contains(s2)) DynastyOrderMap(s2)
+    else if (DynastyOrderMap.contains(s1)) DynastyOrderMap(s1)
+    else 0
   }
 
   /**
@@ -1061,7 +1069,9 @@ object ChineseCalendar {
         val k = f.substring(0, i - 1)
         val v = f.substring(i - 1, i)
         if (map.contains(k)) {
-          map(k) = v :: map(k)
+          if (!map(k).contains(v)) {
+            map(k) = v :: map(k)
+          }
         } else {
           map(k) = List(v)
         }
@@ -4626,7 +4636,6 @@ object ChineseCalendar {
     ("北周宣帝大成", "", "", "", "", (BeiWeiYears, 579)),
     ("北周靜帝大象", "二月", "", "", "", (BeiWeiYears, 579)),
     ("北周靜帝大定", "", "", "", "隋文帝開皇", (BeiWeiYears, 581)),
-    // TODO: modify years BeiWeiYears.
     ("東魏孝靜帝天平", "十月", "", "北魏孝武帝永熙", "", (BeiWeiYears, 534)),
     ("東魏孝靜帝元象", "", "", "", "", (BeiWeiYears, 538)),        
     ("東魏孝靜帝興和", "十一月", "", "", "", (BeiWeiYears, 539)),

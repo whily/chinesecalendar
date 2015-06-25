@@ -123,6 +123,9 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       fromDate(date(1, 2, 12)) should === (List("漢平帝元始元年正月初一"))
       fromDate(date(1, 2, 22)) should === (List("漢平帝元始元年正月十一"))
       fromDate(date(237, 4, 13)) should === (List("魏明帝景初元年四月初一", "蜀後主建興十五年三月初一", "吳大帝嘉禾六年三月初一"))
+
+      // Check DynastyOrder.
+      fromDate(date(543, 5, 6)) should === (List("梁武帝大同九年三月十七", "西魏文帝大統九年三月十七", "東魏孝靜帝武定元年三月十七"))
     }
 
     it("Check monthLength().") {
@@ -300,6 +303,9 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       nextCharacter("漢獻帝中平六年") should === (Array("十", "閏"))
       nextCharacter("漢獻帝中平六年十") should === (Array("二"))
       nextCharacter("漢獻帝中平六年十二月") should === (Array("甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸", "初", "十", "二", "廿", "朔", "晦"))
+
+      // Check the order of results.
+      nextCharacter("唐").startsWith(Array("高", "太")) should be (true)
     }
 
     it("Check data sanity.") {
