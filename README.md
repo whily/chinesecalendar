@@ -1,7 +1,7 @@
-[![Build Status](https://secure.travis-ci.org/whily/chinesecalendar.png)](http://travis-ci.org/whily/chinesecalendar)
-
 chinesecalendar
 ===============
+
+[![Build Status](https://secure.travis-ci.org/whily/chinesecalendar.png)](http://travis-ci.org/whily/chinesecalendar)
 
 Chinesecalendar is a Scala library for Chinese Calendar.
 
