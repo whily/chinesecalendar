@@ -38,9 +38,6 @@ case class ChineseCalendar(era: String, year: String,
    * @param daysToAdd can be either positive or negative.
    */
   def plusDays(daysToAdd: Int): ChineseCalendar = {
-    // Current implementation is not efficient if daysToAdd is large
-    // (e.g. when daysToAdd corresponds to many years).
-
     val month = ChineseCalendar.findMonth(this)
 
     if (daysToAdd == 0)
@@ -79,11 +76,17 @@ case class ChineseCalendar(era: String, year: String,
     val (_, months, _) = ChineseCalendar.lookupDate(this)
     val i = months.indexWhere(_.month == month)
     if (i == months.length - 1) {
-      val yearNumber = ChineseCalendar.Numbers(ChineseCalendar.Numbers.indexOf(year.dropRight(1)) + 1)
-      ChineseCalendar.parseDate(era + yearNumber + year.takeRight(1))
+      firstDayNextYearFast()
     } else {
       ChineseCalendar(era, year, months(i + 1).month, "初一")
     }
+  }
+
+  /** Return the first day of next year, fast in the sense that there is
+    * no check on era boundary. */
+  private def firstDayNextYearFast(): ChineseCalendar = {
+    val yearNumber = ChineseCalendar.Numbers(ChineseCalendar.Numbers.indexOf(year.dropRight(1)) + 1)
+    ChineseCalendar.parseDate(era + yearNumber + year.takeRight(1))
   }
 
   /**
@@ -158,7 +161,7 @@ case class ChineseCalendar(era: String, year: String,
         }
       } catch {
         case ex: Exception =>
-          println("lastDayPrevMonth(): " + era + year + month)
+          println("lastDayPrevMonth(): " + era + year + month + "exception " + ex)
           null
       }
     }
@@ -427,7 +430,11 @@ object ChineseCalendar {
 
     for (era <- containingSegments(date)) {
       if (era.contains(date)) {
-        val chineseDate = era.startChinese.plusDays(date - era.start)
+        // TODO: further optimization by using binary search.
+        val Some(year) = era.years.find(_._2 <= date)
+        // It's strange that we cannot chain the calling by eliminate
+        // intermediate variable chineseDate.
+        val chineseDate = year._1.plusDays(date - year._2)
         result = chineseDate.toString() :: result
       }
     }
@@ -775,6 +782,9 @@ object ChineseCalendar {
     prev: String, next: String) {
     val start = toDate(startChinese, false)
 
+    // Data structure to optimize performance of fromDate()
+    var years: List[(ChineseCalendar, JulianGregorianCalendar)] = Nil
+
     /** Equals method. */
     override def equals(other: Any): Boolean = other match {
       case that: EraSegment => era == that.era &&
@@ -955,7 +965,23 @@ object ChineseCalendar {
 
     eraSegmentArray = eraSegmentArray.sortBy(_.start)
 
-    // 3rd pass, to generate eraDurationMap.
+    // 3rd pass, to generate years.
+    for (eraSegment <- eraSegmentArray) {
+      var years = List((eraSegment.startChinese, eraSegment.start))
+      var flag = true
+      while (flag) {
+        val nextYear = years(0)._1.firstDayNextYearFast()
+        val (nextYearDate, _, _) = lookupDate(nextYear)
+        if (nextYearDate <= eraSegment.end) {
+          years = (nextYear, nextYearDate) :: years
+        } else {
+          flag = false
+        }
+      }
+      eraSegment.years = years
+    }    
+
+    // 4th pass, to generate eraDurationMap.
     for (eraSegment <- eraSegmentArray) {
       val era = eraSegment.era
       if (eraDurationMap.contains(era)) {
@@ -967,7 +993,7 @@ object ChineseCalendar {
       }
     }
 
-    // 4th pass, to generate eraParitionArray.
+    // 5th pass, to generate eraParitionArray.
     var initialIndex = 0
     val endIndex = eraSegmentArray.length
     var eraPartitionList = List(0)
@@ -990,6 +1016,7 @@ object ChineseCalendar {
       val chineseDates = fromDate(day)
       for (chineseDate <- chineseDates) {
         if (toDate(chineseDate, true) != day) {
+          println("checkEveryDay() fails on " + chineseDate)
           return false
         }
       }
@@ -2209,6 +2236,7 @@ object ChineseCalendar {
   private val ce278 = y(278, 2, 9, "庚午 庚子 庚午 己亥 己巳 戊戌 戊辰 丁酉 丁卯 丙申 丙寅 乙未")
   private val ce279 = y(279, 1, 30, "乙丑 甲午 甲子 癸巳 癸亥 壬辰 閏 壬戌 壬辰 辛酉 辛卯 庚申 庚寅 己未")
   private val ce280 = y(280, 2, 18, "己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉 甲寅 甲申 甲寅")
+  private val ce281 = y(281, 2, 6, "癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰 庚戌 己卯 己酉 戊寅 戊申")
   private val ce440 = y(440, 2, 19, "庚寅 己未 己丑 戊午 戊子 丁巳 丁亥 丙辰 丙戌 丙辰 乙酉 乙卯")
   private val ce441 = y(441, 2, 7, "甲申 甲寅 癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰 庚戌 己卯 己酉")
   private val ce442 = y(442, 1, 27, "戊寅 戊申 戊寅 丁未 丁丑 閏 丙午 丙子 乙巳 乙亥 甲辰 甲戌 癸卯 癸酉")
@@ -2312,6 +2340,7 @@ object ChineseCalendar {
   private val ce574 = y(574, 2, 7,  "壬戌 辛卯 辛酉 辛卯 庚申 庚寅 己未 己丑 戊午 戊子 丁巳 丁亥")
   private val ce576 = y(576, 2, 15, "庚辰 庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午 丙子 乙巳")
   private val ce577 = y(577, 2, 4,  "乙亥 甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥")
+  private val ce578 = y(578, 1, 24, "己巳 己亥 戊辰 戊戌 丁卯 丁酉 閏 丙寅 丙申 乙丑 乙未 乙丑 甲午 甲子")
   private val ce589 = y(589, 1, 22, "乙丑 乙未 甲子 甲午 閏 癸亥 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅 庚申")
   private val ce590 = y(590, 2, 10, "己丑 己未 戊子 戊午 丁亥 丁巳 丙戌 丙辰 乙酉 乙卯 乙酉 甲寅")
   private val ce591 = y(591, 1, 31, "甲申 癸丑 癸未 壬子 壬午 辛亥 辛巳 庚戌 庚辰 己酉 己卯 戊申 閏 戊寅")
@@ -2592,8 +2621,7 @@ object ChineseCalendar {
     y(274, 1, 25, "甲午 閏 癸亥 癸巳 壬戌 壬辰 壬戌 辛卯 辛酉 庚寅 庚申 己丑 己未 戊子"),
     ce275,
     y(276, 2, 2, "壬子 壬午 辛亥 辛巳 庚戌 庚辰 己酉 己卯 戊申 閏 戊寅 丁未 丁丑 丁未"),
-    ce277, ce278, ce279, ce280,
-    y(281, 2, 6, "癸未 癸丑 壬午 壬子 辛巳 辛亥 庚辰 庚戌 己卯 己酉 戊寅 戊申"),
+    ce277, ce278, ce279, ce280, ce281,
     y(282, 1, 26, "丁丑 丁未 丙子 丙午 閏 丙子 乙巳 乙亥 甲辰 甲戌 癸卯 癸酉 壬寅 壬申"),
     y(283, 2, 14, "辛丑 辛未 庚子 庚午 己亥 己巳 己亥 戊辰 戊戌 丁卯 丁酉 丙寅"),
     y(284, 2, 4, "丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳 壬戌 壬辰 辛酉 辛卯 辛酉 閏 庚寅"),
@@ -4173,7 +4201,10 @@ object ChineseCalendar {
     y(260, 1, 31, "丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 閏 癸丑 壬午 壬子 辛巳 辛亥 庚辰"),
     y(261, 2, 18, "庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子 丙午 乙亥 乙巳 乙亥"),
     y(262, 2, 7, "甲辰 甲戌 癸卯 癸酉 壬寅 壬申 辛丑 辛未 庚子 庚午 己亥 己巳"),
-    y(263, 1, 27, "戊戌 戊辰 戊戌 丁卯 閏 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳")
+    y(263, 1, 27, "戊戌 戊辰 戊戌 丁卯 閏 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午 癸亥 癸巳"),
+    // The following year is only added to make firstDayNextYearFast() work.
+    // Note that lastDayPrevMonth() breaks if we use a commone CE 264 for CEYears and ShuYears.
+    y(264, 2, 15, "壬戌 辛卯 辛酉 庚寅 庚申 己丑 己未 戊子 戊午 丁亥 丁巳 丙戌")
   )
   private val WuYears = Array(
     ce222,
@@ -4233,7 +4264,9 @@ object ChineseCalendar {
     y(274, 1, 25, "甲午 閏 癸亥 癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅 庚申 己丑 己未 戊子"),
     ce275,
     y(276, 2, 2, "壬子 壬午 辛亥 辛巳 庚戌 庚辰 己酉 己卯 戊申 戊寅 閏 戊申 丁丑 丁未"),
-    ce277, ce278, ce279, ce280
+    ce277, ce278, ce279, ce280,
+    // The following year is only added to make firstDayNextYearFast() work.    
+    ce281
   )
 
   private val BeiWeiYears = Array(
@@ -4314,7 +4347,7 @@ object ChineseCalendar {
     y(575, 1, 28, "丁巳 丙戌 丙辰 乙酉 乙卯 甲申 甲寅 癸未 癸丑 壬午 閏 壬子 辛巳 辛亥"),
     y(576, 2, 15, "庚辰 庚戌 庚辰 己酉 己卯 戊申 戊寅 丁未 丁丑 丙午 丙子 乙巳"),
     y(577, 2, 4,  "乙亥 甲辰 甲戌 癸卯 癸酉 壬寅 壬申 壬寅 辛未 辛丑 庚午 庚子" ),
-    y(578, 1, 24, "己巳 己亥 戊辰 戊戌 丁卯 丁酉 閏 丙寅 丙申 乙丑 乙未 乙丑 甲午 甲子"),
+    ce578,
     y(579, 2, 12, "癸巳 癸亥 壬辰 壬戌 辛卯 辛酉 庚寅 庚申 己丑 己未 己丑 戊午"),
     y(580, 2, 2,  "戊子 丁巳 丁亥 丙辰 丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 壬子"),
     y(581, 1, 21, "壬午 辛亥 辛巳 閏 辛亥 庚辰 庚戌 己卯 己酉 戊寅 戊申 丁丑 丁未 丙子"),
@@ -4345,7 +4378,9 @@ object ChineseCalendar {
     y(572, 1, 31, "甲辰 癸酉 癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子 己巳 己亥 己巳 閏 戊戌"),
     ce573, ce574,
     y(575, 1, 27, "丙辰 丙戌 乙卯 乙酉 甲寅 甲申 癸丑 癸未 閏 癸丑 壬午 壬子 辛巳 辛亥"),        
-    ce576, ce577
+    ce576, ce577,
+    // The following year is only added to make firstDayNextYearFast() work.    
+    ce578
   )
 
   // The tuple has five elements:
