@@ -585,11 +585,22 @@ object ChineseCalendar {
    *
    * @param startMonthIndex the index of the first month in the string,
    *                        1 means the first month.
+   * @param wuZhou if set to true, special handling is performed for   
+   *               武則天統治時使用周正的時期（載初元年至久視元年）, i.e. the months are 
+   *               in the order of 正月、臘月、一月、二月.  
    */
-  def months(s: String, startMonthIndex: Int = 1): Array[Month] = {
-    val words = s.trim.split(" ")
+  def months(s: String, startMonthIndex: Int = 1, wuZhou: Boolean = false): Array[Month] = {
+    var words = s.trim.split(" ")
     var monthIndex = startMonthIndex
-    var result: List[Month] = Nil
+    var result: List[Month] =
+      if (wuZhou) {
+        List(Month("臘月", words(1)), Month("正月", words(0)))
+      } else {
+        Nil
+      }
+    if (wuZhou) {
+      words = words.takeRight(words.length - 2)
+    }
     var prefix = ""
     var specialFlag = false
     for (word <- words) {
@@ -667,6 +678,13 @@ object ChineseCalendar {
    */
   private def z(year: Int, month: Int, dayOfMonth: Int, monthStr: String) =
     Year(date(year, month, dayOfMonth), months(monthStr, 10), "")
+
+  /**
+   * Return object Year given year, month, dayOfMonth,
+   * months. Applicable for 武則天統治時使用周正的時期（載初元年至久視元年）.
+   */
+  private def w(year: Int, month: Int, dayOfMonth: Int, monthStr: String) =
+    Year(date(year, month, dayOfMonth), months(monthStr, 1, true), "")  
 
   def date(year: Int, month: Int, dayOfMonth: Int) =
     new JulianGregorianCalendar(year, month, dayOfMonth)
@@ -4690,7 +4708,7 @@ object ChineseCalendar {
     ("隋恭帝義寧", "十一月", "", "", "", (CEYears, 617)),
     ("唐高祖武德", "五月", "", "", "", (CEYears, 618)),
     ("唐太宗貞觀", "", "", "", "", (CEYears, 627)),
-    ("唐高宗永徽", "", "二年", "", "", (CEYears, 650)),
+    ("唐高宗永徽", "", "", "", "", (CEYears, 650)),
     ("唐高宗顯慶", "", "", "", "", (CEYears, 656)),
     ("唐高宗龍朔", "三月", "", "", "", (CEYears, 661)),
     ("唐高宗麟德", "", "", "", "", (CEYears, 664)),

@@ -50,6 +50,11 @@ class ChineseCalendarTest extends FunSpec with Matchers {
         Month("四月", "辛卯"), Month("五月", "辛酉"), Month("六月", "庚寅"),
         Month("七月", "庚申"), Month("八月", "己丑"), Month("九月", "己未"),
         Month("後九月", "戊子")))
+      months("庚辰 己酉 己卯 戊申 戊寅 丁未 丙子 丙午 乙亥 甲辰 甲戌 甲辰", 1, true) should === (Array(
+        Month("正月", "庚辰"), Month("臘月", "己酉"), Month("一月", "己卯"),
+        Month("二月", "戊申"), Month("三月", "戊寅"), Month("四月", "丁未"),
+        Month("五月", "丙子"), Month("六月", "丙午"), Month("七月", "乙亥"),
+        Month("八月", "甲辰"), Month("九月", "甲戌"), Month("十月", "甲辰")))
     }
 
     it("Check parseDate().") {
