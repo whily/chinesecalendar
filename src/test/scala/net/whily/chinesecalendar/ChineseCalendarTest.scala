@@ -122,6 +122,13 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       // Additional tests based on bug fixes.
       toDate("魏陳留王咸熙元年五月") should be (date(264, 6, 12))
+
+      // Test for 唐武后
+      toDate("唐武后載初元年正月") should be (date(689, 12, 18))
+      toDate("唐武后天授三年臘月") should be (date(691, 12, 25))
+      toDate("唐武后證聖元年閏二月") should be (date(695, 3, 21))
+      toDate("唐武后久視元年十一月") should be (date(700, 12, 15))
+      toDate("唐武后大足元年正月") should be (date(701, 2, 13))      
     }
 
     it("Check fromDate().") {

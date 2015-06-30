@@ -300,7 +300,7 @@ object ChineseCalendar {
   def toDate(date: ChineseCalendar, check: Boolean): JulianGregorianCalendar = {
     val (firstDay, months, _) = lookupDate(date)
     if (months.indexWhere(_.month == date.month) < 0)
-      throw new IllegalArgumentException("toDate(): illegal month " + date.month)
+      throw new IllegalArgumentException("toDate(): illegal month " + date.month + " in " + date.era + date.year)
     val (dayDiff, sexagenary) = daysFromNewYear(date.month, months)
     val dayOfMonth = date.dayOfMonth
     val result = firstDay.plusDays(dayDiff + date.dayDiff())
@@ -476,6 +476,11 @@ object ChineseCalendar {
     parseMonth(s.substring(0, endIndex), dayOfMonth)
   }
 
+  // The prefix of the eras using 周正 where both 正月 & 一月 exist.
+  val ZhouZhengEraPrefix =
+    Set("唐武后載", "唐武后天", "唐武后如", "唐武后長", "唐武后延", "唐武后證",
+      "唐武后萬", "唐武后神", "唐武后聖", "唐武后久")
+
   private def parseMonth(s: String, dayOfMonth: String): ChineseCalendar = {
     var month = "一月" // Default month
     var endIndex = s.length
@@ -490,7 +495,7 @@ object ChineseCalendar {
       } else {
         month = s.substring(k + 1)
       }
-      if (month == "正月") {
+      if ((month == "正月") && !ZhouZhengEraPrefix.contains(s.substring(0, 4))) {
         month = "一月"
       } else if (month == "閏正月") {
         month = "閏一月"
@@ -594,6 +599,7 @@ object ChineseCalendar {
     var monthIndex = startMonthIndex
     var result: List[Month] =
       if (wuZhou) {
+        // There is no leap month for 正月 or 臘月 during period (載初元年至久視元年).
         List(Month("臘月", words(1)), Month("正月", words(0)))
       } else {
         Nil
@@ -2967,20 +2973,20 @@ object ChineseCalendar {
     y(687, 1, 19, "丙申 閏 丙寅 乙未 乙丑 甲午 甲子 癸巳 癸亥 壬辰 壬戌 壬辰 辛酉 辛卯"),
     y(688, 2, 7,  "庚申 庚寅 己未 戊子 戊午 丁亥 丁巳 丙戌 丙辰 丙戌 丙辰 乙酉"),
     y(689, 1, 27, "乙卯 甲申 甲寅 癸未 壬子 壬午 辛亥 辛巳 庚戌 閏 庚辰 庚戌"),
-    y(689, 12,18, "庚辰 己酉 己卯 戊申 戊寅 丁未 丙子 丙午 乙亥 甲辰 甲戌 甲辰"),
-    y(690, 12, 6, "癸酉 癸卯 癸酉 癸卯 壬申 壬寅 辛未 庚子 庚午 己亥 戊辰 戊戌"),    
-    y(691, 11,26, "戊辰 丁酉 丁卯 丁酉 丁卯 丙申 丙寅 閏 乙未 甲子 甲午 癸亥 壬辰 壬戌"),
-    y(692, 12,14, "壬辰 辛酉 辛卯 辛酉 庚寅 庚申 己丑 己未 戊子 戊午 丁亥 丁巳"),
-    y(693, 12, 3, ""),
-    y(694, 11,23, ""),
-    y(695, 12,12, ""),
-    y(696, 11,30, ""),
-    y(697, 12,20, ""),
-    y(698, 12, 8, ""),
-    y(699, 11,27, ""),
-    y(701, 2, 13, ""),
-    y(702, 2, 2,  ""),
-    y(703, 1, 22, ""),
+    w(689, 12,18, "庚辰 己酉 己卯 戊申 戊寅 丁未 丙子 丙午 乙亥 甲辰 甲戌 甲辰"),
+    w(690, 12, 6, "癸酉 癸卯 癸酉 癸卯 壬申 壬寅 辛未 庚子 庚午 己亥 戊辰 戊戌"),    
+    w(691, 11,26, "戊辰 丁酉 丁卯 丁酉 丁卯 丙申 丙寅 閏 乙未 甲子 甲午 癸亥 壬辰 壬戌"),
+    w(692, 12,14, "壬辰 辛酉 辛卯 辛酉 庚寅 庚申 己丑 己未 戊子 戊午 丁亥 丁巳"),
+    w(693, 12, 3, "丙戌 丙辰 乙酉 乙卯 甲申 甲寅 甲申 癸丑 癸未 壬子 壬午 辛亥"),
+    w(694, 11,23, "辛巳 庚戌 庚辰 己酉 閏 己卯 戊申 戊寅 丁未 丁丑 丁未 丙子 丙午 乙亥"),
+    w(695, 12,12, "乙巳 甲戌 甲辰 癸酉 壬寅 壬申 辛丑 辛未 辛丑 庚午 庚子 庚午"),
+    w(696, 11,30, "己亥 己巳 戊戌 戊辰 丁酉 丙寅 丙申 乙丑 乙未 甲子 甲午 甲子 閏 甲午"),
+    w(697, 12,20, "甲子 癸巳 壬戌 壬辰 辛酉 庚寅 庚申 己丑 己未 戊子 戊午 丁亥"),
+    w(698, 12, 8, "丁巳 丁亥 丁巳 丙戌 丙辰 乙酉 甲寅 甲申 癸丑 壬午 壬子 壬午"),
+    w(699, 11,27, "辛亥 辛巳 辛亥 辛巳 庚戌 庚辰 己酉 戊寅 戊申 閏 丁丑 丙午 丙子 乙巳 乙亥 乙巳"),
+    y(701, 2, 13, "乙亥 甲辰 甲戌 甲辰 癸酉 壬寅 壬申 辛丑 庚午 庚子 己巳 己亥"),
+    y(702, 2, 2,  "己巳 戊戌 戊辰 戊戌 丁卯 丁酉 丙寅 丙申 乙丑 乙未 甲子 癸巳"),
+    y(703, 1, 22, "癸亥 癸巳 壬戌 壬辰 閏 辛酉 辛卯 辛酉"),
     y(704, 2, 10, ""),
     y(705, 1, 30, ""),
     y(706, 1, 19, ""),
@@ -4726,22 +4732,26 @@ object ChineseCalendar {
     ("唐睿宗文明", "二月", "", "", "", (CEYears, 684)),
     ("唐武后光宅", "九月", "", "", "", (CEYears, 684)),
     ("唐武后垂拱", "", "", "", "", (CEYears, 685)),
-    // // TODO: remove end                
-    ("唐武后永昌", "", "十月", "", "", (CEYears, 689))
-    // ("唐武后載初", "十一月", "", "", "", (CEYears, 689)),
-    // ("唐武后天授", "九月", "", "", "", (CEYears, 690)),
-    // ("唐武后如意", "四月", "", "", "", (CEYears, 692)),
-    // ("唐武后長壽", "九月", "", "", "", (CEYears, 692)),
-    // ("唐武后延載", "五月", "", "", "", (CEYears, 694)),
-    // ("唐武后證聖", "", "", "", "", (CEYears, 695)),
-    // ("唐武后天冊萬歲", "九月", "", "", "", (CEYears, 695)),
-    // ("唐武后萬歲登封", "十二月", "", "", "", (CEYears, 695)),
-    // ("唐武后萬歲通天", "三月", "", "", "", (CEYears, 696)),
-    // ("唐武后神功", "九月", "", "", "", (CEYears, 697)),
-    // ("唐武后久視", "五月", "", "", "", (CEYears, 700)),
-    // ("唐武后大足", "", "", "", "", (CEYears, 701)),
-    // ("唐武后長安", "十月", "", "", "", (CEYears, 701)),
-    // ("唐武后神龍", "", "", "", "", (CEYears, 705)),
+    ("唐武后永昌", "", "", "", "", (CEYears, 689)),
+    // From 載初 to 久視, the year index is the actual index in the
+    // table, not the year of the 1st day. The start month is
+    // according to 資治通鑑.
+    ("唐武后載初", "正月", "", "", "", (CEYears, 690)),
+    ("唐武后天授", "九月", "", "", "", (CEYears, 690)),
+    ("唐武后如意", "四月", "", "", "", (CEYears, 692)),
+    ("唐武后長壽", "九月", "", "", "", (CEYears, 692)),
+    ("唐武后延載", "五月", "", "", "", (CEYears, 694)),
+    ("唐武后證聖", "", "", "", "", (CEYears, 695)),
+    ("唐武后天冊萬歲", "九月", "", "", "", (CEYears, 695)),
+    ("唐武后萬歲登封", "臘月", "", "", "", (CEYears, 696)),
+    ("唐武后萬歲通天", "三月", "", "", "", (CEYears, 696)),
+    ("唐武后神功", "九月", "", "", "", (CEYears, 697)),
+    ("唐武后聖歷", "", "", "", "", (CEYears, 698)),    
+    ("唐武后久視", "五月", "", "", "", (CEYears, 700)),
+    ("唐武后大足", "", "", "", "", (CEYears, 701)),
+    // TODO: remove end                      
+    ("唐武后長安", "十月", "二年", "", "", (CEYears, 701))
+    // ("唐中宗神龍", "", "", "", "", (CEYears, 705)),
   )
 
   private var eraMap = new mutable.HashMap[String, (Array[Year], Int)]()
