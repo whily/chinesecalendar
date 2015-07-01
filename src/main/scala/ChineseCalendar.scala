@@ -242,7 +242,7 @@ case class ChineseCalendar(era: String, year: String,
 
   override def toString = {
     era + ChineseCalendar.normalizeYear(year) +
-    ChineseCalendar.normalizeMonth(month) + dayOfMonth
+    ChineseCalendar.normalizeMonth(month, era) + dayOfMonth
   }
 }
 
@@ -481,6 +481,12 @@ object ChineseCalendar {
     Set("唐武后載", "唐武后天", "唐武后如", "唐武后長", "唐武后延", "唐武后證",
       "唐武后萬", "唐武后神", "唐武后聖", "唐武后久")
 
+  /** Returns true if 周正 is used. */
+  private def usesZhouZheng(era: String) = {
+    if (era.length < 4) false
+    else ZhouZhengEraPrefix.contains(era.substring(0, 4))
+  }
+
   private def parseMonth(s: String, dayOfMonth: String): ChineseCalendar = {
     var month = "一月" // Default month
     var endIndex = s.length
@@ -495,7 +501,7 @@ object ChineseCalendar {
       } else {
         month = s.substring(k + 1)
       }
-      if ((month == "正月") && !ZhouZhengEraPrefix.contains(s.substring(0, 4))) {
+      if ((month == "正月") && !usesZhouZheng(s)) {
         month = "一月"
       } else if (month == "閏正月") {
         month = "閏一月"
@@ -1040,7 +1046,7 @@ object ChineseCalendar {
       val chineseDates = fromDate(day)
       for (chineseDate <- chineseDates) {
         if (toDate(chineseDate, true) != day) {
-          println("checkEveryDay() fails on " + chineseDate)
+          println("checkEveryDay() fails on " + chineseDate + "and " + day)
           return false
         }
       }
@@ -1265,7 +1271,7 @@ object ChineseCalendar {
     "十一月", "十二月", "十月",
     "閏一月", "閏二月", "閏三月", "閏四月", "閏五月", "閏六月", "閏七月", "閏八月", "閏九月",
     "閏十一月", "閏十二月", "閏十月",
-    "後九月", "後十一月", "後十二月", "後十月"
+    "後九月", "後十一月", "後十二月", "後十月", "正月", "臘月"
   )
   /* Specially ordered sexagenary to give correct order when used with
    * nextCharacterFromArray */    
@@ -1291,7 +1297,7 @@ object ChineseCalendar {
     }    
 
     def nextCharacterFromMonth(availableMonths: Array[String], y: String) = {
-      val m = orderedMonths.intersect(availableMonths).map(normalizeMonth(_))
+      val m = orderedMonths.intersect(availableMonths).map(normalizeMonth(_, query))
       nextCharacterFromArray(y, m)
     }        
 
@@ -1372,10 +1378,11 @@ object ChineseCalendar {
   def normalizeYear(year: String) =
     if (year == "一年") "元年" else year
 
-  def normalizeMonth(month: String) =
-    if (month == "一月") "正月"
+  def normalizeMonth(month: String, era: String) = {
+    if ((month == "一月") && !usesZhouZheng(era)) "正月"
     else if (month == "閏一月") "閏正月"
     else month
+  }
 
   // Information from
   //   * 三千五百年历日天象 (张培瑜 著)  
