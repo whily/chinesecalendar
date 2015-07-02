@@ -1069,6 +1069,57 @@ object ChineseCalendar {
     true
   }
 
+  // Traverse history (mainly for testing).
+  //   * startDate: the first date to start the traverse.
+  //   * next: the function to hop to the next date.
+  //   * finished: function returning true if traverse is completed.
+  private def traverse(startDate: ChineseCalendar, next: ChineseCalendar => ChineseCalendar,
+    completed: ChineseCalendar => Boolean) {
+    val mainLineEras = scala.collection.mutable.Set[String]()    
+    val toBeVisitedDates = scala.collection.mutable.Set[String]()
+
+    // Traverse the main branch.
+    var date = startDate
+    do {
+      mainLineEras += date.era
+      for (chineseDate <- fromDate(toDate(date, false)).tail) {
+        toBeVisitedDates += chineseDate.toString()
+      }
+      date = next(date)
+    } while (!completed(date))
+
+    // Traverse the other branches.
+    while (toBeVisitedDates.nonEmpty) {
+      date = parseDate(toBeVisitedDates.head)
+      do {
+        toBeVisitedDates -= date.toString()
+        date = next(date)
+      } while (!completed(date) && (!mainLineEras(date.era)))
+    }
+  }
+
+  def checkSameDayNextMonth() {
+    traverse(parseDate(fromDate(FirstDay).head), _.sameDayNextMonth(),
+      toDate(_, false) + 30 > LastDay)
+  }  
+
+  def checkSameDayPrevMonth() {
+    traverse(parseDate(fromDate(LastDay).head), _.sameDayPrevMonth(),
+      toDate(_, false) - 30 > FirstDay)
+  }
+
+  def checkSameDayNextYear() {
+    // Use 500 days instead of 384 days for some margin due to irregularities.
+    traverse(parseDate(fromDate(FirstDay).head), _.sameDayNextYear(),
+      toDate(_, false) + 500 > LastDay)
+  }  
+
+  def checkSameDayPrevYear() {
+    // Use 500 days instead of 384 days for some margin due to irregularities.    
+    traverse(parseDate(fromDate(LastDay).head), _.sameDayPrevYear(),
+      toDate(_, false) - 500 > FirstDay)
+  }
+
   // Regresssion test to ensure the data tables are correct. Made
   // public so this can be called as regression test.
   def sanityCheck: Boolean = {

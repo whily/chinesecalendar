@@ -214,22 +214,14 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("漢惠帝七年九月初八").sameDayNextMonth() should be (parseDate("漢高后元年十月初八"))
       parseDate("漢惠帝七年九月三十").sameDayNextMonth() should be (parseDate("漢高后元年十月晦"))
 
-      // TODO: cover the whole range.
-      var d = parseDate("秦孝文王元年")
-      while (toDate(d, true) < date(649, 1, 1)) {
-        d = d.sameDayNextMonth()
-      }
+      checkSameDayNextMonth()      
     }
 
     it("Check sameDayPrevMonth().") {
       parseDate("漢惠帝七年九月初八").sameDayPrevMonth() should be (parseDate("漢惠帝七年八月初八"))
       parseDate("漢惠帝七年九月三十").sameDayPrevMonth() should be (parseDate("漢惠帝七年八月晦"))
 
-      // TODO: cover the whole range.
-      var d = parseDate("唐高宗永徽元年")
-      while (toDate(d, true) > date(-200, 1, 1)) {
-        d = d.sameDayPrevMonth()
-      }      
+      checkSameDayPrevMonth()
     }
 
     it("Check sameDayNextYear().") {
@@ -240,7 +232,9 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("漢武帝太初元年九月十七").sameDayNextYear() should be (parseDate("漢武帝太初二年九月十七"))
       parseDate("魏明帝青龍四年三月十七").sameDayNextYear() should be (parseDate("魏明帝景初元年四月十七"))
       parseDate("魏明帝青龍五年一月初八").sameDayNextYear() should be (parseDate("魏明帝景初二年一月初八"))
-      parseDate("魏明帝青龍五年二月初七").sameDayNextYear() should be (parseDate("魏明帝景初二年二月初七"))                               
+      parseDate("魏明帝青龍五年二月初七").sameDayNextYear() should be (parseDate("魏明帝景初二年二月初七"))
+
+      checkSameDayNextYear()            
     }
 
     it("Check sameDayPrevYear().") {
@@ -252,10 +246,11 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("魏明帝景初元年四月十七").sameDayPrevYear() should be (parseDate("魏明帝青龍四年四月十七"))
       parseDate("魏明帝景初二年一月初八").sameDayPrevYear() should be (parseDate("魏明帝青龍五年一月初八"))
       parseDate("魏明帝景初二年二月初七").sameDayPrevYear() should be (parseDate("魏明帝青龍五年二月初七"))
-      parseDate("魏明帝景初二年三月初七").sameDayPrevYear() should be (parseDate("魏明帝青龍五年二月初七"))                                     
+      parseDate("魏明帝景初二年三月初七").sameDayPrevYear() should be (parseDate("魏明帝青龍五年二月初七"))
+
+      checkSameDayPrevYear()                  
     }
     
-
     it("Check yearSexagenary().") {
       // BCEYears
       parseDate("漢武帝征和元年").yearSexagenary() should be ("己丑")
