@@ -194,5 +194,9 @@ case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth
     }
   }
 
+  def + (days: Int) = plusDays(days)
+
+  def - (days: Int) = plusDays(-days)
+
   def - (that: JulianGregorianCalendar) = toJdn() - that.toJdn()
 }
