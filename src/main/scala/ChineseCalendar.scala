@@ -1435,6 +1435,16 @@ object ChineseCalendar {
     else month
   }
 
+  /** Return a string denoting the supported year range. */
+  def yearRange() = {
+    def getYear(date: JulianGregorianCalendar) = {
+      val dateString = date.toString()
+      val index = dateString.indexOf("年")
+      dateString.substring(0, index + 1)
+    }
+    "支持年代范围: " + getYear(FirstDay) + "至公元" + getYear(LastDay)
+  }
+
   // Information from
   //   * 三千五百年历日天象 (张培瑜 著)  
   //   * 中国史历日和中西历日对照表 (方诗铭，方小芬 著)
