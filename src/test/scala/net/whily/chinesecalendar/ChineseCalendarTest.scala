@@ -319,6 +319,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       // Check the handling of 正月 and 臘月.
       nextCharacter("唐武后載初元年") should === (Array("一", "二", "三", "四", "五", "六", "七", "八", "正", "臘"))
+      nextCharacter("唐武后長安二年") should === (Array("正", "二", "三", "四", "五", "六", "七", "八", "九", "十"))
     }
 
     it("Check data sanity.") {

@@ -483,7 +483,7 @@ object ChineseCalendar {
 
   /** Returns true if 周正 is used. */
   private def usesZhouZheng(era: String) = {
-    if (era.length < 4) false
+    if ((era.length < 4) || era.startsWith("唐武后長安")) false
     else ZhouZhengEraPrefix.contains(era.substring(0, 4))
   }
 
@@ -4818,7 +4818,7 @@ object ChineseCalendar {
     ("唐武后久視", "五月", "", "", "", (CEYears, 700)),
     ("唐武后大足", "", "", "", "", (CEYears, 701)),
     // TODO: remove end                      
-    ("唐武后長安", "十月", "二年", "", "", (CEYears, 701))
+    ("唐武后長安", "十月", "二年十二月", "", "", (CEYears, 701))
     // ("唐中宗神龍", "", "", "", "", (CEYears, 705)),
   )
 
