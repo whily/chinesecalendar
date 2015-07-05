@@ -2,7 +2,7 @@ organization := "net.whily"
 
 name := "chinesecalendar"
 
-version := "0.0.1-SNAPSHOT"
+version := "0.1.0-SNAPSHOT"
 
 scalaVersion := "2.11.6"
 
