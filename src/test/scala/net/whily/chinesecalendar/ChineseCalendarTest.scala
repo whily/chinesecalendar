@@ -50,11 +50,17 @@ class ChineseCalendarTest extends FunSpec with Matchers {
         Month("四月", "辛卯"), Month("五月", "辛酉"), Month("六月", "庚寅"),
         Month("七月", "庚申"), Month("八月", "己丑"), Month("九月", "己未"),
         Month("後九月", "戊子")))
-      months("庚辰 己酉 己卯 戊申 戊寅 丁未 丙子 丙午 乙亥 甲辰 甲戌 甲辰", 1, true) should === (Array(
+      months("庚辰 己酉 己卯 戊申 戊寅 丁未 丙子 丙午 乙亥 甲辰 甲戌 甲辰", 1, "武周") should === (Array(
         Month("正月", "庚辰"), Month("臘月", "己酉"), Month("一月", "己卯"),
         Month("二月", "戊申"), Month("三月", "戊寅"), Month("四月", "丁未"),
         Month("五月", "丙子"), Month("六月", "丙午"), Month("七月", "乙亥"),
         Month("八月", "甲辰"), Month("九月", "甲戌"), Month("十月", "甲辰")))
+      months("壬午 辛亥 辛巳 辛亥 庚辰 庚戌 己卯 己酉 戊寅 丁未 丁丑 丙午 丙子 乙巳", 5, "唐肅宗") should === (Array(
+        Month("建子月", "壬午"), Month("建丑月", "辛亥"), Month("建寅月", "辛巳"),
+        Month("建卯月", "辛亥"), Month("建辰月", "庚辰"), Month("建巳月", "庚戌"),
+        Month("五月", "己卯"), Month("六月", "己酉"), Month("七月", "戊寅"),
+        Month("八月", "丁未"), Month("九月", "丁丑"), Month("十月", "丙午"),
+        Month("十一月", "丙子"), Month("十二月", "乙巳")))
     }
 
     it("Check parseDate().") {
@@ -128,7 +134,10 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("唐武后天授三年臘月") should be (date(691, 12, 25))
       toDate("唐武后證聖元年閏二月") should be (date(695, 3, 21))
       toDate("唐武后久視元年十一月") should be (date(700, 12, 15))
-      toDate("唐武后大足元年正月") should be (date(701, 2, 13))      
+      toDate("唐武后大足元年正月") should be (date(701, 2, 13))
+
+      // Test for 唐肅宗
+      toDate("唐肅宗元年建寅月初一") should be (date(762, 1, 30))
     }
 
     it("Check fromDate().") {
