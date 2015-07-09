@@ -1243,21 +1243,26 @@ object ChineseCalendar {
    * different output from `nextCharacter`.
    */
   def nextCharacter(query: String): Array[String] = {
-    predictionMap.get(query) match {
-      case None =>
-        try {
-          if (jgQuery(query)) {
-            return jgNextCharacter(query)
-          } else {
-            return cnNextCharacter(query)
-          }
-        } catch {
-          case ex: Exception =>
+    def checkFurther(): Array[String] = {
+      try {
+        if (jgQuery(query)) {
+          return jgNextCharacter(query)
+        } else {
+          return cnNextCharacter(query)
         }
+      } catch {
+        case ex: Exception =>
+      }
 
-        null
+      null
+    }
 
-      case Some(a) => a
+    val b = checkFurther()
+    predictionMap.get(query) match {
+      case None => b
+      case Some(a) =>
+        if (b == null) a
+        else a ++ b
     }
   }
 
@@ -1315,7 +1320,7 @@ object ChineseCalendar {
     if (s.length < 3)
       throw new IllegalArgumentException("findEra(): too short string " + s)
 
-    for (i <- 3 to s.length) {
+    for (i <- s.length downto 3) {
       val (era, r) = s.splitAt(i)
       if (eraDurationMap.contains(era)) {
         return (era, r)
@@ -1345,7 +1350,8 @@ object ChineseCalendar {
     "十一月", "十二月", "十月",
     "閏一月", "閏二月", "閏三月", "閏四月", "閏五月", "閏六月", "閏七月", "閏八月", "閏九月",
     "閏十一月", "閏十二月", "閏十月",
-    "後九月", "後十一月", "後十二月", "後十月", "正月", "臘月"
+    "後九月", "後十一月", "後十二月", "後十月", "正月", "臘月",
+    "建子月", "建丑月", "建寅月", "建卯月", "建辰月", "建巳月"
   )
   /* Specially ordered sexagenary to give correct order when used with
    * nextCharacterFromArray */    
@@ -4960,8 +4966,58 @@ object ChineseCalendar {
     // ("宋恭帝德祐", "", "", "", "", (CEYears, 1275)),
     // ("宋端宗景炎", "", "", "", "", (CEYears, 1276)),
     // ("宋衛王祥興", "五月", "二年二月", "", "元世祖至元", (CEYears, 1278)),
-    // // Check prev era if more data added for Yuan.
-    // ("元世祖中統", "五月", "", "宋理宗景定", "", (CEYears, 1260)),        
+    // ("遼太祖", "", "", "唐昭宗天祐", "", (CEYears, 907)),
+    // ("遼太祖神冊", "十二月", "", "", "", (CEYears, 916)),
+    // ("遼太祖天贊", "二月", "", "", "", (CEYears, 922)),
+    // ("遼太祖天顯", "二月", "", "", "", (CEYears, 926)),
+    // ("遼太宗會同", "十一月", "", "", "", (CEYears, 938)),
+    // ("遼太宗大同", "二月", "", "", "", (CEYears, 947)),
+    // ("遼世宗天祿", "九月", "", "", "", (CEYears, 947)),
+    // ("遼穆宗應歷", "九月", "", "", "", (CEYears, 951)),
+    // ("遼景宗保寧", "二月", "", "", "", (CEYears, 969)),
+    // ("遼景宗乾亨", "十一月", "", "", "", (CEYears, 979)),
+    // ("遼聖宗統和", "六月", "", "", "", (CEYears, 983)),
+    // ("遼聖宗開泰", "十一月", "", "", "", (CEYears, 1012)),
+    // ("遼聖宗太平", "十一月", "", "", "", (CEYears, 1021)),      
+    // ("遼興宗景福", "六月", "", "", "", (CEYears, 1031)),
+    // ("遼興宗重熙", "十一月", "", "", "", (CEYears, 1032)),
+    // ("遼道宗清寧", "八月", "", "", "", (CEYears, 1055)),
+    // ("遼道宗咸雍", "", "", "", "", (CEYears, 1065)),
+    // ("遼道宗大康", "", "", "", "", (CEYears, 1075)),
+    // ("遼道宗大安", "", "", "", "", (CEYears, 1085)),
+    // ("遼道宗壽昌", "", "", "", "", (CEYears, 1095)),            
+    // ("遼天祚帝乾統", "二月", "", "", "", (CEYears, 1101)),
+    // ("遼天祚帝天庆", "", "", "", "", (CEYears, 1111)),
+    // ("遼天祚帝保大", "", "五年二月", "", "金太宗天會", (CEYears, 1121)),
+    // ("金太祖收國", "", "", "遼天祚帝天庆", "", (CEYears, 1115)),
+    // ("金太祖天輔", "", "", "", "", (CEYears, 1117)),
+    // ("金太宗天會", "九月", "", "", "", (CEYears, 1123)),
+    // ("金熙宗天眷", "", "", "", "", (CEYears, 1138)),
+    // ("金熙宗皇統", "", "", "", "", (CEYears, 1141)),
+    // ("金海陵王天德", "十二月", "", "", "", (CEYears, 1149)),
+    // ("金海陵王貞元", "三月", "", "", "", (CEYears, 1153)),
+    // ("金海陵王正隆", "二月", "", "", "", (CEYears, 1156)),
+    // ("金世宗大定", "十月", "", "", "", (CEYears, 1161)),
+    // ("金章宗明昌", "", "", "", "", (CEYears, 1190)),
+    // ("金章宗承安", "十一月", "", "", "", (CEYears, 1196)),
+    // ("金章宗泰和", "", "", "", "", (CEYears, 1201)),      
+    // ("金衛紹王大安", "", "", "", "", (CEYears, 1209)),
+    // ("金衛紹王崇慶", "", "", "", "", (CEYears, 1212)),
+    // ("金衛紹王至寧", "五月", "", "", "", (CEYears, 1213)),      
+    // ("金宣宗貞祐", "九月", "", "", "", (CEYears, 1213)),
+    // ("金宣宗興定", "九月", "", "", "", (CEYears, 1217)),
+    // ("金宣宗元光", "八月", "", "", "", (CEYears, 1222)),      
+    // ("金哀宗正大", "", "", "", "", (CEYears, 1224)),
+    // ("金哀宗開興", "", "", "", "", (CEYears, 1232)),
+    // ("金哀宗天興", "四月", "三年一月", "", "元太宗", (CEYears, 1232)),            
+    // ("元太祖", "", "", "金章宗泰和", "", (CEYears, 1206)),
+    // ("元皇子拖雷", "", "", "", "", (CEYears, 1228)),      
+    // ("元太宗", "", "", "", "", (CEYears, 1229)),
+    // ("元乃马真后", "", "", "", "", (CEYears, 1242)),
+    // ("元定宗", "", "", "", "", (CEYears, 1246)),
+    // ("元海迷失后", "", "", "", "", (CEYears, 1249)),
+    // ("元憲宗", "", "", "", "", (CEYears, 1251)),                                      
+    // ("元世祖中統", "五月", "", "", "", (CEYears, 1260)),        
     // ("元世祖至元", "八月", "", "", "", (CEYears, 1264)),
     // ("元成宗元貞", "", "", "", "", (CEYears, 1295)),
     // ("元成宗大德", "二月", "", "", "", (CEYears, 1297)),
