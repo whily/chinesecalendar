@@ -333,7 +333,13 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       // Check the handling of 唐肅宗.
       nextCharacter("唐肅宗") should === (Array("至", "乾", "上", "寶", "元"))
       nextCharacter("唐肅宗寶") should === (Array("應"))
-      nextCharacter("唐肅宗寶應") should === (Array("元", "二"))      
+      nextCharacter("唐肅宗寶應") should === (Array("元", "二"))
+
+      for (era <- eraNames()) {
+        for (i <- 1 to era.length) {
+          nextCharacter(era.substring(0, i)).length should be >= 1
+        }
+      }
     }
 
     it("Check data sanity.") {
