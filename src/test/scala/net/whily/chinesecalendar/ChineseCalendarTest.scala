@@ -337,7 +337,9 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       for (era <- eraNames()) {
         for (i <- 1 to era.length) {
-          nextCharacter(era.substring(0, i)).length should be >= 1
+          val next = nextCharacter(era.substring(0, i))
+          next.length should be >= 1
+          next(0) should have length 1
         }
       }
     }
