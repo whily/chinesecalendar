@@ -7,7 +7,7 @@ Chinesecalendar is a Scala library for Chinese Calendar.
 
 Features to include:
 
-* Chinese Calendar between BCE 251 to CE 702.
+* Chinese Calendar between BCE 251 to CE 907.
 
 For more information about Chinesecalendar, please go to
   <https://github.com/whily/chinesecalendar>
@@ -36,4 +36,4 @@ yet. To use this library with your project, you need to download the
 source code, and run `sbt publish-local` in your command line. Then,
 include following line in your sbt configuration file.
 
-          libraryDependencies += "net.whily" %% "chinesecalendar" % "0.1.0-SNAPSHOT"
+          libraryDependencies += "net.whily" %% "chinesecalendar" % "0.1.1-SNAPSHOT"
