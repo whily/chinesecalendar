@@ -3,7 +3,7 @@
  *
  * @author  Yujian Zhang <yujian{dot}zhang[at]gmail(dot)com>
  *
- * License: 
+ * License:
  *   GNU General Public License v2
  *   http://www.gnu.org/licenses/gpl-2.0.html
  * Copyright (C) 2015 Yujian Zhang
@@ -14,16 +14,16 @@ package net.whily.chinesecalendar
 import scala.collection.mutable
 
 /** Convert between Simplified and Traditional Chinese.
-  * See http://www.kjqk.gd.cn/HTML/zlzx/12785517318915120561875011743515.html 
+  * See http://www.kjqk.gd.cn/HTML/zlzx/12785517318915120561875011743515.html
   */
 object Chinese {
   /** Convert Simplified Chinese to Traditional Chinese. */
   def simplified2Traditional(s: String) =
     chineseConvCore(s, simplified2TraditionalMaps)
 
-  /** Convert Traditional Chinese to Simplified Chinese. */  
+  /** Convert Traditional Chinese to Simplified Chinese. */
   def traditional2Simplified(s: String) =
-    chineseConvCore(s, traditional2SimplifiedMaps)    
+    chineseConvCore(s, traditional2SimplifiedMaps)
 
   def chineseConvCore(s: String, maps: (mutable.HashMap[Char, Char], mutable.HashMap[String, String])) = {
     val (characterMap, wordMap) = maps
@@ -54,21 +54,21 @@ object Chinese {
         }
         index += 1
       }
-        
+
     }
     result.mkString("")
-  }  
+  }
 
-  /* 简化字总表（1986年新版）. 
-   * 
-   * For single character only.  
-   * 
+  /* 简化字总表（1986年新版）.
+   *
+   * For single character only.
+   *
    * For each element, the first character is Simplified Chinese, and
-   * remaining characters are corresponding Traditional Chinese. 
-   * 
+   * remaining characters are corresponding Traditional Chinese.
+   *
    * The first Traditional Chinese character will be used when
    * converting from Simplified Chinese.
-   * 
+   *
    * Note: in Emacs, some characters below (e.g. ) might not look
    * correct. They are actually fine (e.g. viewed in web browser).
    */
@@ -330,13 +330,13 @@ object Chinese {
     "黄黃", "吴吳", "晋晉", "岁歲"
   )
 
-  /* 简化字总表（1986年新版）. 
-   * 
+  /* 简化字总表（1986年新版）.
+   *
    * For word (multiple characters). The main intention is to handle
    * exceptions and place names, as word will be handled first.
-   * 
+   *
    * For each element, the first part is Simplified Chinese, and
-   * the second part is correponding Traditional Chinese. 
+   * the second part is correponding Traditional Chinese.
    */
   private val WordTable = List(
     // 第一表: 不作简化偏旁用的简化字
@@ -365,6 +365,13 @@ object Chinese {
     ("丑态百出", "醜態百出"), ("跳梁小丑", "跳梁小醜"),
 
     // 年號
+    ("周共和", "周共和"), ("周宣王", "周宣王"), ("周幽王", "周幽王"), ("周平王", "周平王"),
+    ("周桓王", "周桓王"), ("周庄王", "周莊王"), ("周釐王", "周釐王"), ("周惠王", "周惠王"),
+    ("周襄王", "周襄王"), ("周顷王", "周頃王"), ("周匡王", "周匡王"), ("周定王", "周定王"),
+    ("周简王", "周簡王"), ("周灵王", "周靈王"), ("周景王", "周景王"), ("周敬王", "周敬王"),
+    ("周元王", "周元王"), ("周贞定王", "周貞定王"), ("周考王", "周考王"), ("周威烈王", "周威烈王"),
+    ("周安王", "周安王"), ("周烈王", "周烈王"), ("周显王", "周顯王"), ("周慎靓王", "周慎靚王"),
+    ("周赧王", "周赧王"),
     ("汉高后", "漢高后"), ("北周", "北周"), ("唐武后", "唐武后"),
     ("晋出帝", "晉出帝"), ("后周", "後周"),
     ("庆历", "慶曆"),
@@ -380,7 +387,7 @@ object Chinese {
   )
 
   private var simplified2TraditionalCharacterMap = new mutable.HashMap[Char, Char]()
-  private var traditional2SimplifiedCharacterMap = new mutable.HashMap[Char, Char]()  
+  private var traditional2SimplifiedCharacterMap = new mutable.HashMap[Char, Char]()
   for (charPair <- CharacterTable) {
     val simplified = charPair(0)
     assert(charPair.length >= 2)
@@ -402,7 +409,7 @@ object Chinese {
     // Keep the identity relationship.
     simplified2TraditionalWordMap(traditional) = traditional
     traditional2SimplifiedWordMap(simplified) = simplified
-    
+
     if (simplified.length > maxWordLength) {
       maxWordLength = simplified.length
     }
