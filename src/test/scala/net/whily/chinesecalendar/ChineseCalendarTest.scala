@@ -69,6 +69,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
     it("Check toDate().") {
       // Check dates according to 三千五百年历日天象 (张培瑜 著)
+      toDate("周桓王元年") should be (date(-719, 12, 12))
       toDate("周赧王元年") should be (date(-314, 12, 6))
       toDate("周赧王四十五年") should be (date(-270, 11, 30))
       toDate("周赧王五十九年十一月") should be (date(-255, 10, 16))
