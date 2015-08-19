@@ -1235,7 +1235,31 @@ object ChineseCalendar {
     }
   }
 
-  def buildPrediction() {
+  private def buildEraMaps() {
+    for (era <- eraNames()) {
+      val simplified = Chinese.traditional2Simplified(era)
+      for (i <- 1 to era.length) {
+        val t = era.substring(0, i)
+        val s = simplified.substring(0, i)
+        simplified2TraditionalEraMap(s) = t
+        traditional2SimplifiedEraMap(t) = s
+      }
+    }
+  }
+
+  /** Convert Simplified Chinese to Traditional Chinese, considering era
+    * name predictions. */
+  def simplified2Traditional2(s: String) = {
+    if (traditional2SimplifiedEraMap.contains(s)) s  // Already Traditional Chinese.
+    else simplified2TraditionalEraMap.getOrElse(s, Chinese.simplified2Traditional(s))
+  }
+
+  /** Convert Traditional Chinese to Simplified Chinese, considering era
+    * name predictions. */
+  def traditional2Simplified2(s: String) =
+    traditional2SimplifiedEraMap.getOrElse(s, Chinese.traditional2Simplified(s))
+
+  private def buildPrediction() {
     predictionMap("") = Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "公") ++
       eraNames().map(_.substring(0, 1)).distinct
     predictionMap("公") = Array("元前")
@@ -5793,4 +5817,9 @@ object ChineseCalendar {
   private val LastDay = eraSegmentArray(eraSegmentArray.length - 1).end
 
   buildPrediction()
+
+  private val simplified2TraditionalEraMap = new mutable.HashMap[String, String]
+  private val traditional2SimplifiedEraMap = new mutable.HashMap[String, String]
+
+  buildEraMaps()
 }

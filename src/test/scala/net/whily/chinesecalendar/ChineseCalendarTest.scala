@@ -386,6 +386,10 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       }
     }
 
+    it("Check simplified2Traditional2().") {
+      simplified2Traditional2("遼道宗咸") should be ("遼道宗咸")
+    }
+
     it("Check data sanity.") {
       sanityCheck should be (true)
     }
