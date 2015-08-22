@@ -3110,6 +3110,16 @@ object ChineseCalendar {
   private val ce1293 = y(1293, 2, 8,  "戊午 戊子 丁巳 丁亥 丙辰 乙酉 乙卯 甲申 癸丑 癸未 壬子 壬午")
   private val ce1294 = y(1294, 1, 28, "壬子 壬午 辛亥 辛巳 庚戌 庚辰 己酉 己卯 戊申 丁丑 丁未 丙子")
   private val ce1295 = y(1295, 1, 17, "丙午 丙子 乙巳 乙亥 閏 乙巳 甲戌 甲辰 癸酉 癸卯 壬申 辛丑 辛未 庚子")
+  private val ce1647 = y(1647, 2, 5,  "癸卯 壬申 壬寅 壬申 辛丑 庚午 庚子 己巳 戊戌 戊辰 丁酉 丁卯")
+  private val ce1649 = y(1649, 2, 11, "庚申 庚寅 庚申 己丑 己未 己丑 戊午 戊子 丁巳 丙戌 丙辰 乙酉")
+  private val ce1654 = y(1654, 2, 17, "壬辰 壬戌 辛卯 庚申 庚寅 己未 戊子 戊午 丁亥 丁巳 丁亥 丁巳")
+  private val ce1655 = y(1655, 2, 6,  "丙戌 丙辰 丙戌 乙卯 甲申 甲寅 癸未 壬子 壬午 辛亥 辛巳 辛亥")
+  private val ce1656 = y(1656, 1, 26, "庚辰 庚戌 庚辰 己酉 己卯 閏 戊申 戊寅 丁未 丙子 丙午 乙亥 乙巳 甲戌")
+  private val ce1657 = y(1657, 2, 13, "甲辰 甲戌 甲辰 癸酉 癸卯 壬申 壬寅 辛未 庚子 庚午 己亥 己巳")
+  private val ce1658 = y(1658, 2, 2,  "戊戌 戊辰 戊戌 丁卯 丁酉 丁卯 丙申 丙寅 乙未 甲子 甲午 癸亥")
+  private val ce1660 = y(1660, 2, 11, "丁巳 丙戌 丙辰 乙酉 乙卯 甲申 甲寅 甲申 癸丑 癸未 壬子 壬午")
+  private val ce1662 = y(1662, 2, 18, "乙亥 乙巳 甲戌 甲辰 癸酉 壬寅 壬申 辛丑 辛未 辛丑 辛未 庚子")
+  private val ce1663 = y(1663, 2, 8,  "庚午 庚子 己巳 戊戌 戊辰 丁酉 丙寅 丙申 乙丑 乙未 乙丑 甲午")
 
   // Use `lazy` keyword to suppress the compilation error: Could not
   //   write class net/whily/chinesecalendar/ChineseCalendar$ because
@@ -4450,23 +4460,18 @@ object ChineseCalendar {
     y(1644, 2, 8,  "庚寅 庚申 己丑 戊午 戊子 丁巳 丙戌 丙辰 丙戌 乙卯 乙酉 乙卯"),
     y(1645, 1, 28, "乙酉 甲寅 甲申 癸丑 壬午 壬子 閏 辛巳 庚戌 庚辰 己酉 己卯 己酉 己卯"),
     y(1646, 2, 16, "己酉 戊寅 戊申 丁丑 丙午 丙子 乙巳 甲戌 甲辰 癸酉 癸卯 癸酉"),
-    y(1647, 2, 5,  "癸卯 壬申 壬寅 壬申 辛丑 庚午 庚子 己巳 戊戌 戊辰 丁酉 丁卯"),
+    ce1647,
     y(1648, 1, 25, "丁酉 丙寅 丙申 丙寅 閏 乙未 乙丑 甲午 甲子 癸巳 壬戌 壬辰 辛酉 辛卯"),
-    y(1649, 2, 11, "庚申 庚寅 庚申 己丑 己未 己丑 戊午 戊子 丁巳 丙戌 丙辰 乙酉"),
+    ce1649,
     y(1650, 2, 1,  "乙卯 甲申 甲寅 甲申 癸丑 癸未 壬子 壬午 壬子 辛巳 庚戌 庚辰"),
     y(1651, 1, 21, "己酉 己卯 閏 戊申 戊寅 丁未 丁丑 丙午 丙子 丙午 乙亥 乙巳 乙亥 甲辰"),
     y(1652, 2, 9,  "癸酉 癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子 庚午 己亥 己巳 己亥"),
     y(1653, 1, 29, "戊辰 戊戌 丁卯 丙申 丙寅 乙未 閏 甲子 甲午 甲子 癸巳 癸亥 癸巳 壬戌"),
-    y(1654, 2, 17, "壬辰 壬戌 辛卯 庚申 庚寅 己未 戊子 戊午 丁亥 丁巳 丁亥 丁巳"),
-    y(1655, 2, 6,  "丙戌 丙辰 丙戌 乙卯 甲申 甲寅 癸未 壬子 壬午 辛亥 辛巳 辛亥"),
-    y(1656, 1, 26, "庚辰 庚戌 庚辰 己酉 己卯 閏 戊申 戊寅 丁未 丙子 丙午 乙亥 乙巳 甲戌"),
-    y(1657, 2, 13, "甲辰 甲戌 甲辰 癸酉 癸卯 壬申 壬寅 辛未 庚子 庚午 己亥 己巳"),
-    y(1658, 2, 2,  "戊戌 戊辰 戊戌 丁卯 丁酉 丁卯 丙申 丙寅 乙未 甲子 甲午 癸亥"),
+    ce1654, ce1655, ce1656, ce1657, ce1658,
     y(1659, 1, 23, "癸巳 壬戌 壬辰 閏 辛酉 辛卯 辛酉 庚寅 庚申 己丑 己未 戊子 戊午 丁亥"),
-    y(1660, 2, 11, "丁巳 丙戌 丙辰 乙酉 乙卯 甲申 甲寅 甲申 癸丑 癸未 壬子 壬午"),
+    ce1660,
     y(1661, 1, 30, "辛亥 辛巳 庚戌 庚辰 己酉 戊寅 戊申 閏 戊寅 丁未 丁丑 丁未 丙子 丙午"),
-    y(1662, 2, 18, "乙亥 乙巳 甲戌 甲辰 癸酉 壬寅 壬申 辛丑 辛未 辛丑 辛未 庚子"),
-    y(1663, 2, 8,  "庚午 庚子 己巳 戊戌 戊辰 丁酉 丙寅 丙申 乙丑 乙未 乙丑 甲午"),
+    ce1662, ce1663,
     y(1664, 1, 28, "甲子 甲午 癸亥 癸巳 壬戌 壬辰 閏 辛酉 庚寅 庚申 己丑 己未 戊子 戊午"),
     y(1665, 2, 15, "戊子 戊午 丁亥 丁巳 丙戌 丙辰 乙酉 甲寅 甲申 癸丑 癸未 壬子"),
     y(1666, 2, 4,  "壬午 壬子 辛巳 辛亥 辛巳 庚戌 庚辰 己酉 戊寅 戊申 丁丑 丁未"),
@@ -5252,6 +5257,21 @@ object ChineseCalendar {
     ce1286, ce1287, ce1288, ce1289, ce1290, ce1291, ce1292, ce1293, ce1294, ce1295
   )
 
+  private val NanMingYears = Array(
+    ce1647,
+    y(1648, 1, 25, "丁酉 丙寅 丙申 閏 丙寅 乙未 乙丑 甲午 甲子 癸巳 壬戌 壬辰 辛酉 辛卯"),
+    ce1649,
+    y(1650, 2, 1,  "乙卯 甲申 甲寅 甲申 癸丑 癸未 壬子 壬午 壬子 辛巳 辛亥 閏 庚辰 己酉"),
+    y(1651, 2, 20, "己卯 戊申 戊寅 丁未 丁丑 丙午 丙子 丙午 乙亥 乙巳 乙亥 甲辰"),
+    y(1652, 2, 10, "甲戌 癸卯 壬申 壬寅 辛未 辛丑 庚午 庚子 己巳 己亥 己巳 己亥"),
+    y(1653, 1, 29, "戊辰 戊戌 丁卯 丙申 丙寅 乙未 甲子 閏 甲午 癸亥 癸巳 癸亥 癸巳 癸亥"),
+    ce1654, ce1655, ce1656, ce1657, ce1658,
+    y(1659, 1, 23, "癸巳 閏 壬戌 壬辰 辛酉 辛卯 辛酉 庚寅 庚申 己丑 己未 戊子 戊午 丁亥"),
+    ce1660,
+    y(1661, 1, 30, "辛亥 辛巳 庚戌 庚辰 己酉 戊寅 戊申 戊寅 丁未 丁丑 閏 丁未 丙子 丙午"),
+    ce1662, ce1663
+  )
+
   // The tuple has five elements:
   // - 1st: era name
   // - 2nd and 3rd indicates the duration of the period, as start & end.
@@ -5839,10 +5859,9 @@ object ChineseCalendar {
     ("明光宗泰昌", "八月", "", "", "", (CEYears, 1620)),
     ("明熹宗天啟", "", "", "", "", (CEYears, 1621)),
     ("明思宗崇禎", "", "", "", "", (CEYears, 1628)),
-    // TODO: check Qing and South Ming.
     ("明弘光", "", "", "", "", (CEYears, 1645)),
     ("明隆武", "七月", "", "", "", (CEYears, 1645)),
-    ("明永歷", "", "十六年四月", "", "清聖祖康熙", (CEYears, 1647)),
+    ("明永歷", "", "十六年四月", "", "清聖祖康熙", (NanMingYears, 1647)),
     ("清太祖天命", "", "", "明神宗萬曆", "", (CEYears, 1616)),
     ("清太宗天聰", "", "", "", "", (CEYears, 1627)),
     ("清太宗崇德", "四月", "", "", "", (CEYears, 1636)),
@@ -5881,8 +5900,8 @@ object ChineseCalendar {
   setMonthLength(LiaoYears)
   setMonthLength(JinYears)
   setMonthLength(YuanYears)
+  setMonthLength(NanMingYears)
 
-  // TODO: set once everything is ready.
   setMonthLengthLastYear(BCEYears, 29)
   // No need for ZhuanXuYears as the last year is shared with Wei.
   // To comply with the cycle of 30, 29, 30, 29...
@@ -5894,6 +5913,7 @@ object ChineseCalendar {
   // No need for LiaoYears as the last year is shared with CEYears.
   // No need for JinYears as the last year is shared with CEYears.
   // No need for YuanYears as the last year is shared with CEYears.
+  // No need for NanMingYears as the last year is shared with CEYears.
 
   // Although using sexagenary for year only started from Han, it is nevertheless
   // helpful to check the years before Han for correctness.
@@ -5908,6 +5928,7 @@ object ChineseCalendar {
   setSexagenary("辛亥", LiaoYears)
   setSexagenary("癸卯", JinYears)
   setSexagenary("己丑", YuanYears)
+  setSexagenary("丁亥", NanMingYears)
 
   private var eraSegmentArray = new Array[EraSegment](eraArray.length)
   private val eraDurationMap = new mutable.HashMap[String, List[EraSegment]]()
