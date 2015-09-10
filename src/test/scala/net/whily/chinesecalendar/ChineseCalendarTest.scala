@@ -377,6 +377,10 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       nextCharacter("唐肅宗寶") should === (Array("應"))
       nextCharacter("唐肅宗寶應") should === (Array("元", "二"))
 
+      // Check for 民國
+      nextCharacter("民") should === (Array("國"))
+      nextCharacter("民國") should === (Array("元", "二", "三", "四", "五", "六", "七", "八", "九", "十"))
+
       for (era <- eraNames()) {
         for (i <- 1 to era.length) {
           val next = nextCharacter(era.substring(0, i))
