@@ -519,16 +519,19 @@ object ChineseCalendar {
     var t = s.dropRight(1)
 
     // Get the year in Chinese.
-    var year = t.takeRight(3)
+    var year = t.takeRight(4)
     if (!Numbers.contains(year)) {
-      year = t.takeRight(2)
+      year = t.takeRight(3)
       if (!Numbers.contains(year)) {
-        year = t.takeRight(1)
-        if (year == "元") {
-          year = "一"
-        }
+        year = t.takeRight(2)
         if (!Numbers.contains(year)) {
-          throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
+          year = t.takeRight(1)
+          if (year == "元") {
+            year = "一"
+          }
+          if (!Numbers.contains(year)) {
+            throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
+          }
         }
       }
     }
@@ -564,7 +567,7 @@ object ChineseCalendar {
     }
   }
 
-  private val Numbers = Array(
+  private val NumbersSmall = Array(
     "〇", "一", "二", "三", "四", "五", "六", "七", "八", "九",
     "十", "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九",
     "二十", "二十一", "二十二", "二十三", "二十四", "二十五", "二十六", "二十七", "二十八", "二十九",
@@ -573,6 +576,19 @@ object ChineseCalendar {
     "五十", "五十一", "五十二", "五十三", "五十四", "五十五", "五十六", "五十七", "五十八", "五十九",
     "六十", "六十一", "六十二", "六十三", "六十四", "六十五", "六十六", "六十七", "六十八", "六十九"
   )
+  // We will handle years up to 2100.
+  private val Numbers = Array.fill[String](2101)("")
+  for (i <- 0 until NumbersSmall.length - 1) {
+    Numbers(i) = NumbersSmall(i)
+  }
+
+  for (i <- 1949 to 2100) {
+    val year = i.toString
+    // Convert number to string, e.g. 1988 to 一九八八
+    Numbers(i) = Numbers(year(0) - '0') + Numbers(year(1) - '0') +
+                 Numbers(year(2) - '0') + Numbers(year(3) - '0')
+  }
+
   // Not so good to publish an array here. TODO: encapsulates.
   val Dates = Array(
     "初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
@@ -5875,7 +5891,8 @@ object ChineseCalendar {
     ("清穆宗同治", "", "", "", "", (CEYears, 1862)),
     ("清德宗光緒", "", "", "", "", (CEYears, 1875)),
     ("清宣統", "", "", "", "", (CEYears, 1909)),
-    ("民國", "", "三十八年八月", "", "", (CEYears, 1912))
+    ("民國", "", "", "", "", (CEYears, 1912)),
+    ("公元", "一九四九年八月", "一九五二年十月", "", "", (CEYears, 1))
   )
 
   private var eraMap = new mutable.HashMap[String, (Array[Year], Int)]()

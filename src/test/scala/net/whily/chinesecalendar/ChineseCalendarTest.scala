@@ -179,6 +179,8 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       // Test for 唐肅宗
       toDate("唐肅宗元年建寅月初一") should be (date(762, 1, 30))
+
+      toDate("公元一九五一年二月初一") should be (date(1951, 3, 8))
     }
 
     it("Check fromDate().") {
