@@ -383,6 +383,14 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       nextCharacter("民") should === (Array("國"))
       nextCharacter("民國") should === (Array("元", "二", "三", "四", "五", "六", "七", "八", "九", "十"))
 
+      // Check for 公元
+      nextCharacter("公元一") should === (Array("九"))
+      nextCharacter("公元一九") should === (Array("四", "五")) //, "六", "七", "八", "九"))
+      nextCharacter("公元一九四") should === (Array("九"))
+      //nextCharacter("公元二") should === (Array("〇", "一"))
+      //nextCharacter("公元二〇") should === (Array("〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"))
+      //nextCharacter("公元二一") should === (Array("〇"))
+
       for (era <- eraNames()) {
         for (i <- 1 to era.length) {
           val next = nextCharacter(era.substring(0, i))

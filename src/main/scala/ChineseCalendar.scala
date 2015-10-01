@@ -1276,9 +1276,9 @@ object ChineseCalendar {
     traditional2SimplifiedEraMap.getOrElse(s, Chinese.traditional2Simplified(s))
 
   private def buildPrediction() {
-    predictionMap("") = Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "公") ++
-      eraNames().map(_.substring(0, 1)).distinct
-    predictionMap("公") = Array("元前")
+    predictionMap("") = (Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "公") ++
+      eraNames().map(_.substring(0, 1)).distinct).distinct
+    predictionMap("公") = Array("元")
     predictionMap("公元") = Array("前")
     predictionMap("公元前") = Array("1", "2", "3", "4", "5", "6", "7", "8", "9")
 
@@ -1400,7 +1400,7 @@ object ChineseCalendar {
     "五十一", "五十二", "五十三", "五十四", "五十五", "五十六", "五十七", "五十八", "五十九", "五十", "五",
     "六十一", "六十二", "六十三", "六十四", "六十五", "六十六", "六十七", "六十八", "六十九", "六十", "六",
     "七", "八", "九", "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "十"
-  )
+  ) ++ Numbers.filter(_.length >= 4)
   /* Specially ordered numbers to give correct order when used with
    * nextCharacterFromArray, for example, 月 should applear later than
    * numbers 一, 二, ...*/
