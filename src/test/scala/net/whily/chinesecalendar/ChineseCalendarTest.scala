@@ -385,7 +385,7 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       // Check for 公元
       nextCharacter("公元一") should === (Array("九"))
-      nextCharacter("公元一九") should === (Array("四", "五", "六", "七")) //, "八", "九"))
+      nextCharacter("公元一九") should === (Array("四", "五", "六", "七", "八", "九"))
       nextCharacter("公元一九四") should === (Array("九"))
       //nextCharacter("公元二") should === (Array("〇", "一"))
       //nextCharacter("公元二〇") should === (Array("〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"))
