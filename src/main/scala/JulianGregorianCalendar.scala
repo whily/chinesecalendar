@@ -3,7 +3,7 @@
  *
  * @author  Yujian Zhang <yujian{dot}zhang[at]gmail(dot)com>
  *
- * License: 
+ * License:
  *   GNU General Public License v2
  *   http://www.gnu.org/licenses/gpl-2.0.html
  * Copyright (C) 2015 Yujian Zhang
@@ -11,9 +11,19 @@
 
 package net.whily.chinesecalendar
 
+import java.util.Calendar
 import scala.util.matching.Regex
 
 object JulianGregorianCalendar {
+  /** Return current data. */
+  def currentDate() = {
+    val cal = Calendar.getInstance()
+    val y = cal.get(Calendar.YEAR)
+    val m = cal.get(Calendar.MONTH) + 1  // JANUARY = 0 as in http://docs.oracle.com/javase/1.5.0/docs/api/constant-values.html#java.util.Calendar.JANUARY
+    val d = cal.get(Calendar.DAY_OF_MONTH)
+    JulianGregorianCalendar(y, m, d)
+  }
+
   /** Returns the number of days in the month. */
   def monthDays(leapYear: Boolean, month: Int) = {
     if (leapYear) MonthDaysLeap(month - 1)
@@ -30,8 +40,8 @@ object JulianGregorianCalendar {
   }
 
   /** Return the first day of the year given a fragmented string which
-    * contains valid year information. 
-    * 
+    * contains valid year information.
+    *
     * Useful to call isLeapYear() or monthDays(). */
   def fromStringFrag(s: String) = {
     if (JGFrag.findFirstIn(s) == None)
@@ -41,30 +51,30 @@ object JulianGregorianCalendar {
   }
 
   private val JGDate = new Regex("^(公元前)?(\\d+)年(\\d{1,2})月(\\d{1,2})日$")
-  private val JGFrag = new Regex("^(公元前)?(\\d+)年")  
+  private val JGFrag = new Regex("^(公元前)?(\\d+)年")
   private val MonthDaysLeap    = Array(31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-  private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)     
+  private val MonthDaysNonLeap = Array(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 }
 
 /**
   * JulianGregorianCalendar is an immutable date-time object that represents a date,
   * often viewed as year-month-day. Time and timezone information are
   * not stored. Other date fields, such as day-of-year, day-of-week and
-  * week-of-year, are not available either. 
-  * 
+  * week-of-year, are not available either.
+  *
   * The calendar is essentially same as class GregorianCalendar() in
   * Java, i.e. a hybrid Gregorian/Julian calendar system with cutover
   * date as 15 October 1582. Gregorian Calendar is used after the
   * cutover while proleptic Julian calendar (proleptic means extending
   * indefinitely) is used before it.
-  * 
+  *
   * Originally the target is to model irregular leap years in
   * Roman history (e.g. CE 4 is not a leap year). However such
   * ambition is abandoned:
-  * 
+  *
   * 1) There is no firm conclusion on the real situation of leap year
   * error
-  * 
+  *
   * 2) The main purpose of using a reference calendar (as in this
   *    class) is for easy reference. Therefore using a calendar system
   *    which has some usage scenarios is more important than
@@ -73,10 +83,10 @@ object JulianGregorianCalendar {
   *    (e.g. http://eclipse.gsfc.nasa.gov/SEhelp/calendar.html), which
   *    seems to be a more interesting choice. Proplepptic Julian calendar is also
   *    used in 三千五百年历日天象.
-  * 
+  *
   * class JulianGregorianCalendar is thread-safe and immutable. The equals method should
   * be used for comparison.
-  * 
+  *
   * @param year       1 BCE is input and returned as 0, 2 BCE as -1, and so on.
   * @param month      January corresponds to 1, February to 2, and so on.
   * @param dayOfMonth the 1st day as 1, the 2nd day as 2, and so on. It must be valid
@@ -127,9 +137,9 @@ case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth
     else JulianGregorianCalendar(year, month - 1, JulianGregorianCalendar(year, month - 1, 1).monthDays())
   }
 
-  /** 
-    * Returns a copy of this JulianGregorianCalendar with the specified number of days added. 
-    * 
+  /**
+    * Returns a copy of this JulianGregorianCalendar with the specified number of days added.
+    *
     * @param daysToAdd can be either positive or negative.
     */
   def plusDays(daysToAdd: Int): JulianGregorianCalendar = {
@@ -161,7 +171,7 @@ case class JulianGregorianCalendar(val year: Int, val month: Int, val dayOfMonth
 
   /** Output this date as a string, for example 1492-10-12. */
   override def toString(): String = {
-    val monthDay = "年" + month + "月" + dayOfMonth + "日" 
+    val monthDay = "年" + month + "月" + dayOfMonth + "日"
     if (year > 0) {
       "" + year + monthDay
     } else {
