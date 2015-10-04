@@ -341,7 +341,7 @@ object ChineseCalendar {
       return lookupDate("漢平帝元始", "一年")
     }
 
-    val yearOffset = Numbers.indexOf(year.dropRight(1)) - 1 // Remove 年
+    val yearOffset = numberMap(year.dropRight(1)) - 1 // Remove 年
 
     val Year(firstDay, months, sexagenary) = eraMap(era) match {
       case (table, eraStartYear) =>
@@ -578,8 +578,13 @@ object ChineseCalendar {
   )
   // We will handle years up to 2100.
   private val Numbers = Array.fill[String](2101)("")
+
+  // "〇" -> 0, "一" -> 1
+  private val numberMap = new mutable.HashMap[String, Int]()
+
   for (i <- 0 until NumbersSmall.length - 1) {
     Numbers(i) = NumbersSmall(i)
+    numberMap(Numbers(i)) = i
   }
 
   for (i <- 1949 to 2100) {
@@ -587,6 +592,7 @@ object ChineseCalendar {
     // Convert number to string, e.g. 1988 to 一九八八
     Numbers(i) = Numbers(year(0) - '0') + Numbers(year(1) - '0') +
                  Numbers(year(2) - '0') + Numbers(year(3) - '0')
+    numberMap(Numbers(i)) = i
   }
 
   // Not so good to publish an array here. TODO: encapsulates.
@@ -1043,6 +1049,7 @@ object ChineseCalendar {
         if (eraArray(i)._5 == "") { // The next entry is the next era segment in time.
           eraSegmentArray(i).end = eraSegmentArray(i + 1).start.plusDays(-1)
         } else { // The next entry is NOT the next era segment in time.
+          // throw new RuntimeException("processEraArray(): wrong data in eraArray: missing end data.")
           val Some(nextEraSegment) = eraSegmentArray.find(_.era == eraArray(i)._5)
           eraSegmentArray(i).end = nextEraSegment.start.plusDays(-1)
         }
@@ -1494,7 +1501,7 @@ object ChineseCalendar {
 
   /** Return the index of the year of `d`. */
   private def yearIndex(d: ChineseCalendar) = {
-    Numbers.indexOf(d.year.dropRight(1))
+    numberMap(d.year.dropRight(1))
   }
 
   /** Return the array of years for the `era`. */
