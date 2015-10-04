@@ -26,7 +26,7 @@ case class ChineseCalendar(era: String, year: String,
   /** Return the difference between current date and start of the month. */
   def dayDiff() = {
     if (dayOfMonth == "晦") ChineseCalendar.monthLength(this) - 1
-    else if (ChineseCalendar.Sexagenary.contains(dayOfMonth)) {
+    else if (ChineseCalendar.sexagenaryMap.contains(dayOfMonth)) {
       val sexagenary = ChineseCalendar.findMonth(this).sexagenary
       ChineseCalendar.sexagenaryDiff(sexagenary, dayOfMonth)
     } else ChineseCalendar.Dates.indexOf(dayOfMonth)
@@ -57,7 +57,7 @@ case class ChineseCalendar(era: String, year: String,
 
   def plusDaysThisMonth(daysToAdd: Int) = {
     var dom = ""
-    if (ChineseCalendar.Sexagenary.contains(dayOfMonth)) {
+    if (ChineseCalendar.sexagenaryMap.contains(dayOfMonth)) {
       dom = ChineseCalendar.sexagenaryAdd(dayOfMonth, daysToAdd)
     } else {
       val date =
@@ -85,7 +85,7 @@ case class ChineseCalendar(era: String, year: String,
   /** Return the first day of next year, fast in the sense that there is
     * no check on era boundary. */
   private def firstDayNextYearFast(): ChineseCalendar = {
-    val yearNumber = ChineseCalendar.Numbers(ChineseCalendar.Numbers.indexOf(year.dropRight(1)) + 1)
+    val yearNumber = ChineseCalendar.Numbers(ChineseCalendar.numberMap(year.dropRight(1)) + 1)
     ChineseCalendar.parseDate(era + yearNumber + year.takeRight(1))
   }
 
@@ -264,16 +264,21 @@ object ChineseCalendar {
     "甲寅", "乙卯", "丙辰", "丁巳", "戊午", "己未", "庚申", "辛酉", "壬戌", "癸亥"
   )
 
+  private val sexagenaryMap = new mutable.HashMap[String, Int]()
+  for (i <- 0 until Sexagenary.length) {
+    sexagenaryMap(Sexagenary(i)) = i
+  }
+
   def sexagenaryDiff(x: String, y: String) = {
     // Note that in Java, % is remainder, not modulo operator. So some checking is needed.
-    val z = (Sexagenary.indexOf(y) - Sexagenary.indexOf(x)) % 60
+    val z = (sexagenaryMap(y) - sexagenaryMap(x)) % 60
     if (z < 0) z + 60
     else z
   }
 
   /** Return a new sexagenary by adding `add` to the original `sexagenary`.*/
   def sexagenaryAdd(sexagenary: String, add: Int) = {
-    var z = (Sexagenary.indexOf(sexagenary) + add) % 60
+    var z = (sexagenaryMap(sexagenary) + add) % 60
     if (z < 0) z += 60
     Sexagenary(z)
   }
@@ -283,9 +288,9 @@ object ChineseCalendar {
    * element, and the array has `length` elements.
    */
   def sexagenaries(start: String, length: Int): Array[String] = {
-    assert((Sexagenary.contains(start)) && (length > 1))
+    assert((sexagenaryMap.contains(start)) && (length > 1))
     val result = new Array[String](length)
-    val index = Sexagenary.indexOf(start)
+    val index = sexagenaryMap(start)
 
     for (i <- 0 until length) {
       result(i) = Sexagenary((index + i) % 60)
@@ -463,7 +468,7 @@ object ChineseCalendar {
       endIndex -= 1
     } else {
       val t = s.takeRight(2)
-      if (Sexagenary.contains(t) || Dates.contains(t)) {
+      if (sexagenaryMap.contains(t) || Dates.contains(t)) {
         endIndex -= 2
         val k = s.lastIndexOf("月")
         if (k + 1 != endIndex) {
@@ -801,13 +806,22 @@ object ChineseCalendar {
     for (i <- 0 until table.length - 1) {
       val months = table(i).months
       val lastMonth = months(months.length - 1)
-      val monthLength =
-        sexagenaryDiff(lastMonth.sexagenary, table(i + 1).months(0).sexagenary)
+      val x = lastMonth.sexagenary
+      val y = table(i + 1).months(0).sexagenary
+      if (x == "") {
+        throw new RuntimeException("setMonthLength(): missing sexagenary: index "
+          + i + " months: " + months.mkString(":"))
+      }
+      if (y == "") {
+        return
+      }
+
+      val monthLength = sexagenaryDiff(x, y)
       if ((lastMonth.length > 0) && (lastMonth.length != monthLength)) {
         // Since some year record is shared by different tables, check
         // whether there is collision. If yes, then corresponding data
         // will be copied to different tables instead of beinig shared.
-        throw new RuntimeException("Sharing should be replaced by copying: index "
+        throw new RuntimeException("setMonthLength(): sharing should be replaced by copying: index "
           + i + " months: " + months.mkString(":"))
       }
       lastMonth.length = monthLength
@@ -5899,7 +5913,7 @@ object ChineseCalendar {
     ("清德宗光緒", "", "", "", "", (CEYears, 1875)),
     ("清宣統", "", "", "", "", (CEYears, 1909)),
     ("民國", "", "", "", "", (CEYears, 1912)),
-    ("公元", "一九四九年八月", "二〇二三年十二月", "", "", (CEYears, 1))
+    ("公元", "一九四九年八月", "二〇二二年十二月", "", "", (CEYears, 1))
   )
 
   private var eraMap = new mutable.HashMap[String, (Array[Year], Int)]()
