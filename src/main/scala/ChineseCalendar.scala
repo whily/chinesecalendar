@@ -525,16 +525,16 @@ object ChineseCalendar {
 
     // Get the year in Chinese.
     var year = t.takeRight(4)
-    if (!Numbers.contains(year)) {
+    if (!numberMap.contains(year)) {
       year = t.takeRight(3)
-      if (!Numbers.contains(year)) {
+      if (!numberMap.contains(year)) {
         year = t.takeRight(2)
-        if (!Numbers.contains(year)) {
+        if (!numberMap.contains(year)) {
           year = t.takeRight(1)
           if (year == "元") {
             year = "一"
           }
-          if (!Numbers.contains(year)) {
+          if (!numberMap.contains(year)) {
             throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
           }
         }
