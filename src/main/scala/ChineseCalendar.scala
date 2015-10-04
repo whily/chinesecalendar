@@ -379,17 +379,15 @@ object ChineseCalendar {
    * sexagenary of the 1st day of each month.
    */
   private def daysFromNewYear(month: String, months: Array[Month]) = {
-    def days(daysDiff: Int, prevSexagenary: String, ms: Array[Month]): (Int, String) = {
-      val diff = sexagenaryDiff(prevSexagenary, ms(0).sexagenary)
-      val updatedDaysDiff = daysDiff + diff
-      if (month == ms(0).month) {
-        (updatedDaysDiff, ms(0).sexagenary)
-      } else {
-        days(updatedDaysDiff, ms(0).sexagenary, ms.tail)
-      }
+    val monthIndex = months.indexWhere(_.month == month)
+    val monthSexagenary = months(monthIndex).sexagenary
+    var diff =
+      (sexagenaryMap(monthSexagenary) % 30 -
+        sexagenaryMap(months(0).sexagenary) % 30) % 30
+    if (diff > 0) {
+      diff = diff - 30
     }
-
-    days(0, months(0).sexagenary, months)
+    (monthIndex * 30 + diff, monthSexagenary)
   }
 
   /**
