@@ -381,14 +381,6 @@ object ChineseCalendar {
   private def daysFromNewYear(month: String, months: Array[Month]) = {
     def days(daysDiff: Int, prevSexagenary: String, ms: Array[Month]): (Int, String) = {
       val diff = sexagenaryDiff(prevSexagenary, ms(0).sexagenary)
-      // One month can only have 29 or 30 days. Value 0 is for the 1st
-      // month in the year.
-      if ((diff != 0) && (diff != 29) && (diff != 30)) {
-        throw new RuntimeException("Month length is incorrect: " +
-          prevSexagenary + "-" + ms(0).sexagenary +
-          "\n" + months.mkString(":"))
-      }
-
       val updatedDaysDiff = daysDiff + diff
       if (month == ms(0).month) {
         (updatedDaysDiff, ms(0).sexagenary)
@@ -825,6 +817,11 @@ object ChineseCalendar {
           + i + " months: " + months.mkString(":"))
       }
       lastMonth.length = monthLength
+
+      if ((monthLength != 29) && (monthLength != 30)) {
+        throw new RuntimeException("setMonthLength(): month length is incorrect: index " +
+          i + " months: " + months.mkString(":"))
+      }
     }
   }
 
