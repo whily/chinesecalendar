@@ -381,9 +381,7 @@ object ChineseCalendar {
   private def daysFromNewYear(month: String, months: Array[Month]) = {
     val monthIndex = months.indexWhere(_.month == month)
     val monthSexagenary = months(monthIndex).sexagenary
-    var diff =
-      (sexagenaryMap(monthSexagenary) % 30 -
-        sexagenaryMap(months(0).sexagenary) % 30) % 30
+    var diff = (sexagenaryMap(monthSexagenary) - sexagenaryMap(months(0).sexagenary)) % 30
     if (diff > 0) {
       diff = diff - 30
     }
