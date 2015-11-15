@@ -326,6 +326,10 @@ class ChineseCalendarTest extends FunSpec with Matchers {
     }
 
     it("Check nextCharacter().") {
+      nextCharacter("公元前842年") should === (Array("1"))
+      nextCharacter("公元前842年1") should === (Array("2"))
+      nextCharacter("公元前842年12") should === (Array("月"))
+      nextCharacter("公元前842年12月1") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9"))
       nextCharacter("公元前5") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "年"))
       nextCharacter("公元前5年") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "9"))
       nextCharacter("公元前5年1") should === (Array("1", "2", "0", "月"))
@@ -348,6 +352,9 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       nextCharacter("353年4月3") should === (Array("0", "日"))
       nextCharacter("1582年10月") should === (Array("1", "2", "3", "4"))
       nextCharacter("1582年10月1") should === (Array("5", "6", "7", "8", "9", "日"))
+      nextCharacter("2101年") should === (Array("1"))
+      nextCharacter("2101年1") should === (Array("月"))
+      nextCharacter("2101年1月2") should === (Array("1", "2", "3", "4", "5", "6", "7", "8", "0", "日"))
 
       nextCharacter("秦王政") should === (Array("元", "二", "三", "四", "五", "六", "七", "八", "九", "十"))
       nextCharacter("秦王政元") should === (Array("年"))

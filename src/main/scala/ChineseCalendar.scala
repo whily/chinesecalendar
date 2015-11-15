@@ -1353,9 +1353,6 @@ object ChineseCalendar {
     val firstDay = JulianGregorianCalendar.fromStringFrag(query)
 
     if (JGMonthD.findFirstIn(query) != None) {
-      // TODO: perform optimization to only show the
-      // available months for the first year and last year.
-
       val JGMonthD(bce, year, month, day) = query
 
       val m = Integer.parseInt(month)
@@ -1373,16 +1370,25 @@ object ChineseCalendar {
         days = days.filter(d => (d <= 4) || (d >= 15))
       }
 
+      days = days.filter(d => date(firstDay.year, m, d) >= FirstDay &&
+        date(firstDay.year, m, d) <= LastDay)
+
       return nextCharacterFromArray(day, days.map(_.toString + "日"))
     }
 
     if (JGYearD.findFirstIn(query) != None) {
-      // TODO: perform optimization to only show the
-      // available months for the first year and last year.
+      val orderedMonths = Array(11, 12, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+
       val JGYearD(bce, year, month) = query
-      return nextCharacterFromArray(month,
-        Array("11月", "12月", "10月", "1月", "2月", "3月", "4月", "5月", "6月",
-          "7月", "8月", "9月"))
+      if (year.toInt == LastDay.year) {
+        return nextCharacterFromArray(month,
+          orderedMonths.filter(date(LastDay.year, _, 1) <= LastDay).map(_.toString + "月"))
+      } else if ((bce == "公元前") && (year.toInt == 1 - FirstDay.year)) {
+        return nextCharacterFromArray(month,
+          orderedMonths.filter(date(FirstDay.year, _, 30) >= FirstDay).map(_.toString + "月"))
+      } else {
+        return nextCharacterFromArray(month, orderedMonths.map(_.toString + "月"))
+      }
     }
 
     null
