@@ -36,4 +36,4 @@ yet. To use this library with your project, you need to download the
 source code, and run `sbt publish-local` in your command line. Then,
 include following line in your sbt configuration file.
 
-          libraryDependencies += "net.whily" %% "chinesecalendar" % "0.2.0-SNAPSHOT"
+          libraryDependencies += "net.whily" %% "chinesecalendar" % "0.2.1-SNAPSHOT"
