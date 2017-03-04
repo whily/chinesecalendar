@@ -177,6 +177,12 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       toDate("唐武后久視元年十一月") should be (date(700, 12, 15))
       toDate("唐武后大足元年正月") should be (date(701, 2, 13))
 
+      // Test for 載
+      toDate("唐玄宗天寶二年十二月三十") should be (date(744, 1, 19))
+      toDate("唐玄宗天寶三載正月") should be (date(744, 1, 20))
+      toDate("唐肅宗至德三載正月晦") should be (date(758, 3, 13))
+      toDate("唐肅宗乾元元年二月") should be (date(758, 3, 14))
+
       // Test for 唐肅宗
       toDate("唐肅宗元年建寅月初一") should be (date(762, 1, 30))
 
@@ -193,6 +199,12 @@ class ChineseCalendarTest extends FunSpec with Matchers {
 
       // Test for 唐武后
       fromDate(date(689, 12, 18)) should === (List("唐武后載初元年正月初一"))
+
+      // Test for 載
+      fromDate(date(744, 1, 19)) should === (List("唐玄宗天寶二年十二月三十"))
+      fromDate(date(744, 1, 20)) should === (List("唐玄宗天寶三載正月初一"))
+      fromDate(date(758, 3, 13)) should === (List("唐肅宗至德三載正月廿九"))
+      fromDate(date(758, 3, 14)) should === (List("唐肅宗乾元元年二月初一"))
     }
 
     it("Check monthLength().") {
@@ -254,6 +266,10 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       parseDate("蜀昭烈帝章武三年四月初二").firstDayNextMonth(false) should be (parseDate("蜀後主建興元年五月初一"))
       parseDate("蜀後主炎興元年十一月十一").firstDayNextMonth(false) should be (parseDate("魏陳留王景元四年十二月初一"))
       parseDate("隋文帝開皇二十年十二月朔").firstDayNextMonth(false) should be (parseDate("隋文帝仁壽元年一月初一"))
+
+      // Test for 載.
+      parseDate("唐玄宗天寶二年十二月三十").firstDayNextMonth(false).year should be ("三載")
+      parseDate("唐肅宗至德三載正月初一").firstDayNextMonth(false).year should be ("一年")
     }
 
     it("Check lastDayPrevMonth().") {
@@ -380,6 +396,12 @@ class ChineseCalendarTest extends FunSpec with Matchers {
       // Check the handling of 正月 and 臘月.
       nextCharacter("唐武后載初元年") should === (Array("一", "二", "三", "四", "五", "六", "七", "八", "正", "臘"))
       nextCharacter("唐武后長安二年") should === (Array("正", "二", "三", "四", "五", "六", "七", "八", "九", "十"))
+
+      // Check the handling of 載.
+      nextCharacter("唐肅宗至德三") should === (Array("載"))
+      nextCharacter("唐肅宗至德三載") should === (Array("正"))
+      nextCharacter("唐武后載") should === (Array("初"))
+      nextCharacter("唐武后延載") should === (Array("元"))
 
       // Check the handling of 唐肅宗.
       nextCharacter("唐肅宗") should === (Array("至", "乾", "上", "寶", "元"))

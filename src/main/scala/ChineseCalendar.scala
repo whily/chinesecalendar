@@ -98,7 +98,7 @@ case class ChineseCalendar(era: String, year: String,
    *                   not aligned, the returned date might not be
    *                   the first day of the month).
    *
-   * TODO: optimize performance so we only need one versin.
+   * TODO: optimize performance so we only need one version.
    */
   def firstDayNextMonth(continuous: Boolean): ChineseCalendar = {
     val Some(eraSegment) = ChineseCalendar.containingSegment(this)
@@ -410,8 +410,13 @@ object ChineseCalendar {
     if (date.length < 4) {
       throw new IllegalArgumentException("toDate(): illegal argument date: " + date)
     }
+
     toDate(parseDate(date), check)
   }
+
+  // The usage of 載 is between 唐玄宗天寶三載正月初一 (744.1.20) and 唐肅宗至德三載正月廿九 (758.3.13).
+  private val ZaiStartDate = JulianGregorianCalendar(744, 1, 20)
+  private val ZaiEndDate = JulianGregorianCalendar(758, 3, 13)
 
   /**
    * Return a list of Chinese dates corresponding to Julian/Gregorian
@@ -432,7 +437,13 @@ object ChineseCalendar {
       }
     }
 
-    result.sortBy(ChineseCalendar.dynastyOrder(_))
+
+    if ((ZaiStartDate <= date) && (date <= ZaiEndDate)) {
+      // Note that there is only one calendar in this period.
+      result.map(_.replace("年", "載"))
+    } else {
+      result.sortBy(ChineseCalendar.dynastyOrder(_))
+    }
   }
 
   def fromDate(date: String): List[String] =
@@ -440,7 +451,7 @@ object ChineseCalendar {
 
   def parseDate(s: String): ChineseCalendar = {
     // Select the first month
-    if (s.takeRight(1) == "年") {
+    if ((s.takeRight(1) == "年") || (s.takeRight(1) == "載")) {
       val (era, year) = parseYear(s)
       val (_, months, _) = lookupDate(era, year)
       return parseDate(era + year + months(0).month)
@@ -484,9 +495,12 @@ object ChineseCalendar {
     var month = "一月" // Default month
     var endIndex = s.length
     if (s.endsWith("月")) {
-      val k = s.lastIndexOf("年")
+      var k = s.lastIndexOf("年")
       if (k == -1) {
-        throw new IllegalArgumentException("parseMonth(): illegal argument s: " + s)
+        k = s.lastIndexOf("載")
+        if (k == -1) {
+          throw new IllegalArgumentException("parseMonth(): illegal argument s: " + s)
+        }
       }
       endIndex = k + 1
       if (Array("春", "夏", "秋", "冬").contains(s.substring(k + 1, k + 2))) {
@@ -505,7 +519,7 @@ object ChineseCalendar {
   }
 
   private def parseYear(s: String): (String, String) = {
-    if (s.takeRight(1) != "年") {
+    if ((s.takeRight(1) != "年") && (s.takeRight(1) != "載")) {
       throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
     }
 
@@ -534,7 +548,11 @@ object ChineseCalendar {
       throw new IllegalArgumentException("parseYear(): illegal argument s: " + s)
     }
 
-    (era, year + "年")
+    if (((era == "唐玄宗天寶") && (year != "一") && (year != "二")) || (era == "唐肅宗至德")) {
+      (era, year + "載")
+    } else {
+      (era, year + "年")
+    }
   }
 
   private def parseYear(s: String, month: String, dayOfMonth: String): ChineseCalendar = {
@@ -1130,6 +1148,7 @@ object ChineseCalendar {
     for (era <- eraNames()) {
       // Prediction in nextCharacter() based on the assumption that
       // era name does not contain certain characters.
+      // TODO: handle Zai
       if ((era.indexOf("年") >= 0) || (era.indexOf("月") >= 0)) {
         println("checkEraNames() " + era + " contains characters 年/月.")
         return false
@@ -1460,7 +1479,20 @@ object ChineseCalendar {
       nextCharacterFromArray(y, m)
     }
 
-    if ((query.indexOf("年") > 0) && (query.indexOf("月") > 0)) {
+    // Special handling for 載
+    if ((query == "唐玄宗天寶三") || (query == "唐玄宗天寶四") ||
+      (query == "唐玄宗天寶五") || (query == "唐玄宗天寶六") ||
+      (query == "唐玄宗天寶七") || (query == "唐玄宗天寶八") ||
+      (query == "唐玄宗天寶九") || (query == "唐玄宗天寶十") ||
+      (query == "唐玄宗天寶十一") || (query == "唐玄宗天寶十二") ||
+      (query == "唐玄宗天寶十三") || (query == "唐玄宗天寶十四") ||
+      (query == "唐玄宗天寶十五") || (query == "唐肅宗至德元") ||
+      (query == "唐肅宗至德二") || (query == "唐肅宗至德三")) {
+      return Array("載")
+    }
+
+    // TODO: check whether era name contains 載.
+    if (((query.indexOf("年") > 0) || (query.indexOf("載") > 0)) && (query.indexOf("月") > 0)) {
       if (query.length > query.indexOf("月") + 1) {
         // Check whther this is already a valid date.
         try {
@@ -1482,9 +1514,15 @@ object ChineseCalendar {
       return nextCharacterFromArray(r, d)
     }
 
-    if (query.indexOf("年") > 0) {
+    if ((query.indexOf("年") > 0) ||
+      ((query.indexOf("載") > 0) && (query.startsWith("唐玄宗天寶") || query.startsWith("唐肅宗至德")))) {
       // TODO: it is assuemd that 月 does not appear in era name.
-      val (eraYear, r) = query.splitAt(query.indexOf("年") + 1)
+      var yearIndex = query.indexOf("年")
+      if (yearIndex < 0) {
+        yearIndex = query.indexOf("載")
+      }
+
+      val (eraYear, r) = query.splitAt(yearIndex + 1)
       // TODO: make sure 六月 (or alternative) exists in every year.
       val date = parseDate(eraYear + "六月")
       val (_, months, _) = lookupDate(date)
