@@ -7,7 +7,7 @@ Chinesecalendar is a Scala library for Chinese Calendar.
 
 Features to include:
 
-* Chinese Calendar between BCE 841 to CE 1911.
+* Chinese Calendar between BCE 841 to CE 2100.
 
 For more information about Chinesecalendar, please go to
   <https://github.com/whily/chinesecalendar>
